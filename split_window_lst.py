@@ -3,17 +3,9 @@
 @author: nik | Created on Wed Mar 18 11:28:45 2015
 """
 
-#"Emissivity Class"|"TIRS-10"|"TIRS-11"
-{'Cropland': {'tirs10': 0.971}, {'tirs11': 0.968}}
-#"Forest"|0.995|0.996
-#"Grasslands"|0.970|0.971
-#"Shrublands"|0.969|0.970
-#"Wetlands"|0.992|0.998
-#"Waterbodies"|0.992|0.998
-#"Tundra"|0.980|0.984
-#"Impervious"|0.973|0.981
-#"Barren Land"|0.969|0.978                                                                                                                                                                                                               
-#"Snow and ice"|0.992|0.998
+# import average emissivities
+from ... import ...
+
 
 class SplitWindowLandSurfaceTemperature():
     """
@@ -94,5 +86,4 @@ class SplitWindowLandSurfaceTemperature():
         
         # land surface temperature
         lst = a + b + c + d + e
-
         self.lst = lst

@@ -1,11 +1,11 @@
-"Emissivity Class"|"TIRS-10"|"TIRS-11"
-"Cropland"|0.971|0.968
-"Forest"|0.995|0.996
-"Grasslands"|0.970|0.971
-"Shrublands"|0.969|0.970
-"Wetlands"|0.992|0.998
-"Waterbodies"|0.992|0.998
-"Tundra"|0.980|0.984
-"Impervious"|0.973|0.981
-"Barren Land"|0.969|0.978
-"Snow and ice"|0.992|0.998
+Emissivity Class|TIRS10|TIRS11
+Cropland|0.971|0.968
+Forest|0.995|0.996
+Grasslands|0.97|0.971
+Shrublands|0.969|0.97
+Wetlands|0.992|0.998
+Waterbodies|0.992|0.998
+Tundra|0.98|0.984
+Impervious|0.973|0.981
+Barren Land|0.969|0.978
+Snow and ice|0.992|0.998
