@@ -4,7 +4,42 @@
 """
 
 # import average emissivities
-from ... import ...
+#from ... import ...
+import random
+import csv_avg_emissivity_to_dictionary
+
+EMISSIVITIES = csv_avg_emissivity_to_dictionary.main()
+
+# helper functions
+def check_t1x_range(dn):
+    """
+    Check if digital numbers for T10, T11, lie inside
+    the expected range [1, 65535]
+    """
+    if dn < 1 or dn > 65535:
+        raise ValueError('The input value for T10 is out of '
+                             'expected range [1,65535]')
+    else:
+        return True
+
+def random_digital_numbers(count=3):
+    """
+    Return a user-requested amount of random Digital Number values for testing
+    purposes
+    """
+    digital_numbers = []
+
+    for dn in range(0, count):
+        digital_numbers.append(random.randint(1, 65535))
+
+    return digital_numbers
+
+
+def random_digital_number():
+    """
+    Return one random of Digital Number values for testing purposes
+    """
+    return random.randint(1, 65535)
 
 
 class SplitWindowLandSurfaceTemperature():
@@ -25,10 +60,14 @@ class SplitWindowLandSurfaceTemperature():
         """
         Create a class object for Split Window algorithm ... LST ...
         """
-        self.t10 = t10
-        self.t11= t11
-        self.emissivity_t10  = emissivity_b10# t10  or  b10?
+        if check_t1x_range(t10):
+            self.t10 = t10
+        if check_t1x_range(t11):
+            self.t11 = t11
+        self.emissivity_t10 = emissivity_b10 # t10  or  b10?
         self.emissivity_t11 = emissivity_b11
+        self._ae = float()
+        self._de = float()
         self.b0 = b0
         self.b1 = b1
         self.b2 = b2
@@ -37,8 +76,8 @@ class SplitWindowLandSurfaceTemperature():
         self.b5 = b5
         self.b6 = b6
         self.b7 = b7
-        self._r2 = float()
-        self.lst = self.compute_lst()
+        self.r2 = float()
+        self.lst = self._compute_lst()
 
     def _citation(self):
         """
@@ -64,7 +103,7 @@ class SplitWindowLandSurfaceTemperature():
         msg = "Asociated R^2: "
         return msg + str(self._r2)
 
-    def compute_lst(self):
+    def _compute_lst(self):
         """
         Compute Land Surface Temperature
         """
@@ -87,3 +126,35 @@ class SplitWindowLandSurfaceTemperature():
         # land surface temperature
         lst = a + b + c + d + e
         self.lst = lst
+
+
+def test_split_window_lst():
+
+    print " * Testing availability of constant data (global variables)"
+
+    t10, t11 = random_digital_numbers(2)
+    print "Random digital numbers for T10, T11:", t10, t11
+
+    # emissivity_b10
+    # emissivity_b11
+    # b0
+    # b1
+    # b2
+    # b3
+    # b4
+    # b5
+    # b6
+    # b7
+
+    #swlst = SplitWindowLandSurfaceTemperature(t10, t11,
+    #                                          emissivity_b10, emissivity_b11,
+    #                                         b0, b1, b2, b3, b4, b5, b6, b7)
+ 
+    print " * Testing '__str__' of class:\n", swlst
+    print " * Testing '_citation' method:\n", swlst._citation
+    print " * Testing 'compute_lst' method:\n", swlst.compute_lst()
+    print " * Testing 'report_r2' method:\n", swlst.report_r2
+     
+    pass
+
+test_split_window_lst()
