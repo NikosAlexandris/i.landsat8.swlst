@@ -2,7 +2,11 @@
 Convert csv data to a dictionary with namedtuples as values
 
 ToDo:
-* Add usage examples!
+* Add usage examplesi!
+* Clean up which test to use for which csv file!
+* Clean up which transform function to use according to csv file!
+* Clean again...
+* Deduplication!
 """
 
 # based on: <http://pastebin.com/tnyhmCJz>
@@ -50,12 +54,33 @@ def is_number(value):
     return value
 
 
+def replace_dot_comma_space(string):
+    """
+    Source: <http://stackoverflow.com/a/9479972/1172302>
+    """
+    replacements = ('.', ''), (', ', '_'), (',', '_'), (' ', '_'), ('(', ''), (')', ''), ('/', '_')
+    return reduce(lambda alpha, omega: alpha.replace(*omega),
+                  replacements, string)
+
+
 def csv_reader(csv_file):
     '''
     Transforms csv from a file into a multiline string. For example,
     the following csv
 
-    ...
+    --%<---
+    Emissivity Class|TIRS10|TIRS11
+    Cropland|0.971|0.968
+    Forest|0.995|0.996
+    Grasslands|0.97|0.971
+    Shrublands|0.969|0.97
+    Wetlands|0.992|0.998
+    Waterbodies|0.992|0.998
+    Tundra|0.98|0.984
+    Impervious|0.973|0.981
+    Barren Land|0.969|0.978
+    Snow and ice|0.992|0.998
+    --->%--
 
     will be returned as:
 
@@ -87,21 +112,59 @@ def csv_to_dictionary(csv):
     '''
     # split input in rows
     rows = csv.split('\n')
+    print "Rows:", rows
+    print
+
     dictionary = {}  # empty dictionary
     fields = rows.pop(0).split('|')[1:]  # header
+    print "Fields:", fields
+    print
 
     def transform(row):
         '''
         Transform an input row as follows
         '''
         elements = row.split('|')  # split row in elements
-        key = elements[0].replace(" ", "_")  # key: class name, replace ''w/ _
+        key = replace_dot_comma_space(elements[0])  # key: 1st column, replace
         ect = collections.namedtuple(key, [fields[0], fields[1]])  # namedtuple
+
         # feed namedtuples
         ect.TIRS10, ect.TIRS11 = is_number(elements[1]), is_number(elements[2])
         dictionary[key] = dictionary.get(key, ect)  # feed dictionary
 
-    map(transform, rows)
+    def transform_cwv(row):
+        '''
+        Transform an input row as follows
+        '''
+        elements = row.split('|')  # split row in elements
+        key = replace_dot_comma_space(elements[0])  # key: 1st column, replace
+        cwv = collections.namedtuple(key,
+                                     [replace_dot_comma_space(fields[0]),
+                                      replace_dot_comma_space(fields[1]),
+                                      replace_dot_comma_space(fields[2]),
+                                      replace_dot_comma_space(fields[3]),
+                                      replace_dot_comma_space(fields[4]),
+                                      replace_dot_comma_space(fields[5]),
+                                      replace_dot_comma_space(fields[6]),
+                                      replace_dot_comma_space(fields[7]),
+                                      replace_dot_comma_space(fields[8]),
+                                      replace_dot_comma_space(fields[9])])  # named tuples
+
+        # feed namedtuples
+        cwv.subrange = is_number(elements[0])
+        cwv.b0 = is_number(elements[1])
+        cwv.b1 = is_number(elements[2])
+        cwv.b2 = is_number(elements[3])
+        cwv.b3 = is_number(elements[4])
+        cwv.b4 = is_number(elements[5])
+        cwv.b5 = is_number(elements[6])
+        cwv.b6 = is_number(elements[7])
+        cwv.b7 = is_number(elements[8])
+        cwv.rmse = is_number(elements[9])
+        dictionary[key] = dictionary.get(key, cwv)  # feed dictionary
+
+    #map(transform, rows)
+    map(transform_cwv, rows)
     return dictionary
 
 
@@ -121,7 +184,8 @@ def main():
         print " * Using the file", CSVFILE
     csvstring = csv_reader(CSVFILE)
     emissivity_coefficients = csv_to_dictionary(csvstring)  # csv < from string
-    print "Emissivity coefficients (using named tupples):\n", emissivity_coefficients
+    print ("Emissivity coefficients (using named tupples):\n",
+           emissivity_coefficients)
     return emissivity_coefficients
 
 
@@ -154,10 +218,14 @@ def test_using_file(file):
 
     random_field = random.choice(fields)
     print "* Some random field:", random_field
-    print "* Return values (namedtuple):", d[somekey].TIRS10, d[somekey].TIRS11
+    # print "* Return values (namedtuple):", d[somekey].TIRS10, d[somekey].TIRS11
+    print "* Return values (namedtuple):", (d[somekey].b0,
+                                            d[somekey].b1)
 
 #test_using_file(CSVFILE)  # Ucomment to run test function!
-
+CSVFILE = "cwv_coefficients.csv"
+test_using_file("cwv_coefficients.csv")
+CSVFILE = ''
 
 def test(testdata):
     '''
