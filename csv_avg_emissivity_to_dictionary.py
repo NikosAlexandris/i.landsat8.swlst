@@ -22,9 +22,17 @@ Barren Land|0.969|0.978
 Snow and ice|0.992|0.998'''
 
 # required librairies -------------------------------------------------------
+import sys
 import csv
 import collections
 import random
+
+# set user defined csvfile, if any
+if len(sys.argv) > 1:
+    CSVFILE=sys.argv[1]
+    print "User defined csv file:", CSVFILE
+else:
+    CSVFILE = ''
 
 
 # helpers -------------------------------------------------------------------
@@ -42,7 +50,7 @@ def is_number(value):
     return value
 
 
-def csv_reader(file):
+def csv_reader(csv_file):
     '''
     Transforms csv from a file into a multiline string. For example,
     the following csv
@@ -63,7 +71,7 @@ def csv_reader(file):
     Barren Land|0.969|0.978
     Snow and ice|0.992|0.998"""
     '''
-    with open(file, 'rb') as csvfile:
+    with open(csv_file, 'rb') as csvfile:
         csvreader = csv.reader(csvfile, delimiter="|")  # delimiter?
         string = str()
         for row in csvreader:
@@ -82,7 +90,6 @@ def csv_to_dictionary(csv):
     dictionary = {}  # empty dictionary
     fields = rows.pop(0).split('|')[1:]  # header
 
-    # -----------------------------------------------------------------------
     def transform(row):
         '''
         Transform an input row as follows
@@ -93,32 +100,38 @@ def csv_to_dictionary(csv):
         # feed namedtuples
         ect.TIRS10, ect.TIRS11 = is_number(elements[1]), is_number(elements[2])
         dictionary[key] = dictionary.get(key, ect)  # feed dictionary
-    # -----------------------------------------------------------------------
 
     map(transform, rows)
     return dictionary
 
 
-# main ----------------------------------------------------------------------
+# main
 def main():
     """
     Main function:
     - reads a csv file (or a multi-line string)
     - converts and returns a dictionary which contains named tupples
     """
-    csvstring = csv_reader("average_emissivity.csv")
+    global CSVFILE
+    if CSVFILE == '':
+        print '>>> No user-define csv file.'
+        CSVFILE = "average_emissivity.csv"
+        print '>>> Using the "default"', CSVFILE, 'file'
+    else:
+        print " * Using the file", CSVFILE
+    csvstring = csv_reader(CSVFILE)
     emissivity_coefficients = csv_to_dictionary(csvstring)  # csv < from string
+    print "Emissivity coefficients (using named tupples):\n", emissivity_coefficients
     return emissivity_coefficients
 
 
-# Test data =================================================================
+# Test data
 def test_using_file(file):
     '''
     Test helper functions and main function using a csv file as an input.
     '''
     number = random.randint(1., 10.)
     print " * Testing 'is_number':", is_number(number)
-    print
 
     if not file:
         csvfile = "average_emissivity.csv"
@@ -132,23 +145,18 @@ def test_using_file(file):
     print " * Testing 'csv_to_dictionary':\n\n", csv_to_dictionary(csvstring)
     print
 
-    '''
-    Testing the process...
-    '''
     d = csv_to_dictionary(csvstring)
     somekey = random.choice(d.keys())
     print "* Some random key:", somekey
-    print
 
     fields = d[somekey]._fields
     print "* Fields of namedtuple:", fields
-    print
 
     random_field = random.choice(fields)
     print "* Some random field:", random_field
     print "* Return values (namedtuple):", d[somekey].TIRS10, d[somekey].TIRS11
 
-test_using_file("average_emissivity.csv")
+#test_using_file(CSVFILE)  # Ucomment to run test function!
 
 
 def test(testdata):
@@ -191,7 +199,7 @@ Impervious|0.973|0.981
 Barren_Land|0.969|0.978
 Snow_and_Ice|0.992|0.998'''
 
-test(testdata)  # Ucomment to run the test function!
+#test(testdata)  # Ucomment to run the test function!
 
 ''' Output ------------------------------
 {'Wetlands': <class '__main__.Wetlands'>,
