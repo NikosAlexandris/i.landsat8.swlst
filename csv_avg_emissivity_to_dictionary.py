@@ -112,13 +112,8 @@ def csv_to_dictionary(csv):
     '''
     # split input in rows
     rows = csv.split('\n')
-    print "Rows:", rows
-    print
-
     dictionary = {}  # empty dictionary
     fields = rows.pop(0).split('|')[1:]  # header
-    print "Fields:", fields
-    print
 
     def transform(row):
         '''
@@ -151,16 +146,16 @@ def csv_to_dictionary(csv):
                                       replace_dot_comma_space(fields[9])])  # named tuples
 
         # feed namedtuples
-        cwv.subrange = is_number(elements[0])
-        cwv.b0 = is_number(elements[1])
-        cwv.b1 = is_number(elements[2])
-        cwv.b2 = is_number(elements[3])
-        cwv.b3 = is_number(elements[4])
-        cwv.b4 = is_number(elements[5])
-        cwv.b5 = is_number(elements[6])
-        cwv.b6 = is_number(elements[7])
-        cwv.b7 = is_number(elements[8])
-        cwv.rmse = is_number(elements[9])
+        cwv.subrange = elements[1]
+        cwv.b0 = is_number(elements[2])
+        cwv.b1 = is_number(elements[3])
+        cwv.b2 = is_number(elements[4])
+        cwv.b3 = is_number(elements[5])
+        cwv.b4 = is_number(elements[6])
+        cwv.b5 = is_number(elements[7])
+        cwv.b6 = is_number(elements[8])
+        cwv.b7 = is_number(elements[9])
+        cwv.rmse = is_number(elements[10])
         dictionary[key] = dictionary.get(key, cwv)  # feed dictionary
 
     #map(transform, rows)
@@ -177,30 +172,37 @@ def main():
     """
     global CSVFILE
     if CSVFILE == '':
-        print '>>> No user-define csv file.'
+        print '>>> No user-defined csv file.'
         CSVFILE = "average_emissivity.csv"
         print '>>> Using the "default"', CSVFILE, 'file'
     else:
         print " * Using the file", CSVFILE
     csvstring = csv_reader(CSVFILE)
     emissivity_coefficients = csv_to_dictionary(csvstring)  # csv < from string
-    print ("Emissivity coefficients (using named tupples):\n",
+    print ("Emissivity coefficients (using named tuples):\n",
            emissivity_coefficients)
     return emissivity_coefficients
 
 
 # Test data
-def test_using_file(file):
+def test_csvfile(infile):
     '''
-    Test helper functions and main function using a csv file as an input.
+    Test helper and main functions using as input a csv file.
     '''
-    number = random.randint(1., 10.)
-    print " * Testing 'is_number':", is_number(number)
+    global CSVFILE
+    CSVFILE = infile
+    print "CSVFILE (global variable) = ", CSVFILE
 
-    if not file:
+    print 'Test helper and main functions using as input a csv file.'
+    print
+
+    number = random.randint(1., 10.)
+    print " * Testing helper function 'is_number':", is_number(number)
+
+    if not infile:
         csvfile = "average_emissivity.csv"
     else:
-        csvfile = file
+        csvfile = infile
 
     print " * Testing 'csv_reader' on", csvfile, ":\n\n", csv_reader(csvfile)
     print
@@ -219,18 +221,25 @@ def test_using_file(file):
     random_field = random.choice(fields)
     print "* Some random field:", random_field
     # print "* Return values (namedtuple):", d[somekey].TIRS10, d[somekey].TIRS11
-    print "* Return values (namedtuple):", (d[somekey].b0,
-                                            d[somekey].b1)
+    print "* Return values (namedtuple):", ('subrange', d[somekey].subrange,
+                                            'b0', d[somekey].b0,
+                                            'b1', d[somekey].b1,
+                                            'b2', d[somekey].b2,
+                                            'b3', d[somekey].b3,
+                                            'b4', d[somekey].b4,
+                                            'b5', d[somekey].b5,
+                                            'b6', d[somekey].b6,
+                                            'b7', d[somekey].b7,
+                                            'rmse', d[somekey].rmse)
 
 #test_using_file(CSVFILE)  # Ucomment to run test function!
 CSVFILE = "cwv_coefficients.csv"
-test_using_file("cwv_coefficients.csv")
+test_csvfile("cwv_coefficients.csv")
 CSVFILE = ''
 
 def test(testdata):
     '''
-    Test helper functions and main function using a multi-line string as an
-    input.
+    Test helper and main functions using as input a multi-line string.
     '''
     number = random.randint(1., 10.)
     print " * Testing 'is_number':", is_number(number)
