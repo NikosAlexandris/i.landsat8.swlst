@@ -25,21 +25,22 @@ Impervious|0.973|0.981
 Barren Land|0.969|0.978
 Snow and ice|0.992|0.998'''
 
-# required librairies -------------------------------------------------------
+
+# required librairies
 import sys
 import csv
 import collections
 import random
 
+
 # set user defined csvfile, if any
-if len(sys.argv) > 1:
-    CSVFILE=sys.argv[1]
-    print "User defined csv file:", CSVFILE
-else:
-    CSVFILE = ''
+def set_csvfile():
+    if len(sys.argv) > 1:
+        return sys.argv[1]
+    else:
+        return False
 
-
-# helpers -------------------------------------------------------------------
+# helper functions
 def is_number(value):
     '''
     Check if input is a number
@@ -115,51 +116,57 @@ def csv_to_dictionary(csv):
     dictionary = {}  # empty dictionary
     fields = rows.pop(0).split('|')[1:]  # header
 
-    def transform(row):
-        '''
-        Transform an input row as follows
-        '''
-        elements = row.split('|')  # split row in elements
-        key = replace_dot_comma_space(elements[0])  # key: 1st column, replace
-        ect = collections.namedtuple(key, [fields[0], fields[1]])  # namedtuple
+    strings = ('TIRS10', 'TIRS11')
+    if any(string in fields for string in strings):
 
-        # feed namedtuples
-        ect.TIRS10, ect.TIRS11 = is_number(elements[1]), is_number(elements[2])
-        dictionary[key] = dictionary.get(key, ect)  # feed dictionary
+        def transform(row):
+            '''
+            Transform an input row as follows
+            '''
+            elements = row.split('|')  # split row in elements
+            key = replace_dot_comma_space(elements[0])  # key: 1st column, replace
+            ect = collections.namedtuple(key, [fields[0], fields[1]])  # namedtuple
 
-    def transform_cwv(row):
-        '''
-        Transform an input row as follows
-        '''
-        elements = row.split('|')  # split row in elements
-        key = replace_dot_comma_space(elements[0])  # key: 1st column, replace
-        cwv = collections.namedtuple(key,
-                                     [replace_dot_comma_space(fields[0]),
-                                      replace_dot_comma_space(fields[1]),
-                                      replace_dot_comma_space(fields[2]),
-                                      replace_dot_comma_space(fields[3]),
-                                      replace_dot_comma_space(fields[4]),
-                                      replace_dot_comma_space(fields[5]),
-                                      replace_dot_comma_space(fields[6]),
-                                      replace_dot_comma_space(fields[7]),
-                                      replace_dot_comma_space(fields[8]),
-                                      replace_dot_comma_space(fields[9])])  # named tuples
+            # feed namedtuples
+            ect.TIRS10, ect.TIRS11 = is_number(elements[1]), is_number(elements[2])
+            dictionary[key] = dictionary.get(key, ect)  # feed dictionary
+    
+    strings = ('b0', 'b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7')
+    if any(string in fields for string in strings):
 
-        # feed namedtuples
-        cwv.subrange = elements[1]
-        cwv.b0 = is_number(elements[2])
-        cwv.b1 = is_number(elements[3])
-        cwv.b2 = is_number(elements[4])
-        cwv.b3 = is_number(elements[5])
-        cwv.b4 = is_number(elements[6])
-        cwv.b5 = is_number(elements[7])
-        cwv.b6 = is_number(elements[8])
-        cwv.b7 = is_number(elements[9])
-        cwv.rmse = is_number(elements[10])
-        dictionary[key] = dictionary.get(key, cwv)  # feed dictionary
+        def transform(row):
+            '''
+            Transform an input row as follows
+            '''
+            elements = row.split('|')  # split row in elements
+            key = replace_dot_comma_space(elements[0])  # key: 1st column, replace
+            # named tuples
+            cwv = collections.namedtuple(key,
+                                        [replace_dot_comma_space(fields[0]),
+                                        replace_dot_comma_space(fields[1]),
+                                        replace_dot_comma_space(fields[2]),
+                                        replace_dot_comma_space(fields[3]),
+                                        replace_dot_comma_space(fields[4]),
+                                        replace_dot_comma_space(fields[5]),
+                                        replace_dot_comma_space(fields[6]),
+                                        replace_dot_comma_space(fields[7]),
+                                        replace_dot_comma_space(fields[8]),
+                                        replace_dot_comma_space(fields[9])])
 
-    #map(transform, rows)
-    map(transform_cwv, rows)
+            # feed named tuples
+            cwv.subrange = elements[1]
+            cwv.b0 = is_number(elements[2])
+            cwv.b1 = is_number(elements[3])
+            cwv.b2 = is_number(elements[4])
+            cwv.b3 = is_number(elements[5])
+            cwv.b4 = is_number(elements[6])
+            cwv.b5 = is_number(elements[7])
+            cwv.b6 = is_number(elements[8])
+            cwv.b7 = is_number(elements[9])
+            cwv.rmse = is_number(elements[10])
+            dictionary[key] = dictionary.get(key, cwv)  # feed dictionary
+
+    map(transform, rows)
     return dictionary
 
 
@@ -167,21 +174,35 @@ def csv_to_dictionary(csv):
 def main():
     """
     Main function:
-    - reads a csv file (or a multi-line string)
+    - reads a special csv file (or a multi-line string)
     - converts and returns a dictionary which contains named tupples
+
+    - accepted csv are:
+      - average emissivity coefficients
+      - column water vapour
     """
+
+    # user requested file?
     global CSVFILE
-    if CSVFILE == '':
+
+    if set_csvfile():
+        CSVFILE = set_csvfile()
+        print " * Reading comma separated values from:", CSVFILE
+
+    else:
         print '>>> No user-defined csv file.'
         CSVFILE = "average_emissivity.csv"
-        print '>>> Using the "default"', CSVFILE, 'file'
-    else:
-        print " * Using the file", CSVFILE
+        print '>>> Reading from "default" file:', CSVFILE, 'file'
+
     csvstring = csv_reader(CSVFILE)
-    emissivity_coefficients = csv_to_dictionary(csvstring)  # csv < from string
-    print ("Emissivity coefficients (using named tuples):\n",
-           emissivity_coefficients)
-    return emissivity_coefficients
+    coefficients_dictionary = csv_to_dictionary(csvstring)  # csv < from string
+
+    if set_csvfile():
+        msg = '   > Dictionary with coefficients '
+        msg += str('(note, the returned dictionary contains named tuples):\n')
+        print msg, coefficients_dictionary
+
+    return coefficients_dictionary
 
 
 # Test data
@@ -233,9 +254,10 @@ def test_csvfile(infile):
                                             'rmse', d[somekey].rmse)
 
 #test_using_file(CSVFILE)  # Ucomment to run test function!
-CSVFILE = "cwv_coefficients.csv"
-test_csvfile("cwv_coefficients.csv")
-CSVFILE = ''
+#CSVFILE = "cwv_coefficients.csv"
+#test_csvfile("cwv_coefficients.csv")
+#CSVFILE = ''
+
 
 def test(testdata):
     '''
