@@ -33,14 +33,17 @@ import collections
 import random
 
 
-# set user defined csvfile, if any
+# helper functions
 def set_csvfile():
+    """
+    Set user defined csvfile, if any
+    """
     if len(sys.argv) > 1:
         return sys.argv[1]
     else:
         return False
 
-# helper functions
+
 def is_number(value):
     '''
     Check if input is a number
@@ -108,8 +111,8 @@ def csv_reader(csv_file):
 
 def csv_to_dictionary(csv):
     '''
-    Transform input from csv into a python dictionary with namedtuples as
-    values
+    Transform input from special csv into a python dictionary with namedtuples
+    as values. Note, "strings" of interest are hardcoded!
     '''
     # split input in rows
     rows = csv.split('\n')
@@ -123,14 +126,22 @@ def csv_to_dictionary(csv):
             '''
             Transform an input row as follows
             '''
-            elements = row.split('|')  # split row in elements
-            key = replace_dot_comma_space(elements[0])  # key: 1st column, replace
-            ect = collections.namedtuple(key, [fields[0], fields[1]])  # namedtuple
+            # split row in elements
+            elements = row.split('|')
+
+            # key: 1st column, replace
+            key = replace_dot_comma_space(elements[0])
+
+            # namedtuple
+            ect = collections.namedtuple(key, [fields[0], fields[1]])
 
             # feed namedtuples
-            ect.TIRS10, ect.TIRS11 = is_number(elements[1]), is_number(elements[2])
-            dictionary[key] = dictionary.get(key, ect)  # feed dictionary
-    
+            ect.TIRS10 = is_number(elements[1])
+            ect.TIRS11 = is_number(elements[2])
+
+            # feed dictionary
+            dictionary[key] = dictionary.get(key, ect)
+
     strings = ('b0', 'b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7')
     if any(string in fields for string in strings):
 
@@ -170,6 +181,38 @@ def csv_to_dictionary(csv):
     return dictionary
 
 
+def get_average_emissivities():
+    """
+    Read comma separated values for average emissivities and return a
+    dictionary wiht named tuples
+    """
+
+    # read csv for average emissivities, convert to string
+    csvstring = csv_reader("average_emissivity.csv")
+
+    # convert string to dictionary
+    average_emissivities = csv_to_dictionary(csvstring)
+
+    # return the dictionary with coefficients
+    return average_emissivities
+
+
+def get_column_water_vapour():
+    """
+    Read comma separated values for column water vapour coefficients and return
+    a dictionary wiht named tuples
+    """
+
+    # read csv for average emissivities, convert to string
+    csvstring = csv_reader("cwv_coefficients.csv")
+
+    # convert string to dictionary
+    column_water_vapour_coefficients = csv_to_dictionary(csvstring)
+
+    # return the dictionary with coefficients
+    return column_water_vapour_coefficients
+
+
 # main
 def main():
     """
@@ -190,9 +233,7 @@ def main():
         print " * Reading comma separated values from:", CSVFILE
 
     else:
-        #print '>>> No user-defined csv file.'
-        CSVFILE = "average_emissivity.csv"
-        #print '>>> Reading from "default" file:', CSVFILE, 'file'
+        raise IOError('Please define a file to read comma-separated-values from!')
 
     # convert csv file to string
     csvstring = csv_reader(CSVFILE)
@@ -203,7 +244,7 @@ def main():
     # report on user requested file
     if set_csvfile():
         msg = '   > Dictionary with coefficients '
-        msg += str('(note, the returned dictionary contains named tuples):\n\n')
+        msg += str('(note, it contains named tuples):\n\n')
         print msg, coefficients_dictionary
 
     # return the dictionary with coefficients
