@@ -190,18 +190,23 @@ def main():
         print " * Reading comma separated values from:", CSVFILE
 
     else:
-        print '>>> No user-defined csv file.'
+        #print '>>> No user-defined csv file.'
         CSVFILE = "average_emissivity.csv"
-        print '>>> Reading from "default" file:', CSVFILE, 'file'
+        #print '>>> Reading from "default" file:', CSVFILE, 'file'
 
+    # convert csv file to string
     csvstring = csv_reader(CSVFILE)
+
+    # convert string to dictionary
     coefficients_dictionary = csv_to_dictionary(csvstring)  # csv < from string
 
+    # report on user requested file
     if set_csvfile():
         msg = '   > Dictionary with coefficients '
-        msg += str('(note, the returned dictionary contains named tuples):\n')
+        msg += str('(note, the returned dictionary contains named tuples):\n\n')
         print msg, coefficients_dictionary
 
+    # return the dictionary with coefficients
     return coefficients_dictionary
 
 
