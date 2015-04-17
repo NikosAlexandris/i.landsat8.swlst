@@ -55,7 +55,7 @@ def is_number(value):
             complex(value)  # for complex
         except ValueError:
             return False
-    return value
+    return float(value)
 
 
 def replace_dot_comma_space(string):

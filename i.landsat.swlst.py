@@ -26,7 +26,7 @@ where:
 In the above equations,
     - dk (k = 0, 1...6) and ek (k = 1, 2, 3, 4) are the algorithm coefficients;
     - w is the CWV;
-    - ε and ∆a are the average emissivity and emissivity difference of two adjacent
+    - ε and ∆ε are the average emissivity and emissivity difference of two adjacent
       thermal channels, respectively, which are similar to Equation (2);
     - and fk (k = 0 and 1) is related to the influence of the atmospheric transmittance and emissivity,
       i.e., f k = f(εi,εj,τ i ,τj).

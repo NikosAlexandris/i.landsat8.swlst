@@ -7,6 +7,9 @@
 import random
 import csv_to_dictionary as coefficients
 
+
+# globals
+EMISSIVITIES = coefficients.get_average_emissivities()
 COLUMN_WATER_VAPOUR = coefficients.get_column_water_vapour()
 
 
@@ -26,12 +29,12 @@ def check_t1x_range(dn):
 def random_digital_numbers(count=3):
     """
     Return a user-requested amount of random Digital Number values for testing
-    purposes
+    purposes ranging in 12-bit
     """
     digital_numbers = []
 
     for dn in range(0, count):
-        digital_numbers.append(random.randint(1, 65535))
+        digital_numbers.append(random.randint(1, 2**12))
 
     return digital_numbers
 
@@ -65,10 +68,10 @@ class SplitWindowLandSurfaceTemperature():
             self.t10 = t10
         if check_t1x_range(t11):
             self.t11 = t11
-        self.emissivity_t10 = emissivity_b10  # t10  or  b10?
-        self.emissivity_t11 = emissivity_b11
-        self._ae = float()
-        self._de = float()
+        self.emissivity_t10 = float(emissivity_b10)  # t10  or  b10?
+        self.emissivity_t11 = float(emissivity_b11)
+        self.average_emissivity = 0.5 * (self.emissivity_t10 + self.emissivity_t11)
+        self.delta_emissivity = self.emissivity_t10 - self.emissivity_t11
         self.b0 = b0
         self.b1 = b1
         self.b2 = b2
@@ -77,6 +80,7 @@ class SplitWindowLandSurfaceTemperature():
         self.b5 = b5
         self.b6 = b6
         self.b7 = b7
+        self._model = 'Add model here...'
         self.r2 = float()
         self.lst = self._compute_lst()
 
@@ -95,16 +99,38 @@ class SplitWindowLandSurfaceTemperature():
         """
         Return a string representation of the Split Window ...
         """
-        msg = 'FixMe <<<'
-        msg += ('[b0 + '
-                '(b1 + '
-                'b2*((1-ae)/ae)) + '
-                'b3*(de/ae) * ((t10 + t11)/2) + '
-                '(b4 + '
-                'b5*((1-ae)/ae) + '
-                'b6*(de/ae^2))*((t10 - t11)/2) + '
-                'b7*(t10 - t11)^2]\n')
-        return msg + '  ' + self._model + '\n'
+        equation = '   > The equation: '
+        equation += ('[b0 + '
+                     '(b1 + '
+                     'b2*((1-ae)/ae)) + '
+                     'b3*(de/ae) * ((t10 + t11)/2) + '
+                     '(b4 + '
+                     'b5*((1-ae)/ae) + '
+                     'b6*(de/ae^2))*((t10 - t11)/2) + '
+                     'b7*(t10 - t11)^2]')
+        model_msg = '   > The model: '
+        model = ('[{b0} + '
+                     '({b1} + '
+                     '{b2}*((1-{ae})/{ae})) + '
+                     '{b3}*({de}/{ae}) * (({t10} + {t11})/2) + '
+                     '({b4} + '
+                     '{b5}*((1-{ae})/{ae}) + '
+                     '{b6}*({de}/{ae}^2))*(({t10} - {t11})/2) + '
+                     '{b7}*({t10} - {t11})^2]\n')
+        model = model.format(b0=self.b0,
+                              b1=self.b1,
+                              b2=self.b2,
+                              ae=self.average_emissivity,
+                              de=self.delta_emissivity,
+                              b3=self.b3,
+                              b4=self.b4,
+                              b5=self.b5,
+                              b6=self.b6,
+                              b7=self.b7,
+                              t10=self.emissivity_t10,
+                              t11=self.emissivity_t11)
+
+        return equation + '\n' + model_msg + model
 
     def report_r2(self):
         """
@@ -119,23 +145,23 @@ class SplitWindowLandSurfaceTemperature():
         """
 
         # average emissivity
-        ae = 0.5 * (self.emissivity_b10 + self.emissivity_b11)
+        avg = self.average_emissivity
 
         # delta emissivity
-        de = self.emissivity_b10 - self.emissivity_b11
+        delta = self.delta_emissivity
 
         # addends
         a = self.b0
-        b = self.b1 + self.b2 * ((1-ae) / ae)
-        c = self.b3*(de / ae) * ((self.t10 + self.t11) / 2)
-        d1 = self.b4 + self.b5 * ((1-ae) / ae) + self.b6 * (de / ae**2)
+        b = self.b1 + self.b2 * ((1-avg) / avg)
+        c = self.b3*(delta / avg) * ((self.t10 + self.t11) / 2)
+        d1 = self.b4 + self.b5 * ((1-avg) / avg) + self.b6 * (delta / avg**2)
         d2 = (self.t10 - self.t11) / 2
         d = d1 * d2
         e = self.b7 * (self.t10 - self.t11)**2
 
         # land surface temperature
-        lst = a + b + c + d + e
-        self.lst = lst
+        self.lst = a + b + c + d + e
+        
 
 
 def test_split_window_lst():
@@ -144,9 +170,9 @@ def test_split_window_lst():
     print
 
     t10, t11 = random_digital_numbers(2)
-    print " * Random digital numbers for T10, T11:", t10, t11
+    print " * Random 12-bit digital numbers for T10, T11:", t10, t11
     print
-    
+
     # get emissivities
     EMISSIVITIES = coefficients.get_average_emissivities()
     print "\n * Dictionary for average emissivities:\n", EMISSIVITIES
@@ -168,10 +194,12 @@ def test_split_window_lst():
     print "\n >>> FIXME -- how to call a named tuple non-interactively?\n"
 
     emissivity_b10 = EMISSIVITIES[somekey].TIRS10
+    print "Average emissivity for B10:", emissivity_b10, "|Type:", type(emissivity_b10)
     emissivity_b11 = EMISSIVITIES[somekey].TIRS11
-    
+    print "Average emissivity for B11:", emissivity_b11
+
     COLUMN_WATER_VAPOUR = coefficients.get_column_water_vapour()
-    print "\n * Dictionary for column water vapour coefficients:\n", 
+    print "\n * Dictionary for column water vapour coefficients:\n",
     print COLUMN_WATER_VAPOUR
     print
 
@@ -199,7 +227,8 @@ def test_split_window_lst():
     b5 = COLUMN_WATER_VAPOUR[cwvkey].b5
     b6 = COLUMN_WATER_VAPOUR[cwvkey].b6
     b7 = COLUMN_WATER_VAPOUR[cwvkey].b7
-    print " * Coefficients b0, b1, ..., b7:", b0, b1, b2, b3, b4, b5, b6, b7
+    print " * Coefficients (b0, b1, ..., b7) in", cwvkey,
+    print ":", b0, b1, b2, b3, b4, b5, b6, b7
 
     rmse = COLUMN_WATER_VAPOUR[cwvkey].rmse
     print " * RMSE:", rmse
@@ -211,9 +240,16 @@ def test_split_window_lst():
                                               b0, b1, b2, b3, b4, b5, b6, b7)
 
     print " * Testing '__str__' of class:\n", swlst
+    print
+
     print " * Testing '_citation' method:\n", swlst._citation
-    print " * Testing 'compute_lst' method:\n", swlst.compute_lst()
-    print " * Testing 'report_r2' method:\n", swlst.report_r2
+    print
+
+    print " * Testing '_compute_lst' method:", swlst._compute_lst
+    print
+    print swlst._compute_lst()  # compute it first!
+    print " * Return the LST value:", swlst.lst
+    print " * Testing 'report_r2' method:", swlst.report_r2
 
     pass
 
