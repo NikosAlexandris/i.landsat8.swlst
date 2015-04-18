@@ -167,12 +167,29 @@ def cleanup():
     """
     grass.run_command('g.remove', flags='f', type="rast",
                       pattern='tmp.{pid}*'.format(pid=os.getpid()), quiet=True)
-                      
+
+
 def run(cmd, **kwargs):
     """
     Pass required arguments to grass commands (?)
     """
     grass.run_command(cmd, quiet=True, **kwargs)
+
+
+def random_digital_numbers(count=2):
+    """
+    Return a user-requested amount of random Digital Number values for testing
+    purposes ranging in 12-bit
+    """
+    digital_numbers = []
+
+    for dn in range(0, count):
+        digital_numbers.append(random.randint(1, 2**12))
+
+    if count == 1:
+        return digital_numbers[0]
+
+    return digital_numbers
 
 
 def retrieve_emissivities():
@@ -211,45 +228,107 @@ def retrieve_column_water_vapour():
     print " * RMSE:", rmse
 
 
+def replace_dummies(string, t10, t11):
+    """
+    Replace DUMMY_MAPCALC_STRINGS (see SplitWindowLST class for it)
+    with input maps t10, t11.
+    
+    Idead sourced from: <http://stackoverflow.com/a/9479972/1172302>
+    """
+    replacements = ('Input_T10', str(t10)), ('Input_T11', str(t11))
+    return reduce(lambda alpha, omega: alpha.replace(*omega),
+                  replacements, string)
+
+
 def main():
     
-    t10 = options['b10']
-    t11 = options['b11']
+    b10 = options['b10']
+    b11 = options['b11']
     #emissivity_b10 = options['emissivity_b10']
     #emissivity_b11 = options['emissivity_b11']
+
+    # flags    
+    info = flags['i']
+    keep_region = flags['k']
+    #timestamps = not(flags['t'])
+    #zero = flags['z']
+    #null = flags['n']  ### either zero or null, not both
+    #evaluation = flags['e'] -- is there a quick way?
+    #shell = flags['g']
+
+    #
+    # Temporary Region and Files
+    #
+
+    if not keep_region:
+        grass.use_temp_region()  # to safely modify the region
+
+    tmpfile = grass.tempfile()  # Temporary file - replace with os.getpid?
+    tmp = "tmp." + grass.basename(tmpfile)  # use its basename
+
+    #
+    # Section...
+    #
 
     # get average emissivities from Land Cover Map  OR  Look-Up table?
     emissivity_b10, emissivity_b11 = retrieve_emissivities()
 
     # get range for column water vapour
-    cwv_subrange = retrieve_column_water_vapour()
+    cwv_subrange = retrieve_column_water_vapour()  # Random -- FixMe
 
     # SplitWindowLST class, feed with required input values
-    split_window_lst = SplitWindowLST(t10, t11,
-                                      emissivity_b10, emissivity_b11,
+    split_window_lst = SplitWindowLST(emissivity_b10,
+                                      emissivity_b11,
                                       cwv_subrange)
-    print split_window_lst
+    print "Split Window LST class:", split_window_lst
     print
 
     # citation, report or add to history
-    citation = split_window_lst._citation
-    print citation
+    citation = split_window_lst.citation
+    print "Citation:", citation
     print
+
+    #
+    # Match region to input image if... ?
+    #
+
+    # ToDo: check if extent-B10 == extent-B11? Uneccessay?
+    if not keep_region:
+        run('g.region', rast=b10)   # ## FixMe?
+        msg = "\n|! Matching region extent to map {name}"
+        msg = msg.format(name=b10)
+        g.message(msg)
+
+    elif keep_region:
+        grass.warning(_('Operating on current region'))
 
     # compute Land Surface Temperature
-    lst = split_window_lst._compute_lst()
-    print lst
+    t10, t11 = random_digital_numbers(2)
+    lst = split_window_lst.compute_lst(t10, t11)
+    print "LST:", lst
     print
 
-    # formula
-    equation = "{out} = {inputs}"
-    split_window_formula = equation.format(out=tmp_cdn, inputs=mapcalc_formula)
+    # Temporary Map
+    tmp_lst = "{prefix}.lst".format(prefix=tmp)
 
-    split_window_formula = split_window_lst.mapcalc
-    print swlst_formula
-   
-    #swlst_formula.format(lst=tmp_lst, inputs=)
-    #grass.mapcalc(swlst_formula, overwrite=True)
+    # mapcalc basic equation
+    equation = "{result} = {expression}"
+
+    # mapcalc expression
+    split_window_expression = split_window_lst.mapcalc
+
+    # replace the "dummy" string...
+    split_window_expression = replace_dummies(split_window_expression, t10, t11)
+    print "Split-Window expression:", split_window_expression
+    print
+
+    split_window_equation = equation.format(result=tmp_lst,
+                                            expression=split_window_expression)
+
+
+    print "Split-Window equation for r.mapcalc:", split_window_equation
+    print
+    grass.mapcalc(split_window_equation, overwrite=True)
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@ COLUMN_WATER_VAPOUR = coefficients.get_column_water_vapour()
 DUMMY_MAPCALC_STRING_T10 = 'Input_T10'
 DUMMY_MAPCALC_STRING_T11 = 'Input_T11'
 
+
 # helper functions
 def check_t1x_range(dn):
     """
@@ -44,7 +45,7 @@ class SplitWindowLST():
         + b7 * (t10 - t11)^2
     """
 
-    def __init__(self, t10, t11, emissivity_b10, emissivity_b11, cwv_subrange):
+    def __init__(self, emissivity_b10, emissivity_b11, cwv_subrange):
         """
         Create a class object for Split Window algorithm
 
@@ -82,10 +83,7 @@ class SplitWindowLST():
                        '{b7}*({t10} - {t11})^2]\n')
 
         # use inputs
-        if check_t1x_range(t10):  # check validity of t10, t11
-            self.t10 = t10
-        if check_t1x_range(t11):
-            self.t11 = t11
+
         self.emissivity_t10 = float(emissivity_b10)  # t10  or  b10?
         self.emissivity_t11 = float(emissivity_b11)
         self.average_emissivity = 0.5 * (self.emissivity_t10 + self.emissivity_t11)
@@ -98,7 +96,6 @@ class SplitWindowLST():
         self._set_rmse()
 
         # model for mapcalc
-        self._compute_lst()
         self._build_model()
         self._build_mapcalc()
         self._build_mapcalc_direct()
@@ -147,10 +144,14 @@ class SplitWindowLST():
         msg = "Asociated RMSE: "
         return msg + str(self.rmse)
 
-    def _compute_lst(self):
+    def compute_lst(self, t10, t11):
         """
         Compute Land Surface Temperature
         """
+        # check validity of t10, t11
+        check_t1x_range(t10)
+        check_t1x_range(t11)
+
         # average and delta emissivity
         avg = self.average_emissivity
         delta = self.delta_emissivity
@@ -158,11 +159,11 @@ class SplitWindowLST():
         # addends
         a = self.b0
         b = self.b1 + self.b2 * ((1-avg) / avg)
-        c = self.b3*(delta / avg) * ((self.t10 + self.t11) / 2)
+        c = self.b3*(delta / avg) * ((t10 + t11) / 2)
         d1 = self.b4 + self.b5 * ((1-avg) / avg) + self.b6 * (delta / avg**2)
-        d2 = (self.t10 - self.t11) / 2
+        d2 = (t10 - t11) / 2
         d = d1 * d2
-        e = self.b7 * (self.t10 - self.t11)**2
+        e = self.b7 * (t10 - t11)**2
 
         # land surface temperature
         self.lst = a + b + c + d + e
@@ -190,14 +191,14 @@ class SplitWindowLST():
         Build formula for GRASS GIS' mapcalc
         """
         # formula = '{c0} + {c1}*{dummy} + {c2}*{dummy}^2'
-        formula = ('[{b0} + '
+        formula = ('{b0} + '
                    '({b1} + '
                    '{b2}*((1-{ae})/{ae})) + '
                    '{b3}*({de}/{ae}) * (({DUMMY_T10} + {DUMMY_T11})/2) + '
                    '({b4} + '
                    '{b5}*((1-{ae})/{ae}) + '
                    '{b6}*({de}/{ae}^2))*(({DUMMY_T10} - {DUMMY_T11})/2) + '
-                   '{b7}*({DUMMY_T10} - {DUMMY_T11})^2]')
+                   '{b7}*({DUMMY_T10} - {DUMMY_T11})^2')
 
         self.mapcalc = formula.format(b0=self.b0,
                                       b1=self.b1,
