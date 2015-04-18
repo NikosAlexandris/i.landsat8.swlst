@@ -10,6 +10,39 @@
  PURPOSE:      Split Window Algorithm for Land Surface Temperature Estimation
                from Landsat8 OLI/TIRS imagery
 
+
+               +--------+   +--------------------------+                               
+               |Landsat8+--->Cloud screen & calibration|                               
+               +--------+   +---+--------+-------------+                               
+                                |        |                                             
+                                |        |                                             
+                              +-v-+   +--v-+                                           
+                              |OLI|   |TIRS|                                           
+                              +-+-+   +--+-+                                           
+                                |        |                                             
+                                |        |                                             
+                             +--v-+   +--v-------------------+          +-------------+
+                             |NDVI|   |Brightness temperature+---------->MSWCVM method|
+              +----------+   +--+-+   +--+-------------------+          +----------+--+
+              |Land cover|      |        |                                         |   
+              +----------+      |        |                                         |   
+                      |       +-v-+   +--v-------------------+    +----------------v--+
+                      |       |FVC|   |Split Window Algorithm|    |Column Water Vapour|
++---------------------v--+    +-+-+   +-------------------+--+    +----------------+--+
+|Emissivity look|up table|      |                         |                        |   
++---------------------+--+      |                         |                        |   
+                      |      +--v--------------------+    |    +-------------------v--+
+                      +------>Pixel emissivity ei, ej+--> | <--+Algorithm coefficients|
+                             +-----------------------+    |    +----------------------+
+                                                          |                            
+                                                          |                            
+                                          +---------------v--+                         
+                                          |LST and emissivity|                         
+                                          +------------------+                         
+
+        (Figure 3)  -- FixMe
+
+
                Source: Du, Chen; Ren, Huazhong; Qin, Qiming; Meng, Jinjie;
                        Zhao, Shaohua. 2015. "A Practical Split-Window Algorithm
                        for Estimating Land Surface Temperature from Landsat 8 Data."
@@ -95,6 +128,11 @@ Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 #%  description: Keep current computational region settings
 #%end
 
+#%flag
+#%   key: c
+#% description: Apply the Kelvin colortable to the LST map
+#%end
+
 #%option G_OPT_R_BASENAME_INPUT
 #% key: input_prefix
 #% key_desc: prefix string
@@ -108,16 +146,23 @@ Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 # OR
 
 #%option G_OPT_R_INPUT
-#% key: b10
-#% key_desc: Band 10
-#% description: Landsat8 band 10
+#% key: t10
+#% key_desc: Temperature (10)
+#% description: Brightness temperature (K) from Landsat8 band 10
 #% required : yes
 #%end
 
 #%option G_OPT_R_INPUT
-#% key: b11
-#% key_desc: Band 11
-#% description: Landsat 8 band 11
+#% key: t11
+#% key_desc: Temperature (11)
+#% description: Brightness temperature (K) from Landsat 8 band 11
+#% required : yes
+#%end
+
+#%option G_OPT_R_INPUT
+#% key: qab
+#% key_desc: QA band
+#% description: Landsat 8 quality assessment band
 #% required : yes
 #%end
 
@@ -142,6 +187,14 @@ Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 #% required : no
 #%end
 
+#%option
+#% key: emissivity_class
+#% key_desc: emissivity class
+#% description: Land cover class to retrieve average emissivity from a look-up table (case sensitive)
+#% options: Cropland,Forest,Grasslands,Shrublands,Wetlands,Waterbodies,Tundra,Impervious,Barren,Snow
+#% required: no
+#%end
+
 #%option G_OPT_R_OUTPUT
 #%end
 
@@ -152,7 +205,7 @@ sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]),
 
 import atexit
 import grass.script as grass
-from grass.exceptions import CalledModuleError
+#from grass.exceptions import CalledModuleError
 from grass.pygrass.modules.shortcuts import general as g
 #from grass.pygrass.modules.shortcuts import raster as r
 #from grass.pygrass.raster.abstract import Info
@@ -192,7 +245,7 @@ def random_digital_numbers(count=2):
     return digital_numbers
 
 
-def retrieve_emissivities():
+def retrieve_emissivities(emissivity_class):
     """
     Get average emissivities from an emissivity look-up table.
     This helper function returns a tuple.
@@ -200,16 +253,13 @@ def retrieve_emissivities():
     EMISSIVITIES = coefficients.get_average_emissivities()
 
     # how to select land cover class?
-    somekey = random.choice(EMISSIVITIES.keys())
-    print " * Some random key:", somekey
+    if emissivity_class == 'random':
+        emissivity_class = random.choice(EMISSIVITIES.keys())
+        print " * Some random emissivity class (key):", emissivity_class
 
-    fields = EMISSIVITIES[somekey]._fields
-    print " * Fields of namedtuple:", fields
-
-    emissivity_b10 = EMISSIVITIES[somekey].TIRS10
-    print "Average emissivity for B10:", emissivity_b10
-    emissivity_b11 = EMISSIVITIES[somekey].TIRS11
-    print "Average emissivity for B11:", emissivity_b11
+    fields = EMISSIVITIES[emissivity_class]._fields
+    emissivity_b10 = EMISSIVITIES[emissivity_class].TIRS10
+    emissivity_b11 = EMISSIVITIES[emissivity_class].TIRS11
 
     return (emissivity_b10, emissivity_b11)
 
@@ -232,22 +282,49 @@ def replace_dummies(string, t10, t11):
     """
     Replace DUMMY_MAPCALC_STRINGS (see SplitWindowLST class for it)
     with input maps t10, t11.
-    
-    Idead sourced from: <http://stackoverflow.com/a/9479972/1172302>
+
+    (Idea sourced from: <http://stackoverflow.com/a/9479972/1172302>)
     """
     replacements = ('Input_T10', str(t10)), ('Input_T11', str(t11))
     return reduce(lambda alpha, omega: alpha.replace(*omega),
                   replacements, string)
 
 
+def cloud_mask(qab):
+        """
+        Create and apply a cloud mask based on the Quality Assessment Band (BQA)
+
+        Source: <http://landsat.usgs.gov/L8QualityAssessmentBand.php
+        """
+        # create cloud map
+        msg = "\n|i Create a cloud mask (highest confidence) based on the Quality Assessment band."
+        g.message(msg)
+
+        equation = '{result} = {expression}'
+        
+        tmpfile = grass.tempfile()  # Temporary file - replace with os.getpid?
+        tmp_cloudmask = "tmp." + grass.basename(tmpfile)  # use its basename
+        
+        qabits = 'if(qab == 49152, null(), 1)'
+        cloud_masking_equation = equation.format(result=tmp_cloudmask,
+                                                 expression=qabits)
+        grass.mapcalc(cloud_masking_equation)
+
+        # create cloud mask
+        run('r.mask cloudmask', overwrite=True)
+
+
 def main():
-    
-    b10 = options['b10']
-    b11 = options['b11']
+
+    t10 = options['t10']
+    t11 = options['t11']
+    qab = options['qab']
     #emissivity_b10 = options['emissivity_b10']
     #emissivity_b11 = options['emissivity_b11']
+    landcover = options['landcover']
+    emissivity_class = options['emissivity_class']
 
-    # flags    
+    # flags
     info = flags['i']
     keep_region = flags['k']
     #timestamps = not(flags['t'])
@@ -255,6 +332,8 @@ def main():
     #null = flags['n']  ### either zero or null, not both
     #evaluation = flags['e'] -- is there a quick way?
     #shell = flags['g']
+    # if kelvin = flags['c']
+        #r.colors B.ToAR.11 color=kelvin
 
     #
     # Temporary Region and Files
@@ -271,7 +350,7 @@ def main():
     #
 
     # get average emissivities from Land Cover Map  OR  Look-Up table?
-    emissivity_b10, emissivity_b11 = retrieve_emissivities()
+    emissivity_b10, emissivity_b11 = retrieve_emissivities(emissivity_class)
 
     # get range for column water vapour
     cwv_subrange = retrieve_column_water_vapour()  # Random -- FixMe
@@ -302,11 +381,12 @@ def main():
     elif keep_region:
         grass.warning(_('Operating on current region'))
 
-    # compute Land Surface Temperature
-    t10, t11 = random_digital_numbers(2)
-    lst = split_window_lst.compute_lst(t10, t11)
-    print "LST:", lst
-    print
+    #
+    # Mask clouds
+    #
+
+    # mask_clouds()
+
 
     # Temporary Map
     tmp_lst = "{prefix}.lst".format(prefix=tmp)
@@ -325,10 +405,47 @@ def main():
     split_window_equation = equation.format(result=tmp_lst,
                                             expression=split_window_expression)
 
-
-    print "Split-Window equation for r.mapcalc:", split_window_equation
-    print
     grass.mapcalc(split_window_equation, overwrite=True)
+
+    #
+    # Strings for metadata
+    #
+
+    # history_calibration = 'Regression model: '
+    # history_calibration += mapcalc_formula
+    # if ndi:
+    #     history_calibration += '(NDI: {ndi})'.format(ndi=ndi)
+    # title_calibration = 'Calibrated DMSP-OLS Stable Lights'
+    # description_calibration = ('Inter-satellite calibrated average '
+    #                            'Digital Number values')
+    # units_calibration = 'Digital Numbers (Calibrated)'
+
+    # source1_calibration = citation
+    # source2_calibration = ''
+
+    # history entry
+    #run("r.support", map=tmp_lst, title=title_lst,
+    #    units=units_lst, description=description_lst,
+    #    source1=source1_lst, source2=source2_lst,
+    #    history=history_lst)
+
+    #
+    # Add suffix to basename & rename end product
+    #
+
+    # name = "{prefix}.{suffix}"
+    # name = name.format(prefix=image.split('@')[0], suffix=outputsuffix)
+    # lst_name = name
+    lst_name = 'LST'
+    run("g.rename", rast=(tmp_lst, lst_name))
+
+    #
+    # Restore region
+    #
+
+    if not keep_region:
+        grass.del_temp_region()  # restoring previous region settings
+        g.message("|! Original Region restored")
 
 
 if __name__ == "__main__":

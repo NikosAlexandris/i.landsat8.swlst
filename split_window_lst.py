@@ -24,7 +24,7 @@ def check_t1x_range(dn):
     is 12-bit).
     """
     if dn < 1 or dn > 65535:
-        raise ValueError('The input value for T10 is out of '
+        raise ValueError('The input value for T10 is out of the '
                          'expected range [1,65535]')
     else:
         return True
@@ -146,7 +146,7 @@ class SplitWindowLST():
 
     def compute_lst(self, t10, t11):
         """
-        Compute Land Surface Temperature
+        Compute Land Surface Temperature based on the Split-Window algorithm. Inputs are brightness temperatures measured in channels  i(~11.0 μm) and j (~12.0 μm).
         """
         # check validity of t10, t11
         check_t1x_range(t10)
@@ -193,12 +193,12 @@ class SplitWindowLST():
         # formula = '{c0} + {c1}*{dummy} + {c2}*{dummy}^2'
         formula = ('{b0} + '
                    '({b1} + '
-                   '{b2}*((1-{ae})/{ae})) + '
-                   '{b3}*({de}/{ae}) * (({DUMMY_T10} + {DUMMY_T11})/2) + '
+                   '({b2})*((1-{ae})/{ae})) + '
+                   '({b3})*({de}/{ae}) * (({DUMMY_T10} + {DUMMY_T11})/2) + '
                    '({b4} + '
-                   '{b5}*((1-{ae})/{ae}) + '
-                   '{b6}*({de}/{ae}^2))*(({DUMMY_T10} - {DUMMY_T11})/2) + '
-                   '{b7}*({DUMMY_T10} - {DUMMY_T11})^2')
+                   '({b5})*((1-{ae})/{ae}) + '
+                   '({b6})*({de}/{ae}^2))*(({DUMMY_T10} - {DUMMY_T11})/2) + '
+                   '({b7})*({DUMMY_T10} - {DUMMY_T11})^2')
 
         self.mapcalc = formula.format(b0=self.b0,
                                       b1=self.b1,
