@@ -12,42 +12,21 @@ import csv_to_dictionary as coefficients
 # globals
 EMISSIVITIES = coefficients.get_average_emissivities()
 COLUMN_WATER_VAPOUR = coefficients.get_column_water_vapour()
-
+DUMMY_MAPCALC_STRING_T10 = 'Input_T10'
+DUMMY_MAPCALC_STRING_T11 = 'Input_T11'
 
 # helper functions
 def check_t1x_range(dn):
     """
-    Check if digital numbers for T10, T11, lie inside
-    the expected range [1, 65535]
+    Check if digital numbers for T10, T11, lie inside the expected range
+    [1, 65535] (note, that is 16-bit though the actual data quantisation
+    is 12-bit).
     """
     if dn < 1 or dn > 65535:
         raise ValueError('The input value for T10 is out of '
                          'expected range [1,65535]')
     else:
         return True
-
-
-def random_digital_numbers(count=3):
-    """
-    Return a user-requested amount of random Digital Number values for testing
-    purposes ranging in 12-bit
-    """
-    digital_numbers = []
-
-    for dn in range(0, count):
-        digital_numbers.append(random.randint(1, 2**12))
-
-    if count == 1:
-        return digital_numbers[0]
-
-    return digital_numbers
-
-
-def random_digital_number():
-    """
-    Return one random of Digital Number values for testing purposes
-    """
-    return random.randint(1, 65535)
 
 
 class SplitWindowLST():
@@ -76,6 +55,7 @@ class SplitWindowLST():
         - average emissivities for B10, B11
         - subrange for column water vapour
         """
+        # citation
         self.citation = ('Du, Chen; Ren, Huazhong; Qin, Qiming; Meng, '
                          'Jinjie; Zhao, Shaohua. 2015. '
                          '"A Practical Split-Window Algorithm '
@@ -83,65 +63,53 @@ class SplitWindowLST():
                          'Landsat 8 Data." '
                          'Remote Sens. 7, no. 1: 647-665.')
 
-        if check_t1x_range(t10):
-            self.t10 = t10
+        # basic equation/model (for __str__)
+        self._equation = ('[b0 + '
+                          '(b1 + '
+                          'b2*((1-ae)/ae)) + '
+                          'b3*(de/ae) * ((t10 + t11)/2) + '
+                          '(b4 + '
+                          'b5*((1-ae)/ae) + '
+                          'b6*(de/ae^2))*((t10 - t11)/2) + '
+                          'b7*(t10 - t11)^2]')
+        self._model = ('[{b0} + '
+                       '({b1} + '
+                       '{b2}*((1-{ae})/{ae})) + '
+                       '{b3}*({de}/{ae}) * (({t10} + {t11})/2) + '
+                       '({b4} + '
+                       '{b5}*((1-{ae})/{ae}) + '
+                       '{b6}*({de}/{ae}^2))*(({t10} - {t11})/2) + '
+                       '{b7}*({t10} - {t11})^2]\n')
 
+        # use inputs
+        if check_t1x_range(t10):  # check validity of t10, t11
+            self.t10 = t10
         if check_t1x_range(t11):
             self.t11 = t11
-
-        # emissivities
         self.emissivity_t10 = float(emissivity_b10)  # t10  or  b10?
         self.emissivity_t11 = float(emissivity_b11)
         self.average_emissivity = 0.5 * (self.emissivity_t10 + self.emissivity_t11)
         self.delta_emissivity = self.emissivity_t10 - self.emissivity_t11
-
-        # column water vapour
         self.cwv_subrange = random.choice(COLUMN_WATER_VAPOUR.keys())  # ***
-        self._set_cwv_coefficients()
 
-        # Root Mean Square Error for coefficients
+
+        # set emissivities, column water vapour, RMSE
+        self._set_cwv_coefficients()
         self._set_rmse()
 
-        self._model = 'Add model here...'
-        self._mapcalc = 'formula'
-        self.lst = self._compute_lst()
+        # model for mapcalc
+        self._compute_lst()
+        self._build_model()
+        self._build_mapcalc()
+        self._build_mapcalc_direct()
 
     def __str__(self):
         """
         Return a string representation of the Split Window ...
         """
-        equation = '   > The equation: '
-        equation += ('[b0 + '
-                     '(b1 + '
-                     'b2*((1-ae)/ae)) + '
-                     'b3*(de/ae) * ((t10 + t11)/2) + '
-                     '(b4 + '
-                     'b5*((1-ae)/ae) + '
-                     'b6*(de/ae^2))*((t10 - t11)/2) + '
-                     'b7*(t10 - t11)^2]')
-        model_msg = '   > The model: '
-        model = ('[{b0} + '
-                 '({b1} + '
-                 '{b2}*((1-{ae})/{ae})) + '
-                 '{b3}*({de}/{ae}) * (({t10} + {t11})/2) + '
-                 '({b4} + '
-                 '{b5}*((1-{ae})/{ae}) + '
-                 '{b6}*({de}/{ae}^2))*(({t10} - {t11})/2) + '
-                 '{b7}*({t10} - {t11})^2]\n')
-        model = model.format(b0=self.b0,
-                             b1=self.b1,
-                             b2=self.b2,
-                             ae=self.average_emissivity,
-                             de=self.delta_emissivity,
-                             b3=self.b3,
-                             b4=self.b4,
-                             b5=self.b5,
-                             b6=self.b6,
-                             b7=self.b7,
-                             t10=self.emissivity_t10,
-                             t11=self.emissivity_t11)
-
-        return equation + '\n' + model_msg + model
+        equation = '   > The equation: ' + self._equation
+        model = '   > The model: ' + self.model
+        return equation + '\n' + model
 
     def _set_cwv_coefficients(self):
         """
@@ -155,15 +123,14 @@ class SplitWindowLST():
         self.b5 = COLUMN_WATER_VAPOUR[self.cwv_subrange].b5
         self.b6 = COLUMN_WATER_VAPOUR[self.cwv_subrange].b6
         self.b7 = COLUMN_WATER_VAPOUR[self.cwv_subrange].b7
-        
         self.cwv_coefficients = (self.b0,
-                             self.b1,
-                             self.b2,
-                             self.b3,
-                             self.b4,
-                             self.b5,
-                             self.b6,
-                             self.b7)
+                                 self.b1,
+                                 self.b2,
+                                 self.b3,
+                                 self.b4,
+                                 self.b5,
+                                 self.b6,
+                                 self.b7)
 
     def get_cwv_coefficients(self):
         """
@@ -180,16 +147,12 @@ class SplitWindowLST():
         msg = "Asociated RMSE: "
         return msg + str(self.rmse)
 
-
     def _compute_lst(self):
         """
         Compute Land Surface Temperature
         """
-
-        # average emissivity
+        # average and delta emissivity
         avg = self.average_emissivity
-
-        # delta emissivity
         delta = self.delta_emissivity
 
         # addends
@@ -205,92 +168,78 @@ class SplitWindowLST():
         self.lst = a + b + c + d + e
         return self.lst
 
-    def _mapcalc(self):
+    def _build_model(self):
         """
-        Return equation for GRASS GIS' mapcalc
+        Build model for __str__
+        """
+        self.model = self._model.format(b0=self.b0,
+                                        b1=self.b1,
+                                        b2=self.b2,
+                                        ae=self.average_emissivity,
+                                        de=self.delta_emissivity,
+                                        b3=self.b3,
+                                        b4=self.b4,
+                                        b5=self.b5,
+                                        b6=self.b6,
+                                        b7=self.b7,
+                                        t10=self.emissivity_t10,
+                                        t11=self.emissivity_t11)
+
+    def _build_mapcalc(self):
+        """
+        Build formula for GRASS GIS' mapcalc
         """
         # formula = '{c0} + {c1}*{dummy} + {c2}*{dummy}^2'
-        #formula = EQUATIONS[self.author].formula  # look in equations.py
-        #self.mapcalc = formula.format(c0=self.c0, c1=self.c1,
-        #                              dummy=DUMMY_MAPCALC_STRING, c2=self.c2)
-        pass
+        formula = ('[{b0} + '
+                   '({b1} + '
+                   '{b2}*((1-{ae})/{ae})) + '
+                   '{b3}*({de}/{ae}) * (({DUMMY_T10} + {DUMMY_T11})/2) + '
+                   '({b4} + '
+                   '{b5}*((1-{ae})/{ae}) + '
+                   '{b6}*({de}/{ae}^2))*(({DUMMY_T10} - {DUMMY_T11})/2) + '
+                   '{b7}*({DUMMY_T10} - {DUMMY_T11})^2]')
 
-def test_split_window_lst():
+        self.mapcalc = formula.format(b0=self.b0,
+                                      b1=self.b1,
+                                      b2=self.b2,
+                                      ae=self.average_emissivity,
+                                      de=self.delta_emissivity,
+                                      b3=self.b3,
+                                      b4=self.b4,
+                                      b5=self.b5,
+                                      b6=self.b6,
+                                      b7=self.b7,
+                                      DUMMY_T10=DUMMY_MAPCALC_STRING_T10,
+                                      DUMMY_T11=DUMMY_MAPCALC_STRING_T11)
 
-    print " * Testing availability of constant data (global variables)"
-    print
+    def _build_mapcalc_direct(self):
+        """
+        Build formula for GRASS GIS' mapcalc
+        """
+        formula = ('[{b0} + '
+                   '({b1} + '
+                   '{b2}*((1-{ae})/{ae})) + '
+                   '{b3}*({de}/{ae}) * (({t10} + {t11})/2) + '
+                   '({b4} + '
+                   '{b5}*((1-{ae})/{ae}) + '
+                   '{b6}*({de}/{ae}^2))*(({t10} - {t11})/2) + '
+                   '{b7}*({t10} - {t11})^2]')
 
-    t10 = random_digital_numbers(1)
-    t11 = random.choice(((t10 + 500), (t10 - 500)))
-    print " * Random 12-bit digital numbers for T10, T11:", t10, t11
-    print
+        self.mapcalc_direct = formula.format(b0=self.b0,
+                                             b1=self.b1,
+                                             b2=self.b2,
+                                             ae=self.average_emissivity,
+                                             de=self.delta_emissivity,
+                                             b3=self.b3,
+                                             b4=self.b4,
+                                             b5=self.b5,
+                                             b6=self.b6,
+                                             b7=self.b7,
+                                             t10=self.emissivity_t10,
+                                             t11=self.emissivity_t11)
 
-    # get emissivities
-    EMISSIVITIES = coefficients.get_average_emissivities()
-    print "\n * Dictionary for average emissivities:\n", EMISSIVITIES
-    print
-
-    somekey = random.choice(EMISSIVITIES.keys())
-    print " * Some random key:", somekey
-
-    fields = EMISSIVITIES[somekey]._fields
-    print " * Fields of namedtuple:", fields
-
-    random_field = random.choice(fields)
-    print " * Some random field:", random_field
-
-    command = 'EMISSIVITIES.[{key}].{field} ='
-    command = command.format(key=somekey, field=random_field)
-    print " * Example of retrieving values (named tuple): " + command,
-    print EMISSIVITIES[somekey].TIRS10, EMISSIVITIES[somekey].TIRS11
-    print "\n >>> FIXME -- how to call a named tuple non-interactively?\n"
-
-    emissivity_b10 = EMISSIVITIES[somekey].TIRS10
-    print "Average emissivity for B10:", emissivity_b10, "|Type:", type(emissivity_b10)
-    emissivity_b11 = EMISSIVITIES[somekey].TIRS11
-    print "Average emissivity for B11:", emissivity_b11
-
-    # ---------------------------------------------------------
-    COLUMN_WATER_VAPOUR = coefficients.get_column_water_vapour()
-    print "\n * Dictionary for column water vapour coefficients:\n",
-    print COLUMN_WATER_VAPOUR
-    print
-
-    cwvkey = random.choice(COLUMN_WATER_VAPOUR.keys())
-    print " * Some random key:", cwvkey
-
-    cwvfields = COLUMN_WATER_VAPOUR[cwvkey]._fields
-    print " * Fields of namedtuple:", cwvfields
-
-    random_cwvfield = random.choice(cwvfields)
-    print " * Some random field:", random_cwvfield
-
-    command = 'COLUMN_WATER_VAPOUR.[{key}].{field} ='
-    command = command.format(key=cwvkey, field=random_cwvfield)
-    print " * Example of retrieving values (named tuple): " + command,
-    print COLUMN_WATER_VAPOUR[cwvkey].subrange
-
-    print "\n >>> FIXME -- how to call a named tuple non-interactively?\n"
-
-    swlst = SplitWindowLST(t10, t11, emissivity_b10, emissivity_b11, cwvkey)
-    print "Create object and test '__str__' of SplitWindowLST() class:\n", swlst
-    print
-
-    b0, b1, b2, b3, b4, b5, b6, b7 = swlst.cwv_coefficients
-    print " * Coefficients (b0, b1, ..., b7) in <", cwvkey,
-    print "> :", b0, b1, b2, b3, b4, b5, b6, b7
-
-    print " * RMSE:", swlst.rmse
-    print
-
-    print " * Checking 'citation':", swlst.citation
-    print
-
-    print " * Checking the '_compute_lst' method:", swlst._compute_lst
-    swlst._compute_lst()  # compute it first!
-    print " * Return the LST value:", swlst.lst
-    print
-
-    print " * Checking the 'report_rmse' method:", swlst.report_rmse
-    print " * Testing the 'report_rmse' method:", swlst.report_rmse()
-test_split_window_lst()
+# reusable & stand-alone
+if __name__ == "__main__":
+    print ('Split-Window Algorithm for Estimating Land Surface Temperature '
+           'from Landsat8 OLI/TIRS imagery.'
+           ' (Running as stand-alone tool?)\n')

@@ -85,26 +85,54 @@ Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 #%  keywords: landsat8
 #%End
 
+#%flag
+#%  key: i
+#%  description: Print out calibration equations
+#%end
+
+#%flag
+#%  key: k
+#%  description: Keep current computational region settings
+#%end
+
 #%option G_OPT_R_BASENAME_INPUT
 #% key: input_prefix
 #% key_desc: prefix string
 #% type: string
 #% label: Prefix of input bands
 #% description: Prefix of Landsat8 brightness temperatures bands imported in GRASS' data base
-#% required: yes
+#% required: no
 #% answer = B
 #%end
 
-or
+# OR
 
-#%option G_OPT_R_INPUTS
-#% key: tirs
-#% key_desc: tirs band name
-#% type: string
-#% label: QuickBird2 band
-#% description: QuickBird2 acquired spectral band(s) (DN values)
-#% multiple: yes
-#% required: yes
+#%option G_OPT_R_INPUT
+#% key: b10
+#% key_desc: Band 10
+#% description: Landsat8 band 10
+#% required : yes
+#%end
+
+#%option G_OPT_R_INPUT
+#% key: b11
+#% key_desc: Band 11
+#% description: Landsat 8 band 11
+#% required : yes
+#%end
+
+#%option G_OPT_R_INPUT
+#% key: e10
+#% key_desc: Emissivity B10
+#% description: Emissivity for Landsat 8 band 10
+#% required : no
+#%end
+
+#%option G_OPT_R_INPUT
+#% key: e11
+#% key_desc: Emissivity B11
+#% description: Emissivity for Landsat 8 band 11
+#% required : no
 #%end
 
 #%option G_OPT_R_INPUT
@@ -117,6 +145,11 @@ or
 #%option G_OPT_R_OUTPUT
 #%end
 
+import os
+import sys
+sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]),
+                                'etc', 'i.landsat.swlst'))
+
 import atexit
 import grass.script as grass
 from grass.exceptions import CalledModuleError
@@ -124,7 +157,7 @@ from grass.pygrass.modules.shortcuts import general as g
 #from grass.pygrass.modules.shortcuts import raster as r
 #from grass.pygrass.raster.abstract import Info
 
-import SplitWindowLandSurfaceTemperature
+from split_window_lst import *
 
 
 # helper functions
@@ -164,73 +197,59 @@ def retrieve_emissivities():
     return (emissivity_b10, emissivity_b11)
 
 
+def i_emissivity():
+    pass
+
+
 def retrieve_column_water_vapour():
     """
     """
-    COLUMN_WATER_VAPOUR = coefficients.get_column_water_vapour()
-    print "\n * Dictionary for column water vapour coefficients:\n",
-    print COLUMN_WATER_VAPOUR
-    print
-
     cwvkey = random.choice(COLUMN_WATER_VAPOUR.keys())
     print " * Some random key:", cwvkey
-
-    cwvfields = COLUMN_WATER_VAPOUR[cwvkey]._fields
-    print " * Fields of namedtuple:", cwvfields
-
-    random_cwvfield = random.choice(cwvfields)
-    print " * Some random field:", random_cwvfield
-
-    command = 'COLUMN_WATER_VAPOUR.[{key}].{field} ='
-    command = command.format(key=cwvkey, field=random_cwvfield)
-    print " * Example of retrieving values (named tuple): " + command,
     print COLUMN_WATER_VAPOUR[cwvkey].subrange
-
-    # column water vapour coefficients (b0:b7), from dictionary
-    b0 = COLUMN_WATER_VAPOUR[cwvkey].b0
-    b1 = COLUMN_WATER_VAPOUR[cwvkey].b1
-    b2 = COLUMN_WATER_VAPOUR[cwvkey].b2
-    b3 = COLUMN_WATER_VAPOUR[cwvkey].b3
-    b4 = COLUMN_WATER_VAPOUR[cwvkey].b4
-    b5 = COLUMN_WATER_VAPOUR[cwvkey].b5
-    b6 = COLUMN_WATER_VAPOUR[cwvkey].b6
-    b7 = COLUMN_WATER_VAPOUR[cwvkey].b7
-    
-    print " * Coefficients (b0, b1, ..., b7) in", cwvkey,
-    print ":", b0, b1, b2, b3, b4, b5, b6, b7
-
     rmse = COLUMN_WATER_VAPOUR[cwvkey].rmse
     print " * RMSE:", rmse
-    print
 
 
 def main():
     
     t10 = options['b10']
     t11 = options['b11']
-    
-    # get average emissivities
+    #emissivity_b10 = options['emissivity_b10']
+    #emissivity_b11 = options['emissivity_b11']
 
-    # get column water vapour coefficients
+    # get average emissivities from Land Cover Map  OR  Look-Up table?
+    emissivity_b10, emissivity_b11 = retrieve_emissivities()
 
-    # get a SplitWindowLST class, feed with required input values
+    # get range for column water vapour
+    cwv_subrange = retrieve_column_water_vapour()
+
+    # SplitWindowLST class, feed with required input values
     split_window_lst = SplitWindowLST(t10, t11,
                                       emissivity_b10, emissivity_b11,
-                                      b0, b1, b2, b3, b4, b5, b6, b7)
+                                      cwv_subrange)
+    print split_window_lst
+    print
 
     # citation, report or add to history
     citation = split_window_lst._citation
+    print citation
+    print
 
     # compute Land Surface Temperature
-    split_window_lst._compute_lst()
-    lst = split_window_lst.lst
+    lst = split_window_lst._compute_lst()
+    print lst
+    print
 
     # formula
-    equation = "{lst} = {inputs}"
-    swlst_formula = equation.format(lst=tmp_lst, inputs=)
-    
-    #
-    grass.mapcalc(swlst_formula, overwrite=True)
+    equation = "{out} = {inputs}"
+    split_window_formula = equation.format(out=tmp_cdn, inputs=mapcalc_formula)
+
+    split_window_formula = split_window_lst.mapcalc
+    print swlst_formula
+   
+    #swlst_formula.format(lst=tmp_lst, inputs=)
+    #grass.mapcalc(swlst_formula, overwrite=True)
 
 
 if __name__ == "__main__":
