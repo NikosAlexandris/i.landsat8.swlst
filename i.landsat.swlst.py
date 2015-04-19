@@ -7,8 +7,26 @@
  AUTHOR(S):    Nikos Alexandris <nik@nikosalexandris.net>
                Created on Wed Mar 18 10:00:53 2015
 
- PURPOSE:      Split Window Algorithm for Land Surface Temperature Estimation
-               from Landsat8 OLI/TIRS imagery
+ PURPOSE:
+
+               A robust and practical Slit-Window (SW) algorithm estimating
+               land surface temperature, from the Thermal Infra-Red Sensor
+               (TIRS) aboard Landsat 8 with an accuracy of better than 1.0 K.
+
+
+               The input parameters include:
+
+               - the brightness temperatures (Ti and T j ) of the two adjacent bands
+                 of the TIRS,
+
+               - FROM-GLC land cover products and emissivity lookup table, which are
+                 a fraction of the FVC that can be estimated from the red and
+                 near-infrared reflectance of the Operational Land Imager (OLI).
+
+               - The FVC is estimated from the NDVI, calculated from the red and
+                 near-infrared reflectance of Operational Land Imager, another payload
+                 on Landsat8, by using the method proposed by Carlson (1997) and Sobrino
+                 (2001) [34,35].
 
 
                +--------+   +--------------------------+                               
@@ -129,8 +147,8 @@ Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 #%end
 
 #%flag
-#%   key: c
-#% description: Apply the Kelvin colortable to the LST map
+#% key: c
+#% description: Apply the Celsius colortable to the LST output map
 #%end
 
 #%option G_OPT_R_BASENAME_INPUT
@@ -146,16 +164,30 @@ Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 # OR
 
 #%option G_OPT_R_INPUT
+#% key: b4
+#% key_desc: Band 4
+#% description: Band 4 - Red (0.64 - 0.67 microns)
+#% required : yes
+#%end
+
+#%option G_OPT_R_INPUT
+#% key: b5
+#% key_desc: Band 5
+#% description: Band 5 - Near Infra-Red (0.85 - 0.88 microns)
+#% required : yes
+#%end
+
+#%option G_OPT_R_INPUT
 #% key: t10
 #% key_desc: Temperature (10)
-#% description: Brightness temperature (K) from Landsat8 band 10
+#% description: Brightness temperature (K) from Landsat8 band 10 (10.60 - 11.19 microns)
 #% required : yes
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: t11
 #% key_desc: Temperature (11)
-#% description: Brightness temperature (K) from Landsat 8 band 11
+#% description: Brightness temperature (K) from Landsat8 band 11 (11.50 - 12.51 microns)
 #% required : yes
 #%end
 
@@ -184,7 +216,7 @@ Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 #% key: landcover
 #% key_desc: land cover map name
 #% description: Land cover map
-#% required : no
+#% required : yes
 #%end
 
 #%option
@@ -192,7 +224,7 @@ Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 #% key_desc: emissivity class
 #% description: Land cover class to retrieve average emissivity from a look-up table (case sensitive)
 #% options: Cropland,Forest,Grasslands,Shrublands,Wetlands,Waterbodies,Tundra,Impervious,Barren,Snow
-#% required: no
+#% required : yes
 #%end
 
 #%option G_OPT_R_OUTPUT
@@ -245,6 +277,64 @@ def random_digital_numbers(count=2):
     return digital_numbers
 
 
+def cloud_mask(qab):
+        """
+        Create and apply a cloud mask based on the Quality Assessment Band (BQA)
+
+        Source: <http://landsat.usgs.gov/L8QualityAssessmentBand.php
+        """
+        # create cloud map
+        msg = "\n|i Create a cloud mask (highest confidence) based on the Quality Assessment band."
+        g.message(msg)
+
+        equation = '{result} = {expression}'
+
+       
+        tmp_cloudamask = tmp + '.cloudmask'
+        qabits = 'if(qab == 49152, null(), 1)'
+        cloud_masking_equation = equation.format(result=tmp_cloudmask,
+                                                 expression=qabits)
+        grass.mapcalc(cloud_masking_equation)
+
+        # create cloud mask
+        run('r.mask cloudmask', overwrite=True)
+
+
+def ndvi(b4, b5):
+    """
+    Derive NDVI
+    """
+    # temporary map
+    tmp_ndvi = tmp + '.ndvi'
+
+    # use i.vi or r.mapcalc?
+    run('i.vi', red=b4, nir=b5, viname="ndvi", output=tmp_ndvi storage_bit=16)
+
+
+def fvc(ndvi):
+    """
+    Derive the Fraction of Vegetation Cover from the NDVI
+    based on a simple radiative transfer model (Carlson and Ripley, 1997)
+
+    f = ((NDVI - NDVI_s) / (NDVI_inf - NSVI_s))^2
+
+    where:
+
+    - NDVI_inf for vegetation with infinite LAI
+    - NDVI_s for bare soil
+    """
+    # name for themporary fvc map
+    tmp_fvc = tmp + '.fvc'
+    
+    # equation for r.mapcalc
+    equation = '{result} = {expression}'
+    fvc_expression = '((ndvi - ndvi_bare_soil) / (ndvi_inf - ndvi_bare_soil))^ 2'
+    fvc_equation = equation.format(result=tmp_fvc, expression=fvc_expression)
+    
+    # compute fvc
+    grass.mapcalc(fvc_equation, overwrite=True)
+
+ 
 def retrieve_emissivities(emissivity_class):
     """
     Get average emissivities from an emissivity look-up table.
@@ -262,10 +352,6 @@ def retrieve_emissivities(emissivity_class):
     emissivity_b11 = EMISSIVITIES[emissivity_class].TIRS11
 
     return (emissivity_b10, emissivity_b11)
-
-
-def i_emissivity():
-    pass
 
 
 def retrieve_column_water_vapour():
@@ -290,32 +376,13 @@ def replace_dummies(string, t10, t11):
                   replacements, string)
 
 
-def cloud_mask(qab):
-        """
-        Create and apply a cloud mask based on the Quality Assessment Band (BQA)
 
-        Source: <http://landsat.usgs.gov/L8QualityAssessmentBand.php
-        """
-        # create cloud map
-        msg = "\n|i Create a cloud mask (highest confidence) based on the Quality Assessment band."
-        g.message(msg)
-
-        equation = '{result} = {expression}'
-        
-        tmpfile = grass.tempfile()  # Temporary file - replace with os.getpid?
-        tmp_cloudmask = "tmp." + grass.basename(tmpfile)  # use its basename
-        
-        qabits = 'if(qab == 49152, null(), 1)'
-        cloud_masking_equation = equation.format(result=tmp_cloudmask,
-                                                 expression=qabits)
-        grass.mapcalc(cloud_masking_equation)
-
-        # create cloud mask
-        run('r.mask cloudmask', overwrite=True)
 
 
 def main():
 
+    b4 = options['b4']
+    b5 = options['b5']
     t10 = options['t10']
     t11 = options['t11']
     qab = options['qab']
@@ -342,12 +409,23 @@ def main():
     if not keep_region:
         grass.use_temp_region()  # to safely modify the region
 
+    global tmp
     tmpfile = grass.tempfile()  # Temporary file - replace with os.getpid?
     tmp = "tmp." + grass.basename(tmpfile)  # use its basename
 
+ 
     #
-    # Section...
+    # Algorithm Step 1: OLI -> NDVI -> FVC -> Emissivities from look-up table
     #
+
+    # derive NDVI, output is tmp_ndvi
+    ndvi(b4, b5)
+
+    # compute FVC, output is tmp_fvc
+    fvc(tmp_ndvi)
+
+    # remove tmp_ndvi
+    run('g.remove', name=tmp_ndvi, flags='f')
 
     # get average emissivities from Land Cover Map  OR  Look-Up table?
     emissivity_b10, emissivity_b11 = retrieve_emissivities(emissivity_class)

@@ -57,6 +57,10 @@ def is_number(value):
             return False
     return float(value)
 
+def to_tuple(string):
+    """
+    """
+    return tuple(map(float, string[1:-1].split(',')))
 
 def replace_dot_comma_space(string):
     """
@@ -111,8 +115,10 @@ def csv_reader(csv_file):
 
 def csv_to_dictionary(csv):
     '''
-    Transform input from special csv into a python dictionary with namedtuples
+    Transform input from "special" csv into a python dictionary with namedtuples
     as values. Note, "strings" of interest are hardcoded!
+
+    Also, fix the re-definition of the function transform(). How to solve this?
     '''
     # split input in rows
     rows = csv.split('\n')
@@ -149,23 +155,31 @@ def csv_to_dictionary(csv):
             '''
             Transform an input row as follows
             '''
-            elements = row.split('|')  # split row in elements
-            key = replace_dot_comma_space(elements[0])  # key: 1st column, replace
+            # split row in elements
+            elements = row.split('|')
+
+            # key: 1st column, replace
+            key = replace_dot_comma_space(elements[0])
+
+
+            # *** small modification for the CWV field ***
+            fields[0] = 'cwv'
+
             # named tuples
             cwv = collections.namedtuple(key,
-                                        [replace_dot_comma_space(fields[0]),
-                                        replace_dot_comma_space(fields[1]),
-                                        replace_dot_comma_space(fields[2]),
-                                        replace_dot_comma_space(fields[3]),
-                                        replace_dot_comma_space(fields[4]),
-                                        replace_dot_comma_space(fields[5]),
-                                        replace_dot_comma_space(fields[6]),
-                                        replace_dot_comma_space(fields[7]),
-                                        replace_dot_comma_space(fields[8]),
-                                        replace_dot_comma_space(fields[9])])
+                                         [replace_dot_comma_space(fields[0]),
+                                          replace_dot_comma_space(fields[1]),
+                                          replace_dot_comma_space(fields[2]),
+                                          replace_dot_comma_space(fields[3]),
+                                          replace_dot_comma_space(fields[4]),
+                                          replace_dot_comma_space(fields[5]),
+                                          replace_dot_comma_space(fields[6]),
+                                          replace_dot_comma_space(fields[7]),
+                                          replace_dot_comma_space(fields[8]),
+                                          replace_dot_comma_space(fields[9])])
 
             # feed named tuples
-            cwv.subrange = elements[1]
+            cwv.subrange = to_tuple(elements[1])
             cwv.b0 = is_number(elements[2])
             cwv.b1 = is_number(elements[3])
             cwv.b2 = is_number(elements[4])
