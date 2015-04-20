@@ -7,7 +7,7 @@ A class for the Split Window Algorithm for Land Surface Temperature estimation
 # import average emissivities
 import random
 import csv_to_dictionary as coefficients
-from column_water_vapour import column_water_vapour
+from column_water_vapour import Column_Water_Vapour
 
 # globals
 EMISSIVITIES = coefficients.get_average_emissivities()

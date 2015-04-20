@@ -369,16 +369,53 @@ def retrieve_column_water_vapour():
     print " * RMSE:", rmse
 
 
-def replace_dummies(string, t10, t11):
+def replace_dummies(string, *args, **kwargs):
     """
     Replace DUMMY_MAPCALC_STRINGS (see SplitWindowLST class for it)
-    with input maps t10, t11.
+    with input maps ti, tj (here: t10, t11).
+
+    - in_ti and in_tj are the "input" strings, for example:
+    in_ti = 'Input_T10'  and  in_tj = 'Input_T11'
+
+    - out_ti and out_tj are the output strings which correspond to map
+    names, user-fed or in-between temporary maps, for example:
+    out_ti = t10  and  out_tj = t11
+
+    or
+
+    out_ti = tmp_ti_mean  and  out_tj = tmp_ti_mean
 
     (Idea sourced from: <http://stackoverflow.com/a/9479972/1172302>)
     """
-    replacements = ('Input_T10', str(t10)), ('Input_T11', str(t11))
-    return reduce(lambda alpha, omega: alpha.replace(*omega),
-                  replacements, string)
+    inout = set(['instring', 'outstring'])
+    if inout.issubset(set(kwargs)):
+        print "Using inout"
+        print
+        instring = kwargs.get('instring', 'None')
+        print "instring is:", instring
+        print
+
+        outstring = kwargs.get('outstring', 'None')
+        print "outstring is:", outstring
+        print
+    
+        # the comma in the end *is* important!
+        replacements = (str(instring), str(outstring)),
+
+    in_tij_out = set(['in_ti', 'out_ti', 'in_tj', 'out_tj'])
+    if in_tij_out.issubset(set(kwargs)):
+        print "using in_tij_out"
+        print
+        in_ti = kwargs.get('in_ti', 'None')
+        out_ti = kwargs.get('out_ti', 'None')
+        in_tj = kwargs.get('in_tj', 'None')
+        out_tj = kwargs.get('out_tj', 'None')
+        replacements = (in_ti, str(out_ti)), (in_tj, str(out_tj))
+
+    print "Replacements:", replacements, "|Length:", len(replacements)
+    print "String:", string, "|Type:", type(string)
+    print
+    return reduce(lambda alpha, omega: alpha.replace(*omega), replacements, string)
 
 
 def main():
@@ -442,36 +479,80 @@ def main():
     #
 
     # determine column water vapour
-    # use helper function or class -- for testing, select a random one!
-    column_water_vapour = random.uniform(0.0, 6.3)
 
-    # # get mean of adjacent pixels for Ti, Tj
-    # tmp_ti_mean = tmp + '.ti_mean'
-    # print tmp_ti_mean
-    # print
+       
+    window_size = 3  # could it be else!?
+    cwv = Column_Water_Vapour(window_size, t10, t11)
 
-    # tmp_tj_mean = tmp + '.tj_mean'
-    # print tmp_tj_mean
-    # print
+    # get mean of adjacent pixels for Ti, Tj
+    tmp_ti_mean = tmp + '.ti_mean'
+    ti_mean_expression = cwv.mean_ti_expression
+    msg = '\n >>> Deriving window mean from {Ti} using the expression:\n {exp}'.format(Ti=t10, exp=ti_mean_expression)
+    g.message(msg)
 
-    # mean_equation = equation.format(result=tmp_ti_mean,
-    #                                 expression='{m_numerator}/{m_denominator}')
-    # print mean_equation
-    # print
+    ti_mean_equation = equation.format(result=tmp_ti_mean, expression=ti_mean_expression)
+    grass.mapcalc(ti_mean_equation, overwrite=True)
+    
+    # --- Debugging helpers ---
+    #run('r.info', map=tmp_ti_mean, flags='r')
+    #run('g.copy', raster=(tmp_ti_mean,'SomeMap'))
+    # --------------------------------------------
 
-    # ti_mean_equation = mean_equation.format(m_numerator= , m_denominator= )
-    # print ti_mean_equation
-    # print
-    # 
-    # grass.mapcalc(ti_mean_equation, overwrite=True)
+    # get mean of adjacent pixels for Ti, 
+    tmp_tj_mean = tmp + '.tj_mean'
+    tj_mean_expression = cwv.mean_tj_expression
+    print tj_mean_expression
 
-    # #tj_mean_equation = mean_equation.format(result=tmp_tj_mean, expression=tj_mean)
-    # #grass.mapcalc(tj_mean_equation, overwrite=True)
+    msg = '\n >>> Deriving window mean from {Tj} using the expression: {exp}'.format(Tj=t11, exp=tj_mean_expression)
+    g.message(msg)
+
+    tj_mean_equation = equation.format(result=tmp_tj_mean,
+                                       expression=tj_mean_expression)
+    grass.mapcalc(tj_mean_equation, overwrite=True)
+
+    # estimate ratio Rji for column water vapour
+    tmp_ratio = tmp + '.ratio'
+    ratio_expression = cwv.ratio_ji_expression
+    ratio_expression = replace_dummies(ratio_expression,
+                                       in_ti='Mean_Ti', out_ti=tmp_ti_mean,
+                                       in_tj='Mean_Tj', out_tj=tmp_tj_mean)
+    ratio_equation = equation.format(result=tmp_ratio,
+                                     expression=ratio_expression)
+    # replace the "dummy" string...
+    print "Equations for Ratio:", ratio_equation
+    print
+
+    msg = '\n >>> Estimating the Rji ratio'
+    g.message(msg)
+    grass.mapcalc(ratio_equation, overwrite=True)
+
+    # estimate column water vapour
+    tmp_cwv = tmp + '.cwv'
+
+    print ' | The "Column water vapour retrieval expression for mapcalc":\n\n',
+    cwv_expression = cwv.column_water_vapour_expression
+    cwv_expression = replace_dummies(cwv_expression,
+                                     instring='Ratio_ji',
+                                     outstring=tmp_ratio)
+
+    cwv_equation = equation.format(result=tmp_cwv, expression=cwv_expression)
+    msg = "\n >>> Retrieving atmospheric column water vapour"
+    g.message(msg)
+    grass.mapcalc(cwv_equation, overwrite=True)
+    
+    print "Range of CWV:"
+    print
+    run('r.info', map=tmp_cwv, flags='r')
+    print
+
+    # random column water vapour estimation
+    # column_water_vapour = random.uniform(0.0, 6.3)
+   
 
     # SplitWindowLST class, feed with required input values
     split_window_lst = SplitWindowLST(emissivity_b10,
                                       emissivity_b11,
-                                      column_water_vapour)
+                                      tmp_cwv)
     print "Split Window LST class:", split_window_lst
     print
 
@@ -508,7 +589,9 @@ def main():
     split_window_expression = split_window_lst.mapcalc
 
     # replace the "dummy" string...
-    split_window_expression = replace_dummies(split_window_expression, t10, t11)
+    split_window_expression = replace_dummies(split_window_expression,
+                                              in_ti='Input_T10', out_ti=t10,
+                                              in_tj='Input_T11', out_tj=t11)
     print "Split-Window expression:", split_window_expression
     print
 

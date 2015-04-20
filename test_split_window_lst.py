@@ -100,9 +100,10 @@ def test_split_window_lst():
     print COLUMN_WATER_VAPOUR
     print
 
-    print " * Retrieval of column water vapour via helper/class?"
-    print
-    print " * Mapcalc expression for it:\n\n", column_water_vapour(3, 'TIRS10', 'TIRS11')
+    cwvobj = Column_Water_Vapour(3, 'TiRS10', 'TiRS11')
+    print " * Retrieval of column water vapour via class, example: ",  #, cwvobj
+    print "   cwvobj = Column_Water_Vapour(3, MapName_for_T10, MapName_for_T11)"
+    print " * Mapcalc expression for it:\n\n", cwvobj.column_water_vapour_expression
     print
 
     cwv = random_column_water_vapour()
