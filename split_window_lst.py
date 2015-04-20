@@ -30,7 +30,14 @@ def check_t1x_range(dn):
         return True
 
 
-
+def check_cwv(cwv):
+    """
+    """
+    if cwv < 0.0 or cwv > 6.3:
+        raise ValueError('The column water vapour estimation is out of the '
+                         'expected ranfe [0.0, 6.3]')
+    else:
+        return True
 
 
 class SplitWindowLST():
@@ -122,12 +129,12 @@ class SplitWindowLST():
     def _set_column_water_vapour_subrange(self):
         """
         Select and return a subrange (string to be used as a dictionary key)
-        based on an estimation of the atmospheric column water vapour
-        (float ratio) ranging in (0.0, 6.3].
+        based on the atmospheric column water vapour estimation (float ratio)
+        ranging in (0.0, 6.3].
 
         Input "cwv" is an estimation of the column water vapour (float ratio).
         """
-        # is_number(cwv)  # check if float?
+        check_cwv(self.column_water_vapour)  # check if float?
         key_subrange_generator = ((key, COLUMN_WATER_VAPOUR[key].subrange) for key in COLUMN_WATER_VAPOUR.keys())
         self.cwv_subrange = random.choice([range_x for range_x, (low, high) in key_subrange_generator if low < self.column_water_vapour < high])
 

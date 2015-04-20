@@ -18,6 +18,12 @@ class Column_Water_Vapour():
     Retrieving atmospheric column water vapor from Landsat8 TIRS data based on
     the modified split-window covariance and variance ratio (MSWCVR).
 
+    -------------------------------------------------------------------------
+    *Note,* this class produces valid expressions for GRASS GIS' mapcalc raster
+    processing module and does not directly compute column water vapour
+    estimations.
+    -------------------------------------------------------------------------
+
     With a vital assumption that the atmosphere is unchanged over the
     neighboring pixels, the MSWCVR method relates the atmospheric CWV to the ratio
     of the upward transmittances in two thermal infrared bands, whereas the

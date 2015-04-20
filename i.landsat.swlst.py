@@ -389,32 +389,20 @@ def replace_dummies(string, *args, **kwargs):
     """
     inout = set(['instring', 'outstring'])
     if inout.issubset(set(kwargs)):
-        print "Using inout"
-        print
         instring = kwargs.get('instring', 'None')
-        print "instring is:", instring
-        print
-
         outstring = kwargs.get('outstring', 'None')
-        print "outstring is:", outstring
-        print
     
         # the comma in the end *is* important!
         replacements = (str(instring), str(outstring)),
 
     in_tij_out = set(['in_ti', 'out_ti', 'in_tj', 'out_tj'])
     if in_tij_out.issubset(set(kwargs)):
-        print "using in_tij_out"
-        print
         in_ti = kwargs.get('in_ti', 'None')
         out_ti = kwargs.get('out_ti', 'None')
         in_tj = kwargs.get('in_tj', 'None')
         out_tj = kwargs.get('out_tj', 'None')
         replacements = (in_ti, str(out_ti)), (in_tj, str(out_tj))
 
-    print "Replacements:", replacements, "|Length:", len(replacements)
-    print "String:", string, "|Type:", type(string)
-    print
     return reduce(lambda alpha, omega: alpha.replace(*omega), replacements, string)
 
 
@@ -550,6 +538,8 @@ def main():
    
 
     # SplitWindowLST class, feed with required input values
+
+    tmp_cwv = 4.0
     split_window_lst = SplitWindowLST(emissivity_b10,
                                       emissivity_b11,
                                       tmp_cwv)
