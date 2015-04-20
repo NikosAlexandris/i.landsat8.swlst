@@ -40,19 +40,6 @@ def random_column_water_vapour():
     return random.uniform(0.0, 6.3)
 
 
-def column_water_vapour_range(cwv):
-    """
-    Select and return a subrange (string to be used as a dictionary key)
-    based on atmospheric column water vapour (float ratio) ranging in
-    (0.0, 6.3].
-
-    Input "cwv" is an estimation of the column water vapour (float ratio).
-    """
-    # is_number(cwv)  # check if float?
-    key_subrange_generator = ((key, COLUMN_WATER_VAPOUR[key].subrange) for key in COLUMN_WATER_VAPOUR.keys())
-    return random.choice([range_x for range_x, (low, high) in key_subrange_generator if low < cwv < high])
-
-
 def test_split_window_lst():
     """
     Testing the SplitWindowLST class
@@ -113,13 +100,18 @@ def test_split_window_lst():
     print COLUMN_WATER_VAPOUR
     print
 
+    print " * Retrieval of column water vapour via helper/class?"
+    print
+    print " * Mapcalc expression for it:\n\n", column_water_vapour(3, 'TIRS10', 'TIRS11')
+    print
+
     cwv = random_column_water_vapour()
-    print " * Some random atmospheric column water vapour (g/cm^2):", cwv
-    cwv_range_x = column_water_vapour_range(cwv)
-    print " * Atmospheric column water vapour range:", cwv_range_x
+    print " * For the test, some random atmospheric column water vapour (g/cm^2):", cwv
 
-    ### Implement Water Vapour retrieval technique (Ren, H.; Du, C.; Qin, Q.; Liu, R.; Meng, J.; Li, J., 2014)
-
+    # get a column water vapour subrange
+    swlst = SplitWindowLST(emissivity_b10, emissivity_b11, cwv)
+    cwv_range_x = swlst.cwv_subrange
+    
     cwvfields = COLUMN_WATER_VAPOUR[cwv_range_x]._fields
     print " * Fields of namedtuple:", cwvfields
 
@@ -131,22 +123,27 @@ def test_split_window_lst():
     print " * Example of retrieving values (named tuple): " + command,
     print COLUMN_WATER_VAPOUR[cwv_range_x].subrange
     print
-    print
-
+    
+    
+    
     #
     # class
     #
 
     print ">>> [class SplitWindowLST]"
     print
-    swlst = SplitWindowLST(emissivity_b10, emissivity_b11, cwv_range_x)
+
+    # cwv_range_x = column_water_vapour_range(cwv)
+    # print " * Atmospheric column water vapour range:", cwv_range_x
+
+    swlst = SplitWindowLST(emissivity_b10, emissivity_b11, cwv)
     print "Create object and test '__str__' of SplitWindowLST() class:\n\n", swlst
 
     print " * Checking 'citation':", swlst.citation
     print
 
     b0, b1, b2, b3, b4, b5, b6, b7 = swlst.cwv_coefficients
-    print " * Column Water Vapour coefficients (b0, b1, ..., b7) in <", cwv_range_x,
+    print " * Column Water Vapour coefficients (b0, b1, ..., b7) in <", swlst.cwv_subrange,
     print "> :", b0, b1, b2, b3, b4, b5, b6, b7
 
     print " * RMSE for coefficients:", swlst.rmse

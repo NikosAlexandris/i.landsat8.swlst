@@ -216,7 +216,7 @@ Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 #% key: landcover
 #% key_desc: land cover map name
 #% description: Land cover map
-#% required : yes
+#% required : no
 #%end
 
 #%option
@@ -287,10 +287,7 @@ def cloud_mask(qab):
         msg = "\n|i Create a cloud mask (highest confidence) based on the Quality Assessment band."
         g.message(msg)
 
-        equation = '{result} = {expression}'
-
-       
-        tmp_cloudamask = tmp + '.cloudmask'
+        tmp_cloudmask = tmp + '.cloudmask'
         qabits = 'if(qab == 49152, null(), 1)'
         cloud_masking_equation = equation.format(result=tmp_cloudmask,
                                                  expression=qabits)
@@ -305,10 +302,12 @@ def ndvi(b4, b5):
     Derive NDVI
     """
     # temporary map
+    global tmp_ndvi
     tmp_ndvi = tmp + '.ndvi'
 
     # use i.vi or r.mapcalc?
-    run('i.vi', red=b4, nir=b5, viname="ndvi", output=tmp_ndvi storage_bit=16)
+    run('i.vi', red=b4, nir=b5, viname="ndvi", output=tmp_ndvi, storage_bit=16)
+    print "NDVI map:", tmp_ndvi
 
 
 def fvc(ndvi):
@@ -327,12 +326,18 @@ def fvc(ndvi):
     tmp_fvc = tmp + '.fvc'
     
     # equation for r.mapcalc
-    equation = '{result} = {expression}'
-    fvc_expression = '((ndvi - ndvi_bare_soil) / (ndvi_inf - ndvi_bare_soil))^ 2'
+    ndvi_inf = 2
+    ndvi_bare_soil = 0
+
+    fvc_expression = '(({ndvi} - {ndvi_bare_soil}) / ({ndvi_inf} - {ndvi_bare_soil}))^ 2'
+    fvc_expression = fvc_expression.format(ndvi=ndvi, ndvi_bare_soil=ndvi_bare_soil, ndvi_inf=ndvi_inf)
     fvc_equation = equation.format(result=tmp_fvc, expression=fvc_expression)
-    
+
     # compute fvc
     grass.mapcalc(fvc_equation, overwrite=True)
+
+    # remove temporary ndvi map
+    run('g.remove', type='raster', name=tmp_ndvi, flags='f')
 
  
 def retrieve_emissivities(emissivity_class):
@@ -376,16 +381,27 @@ def replace_dummies(string, t10, t11):
                   replacements, string)
 
 
-
-
-
 def main():
+    """
+    Main program
+    """
+
+    # for Temporary files
+    global tmp
+    tmpfile = grass.tempfile()  # replace with os.getpid?
+    tmp = "tmp." + grass.basename(tmpfile)  # use its basename
+
+    # mapcalc basic equation
+    global equation
+    equation = "{result} = {expression}"
+
 
     b4 = options['b4']
     b5 = options['b5']
     t10 = options['t10']
     t11 = options['t11']
     qab = options['qab']
+    
     #emissivity_b10 = options['emissivity_b10']
     #emissivity_b11 = options['emissivity_b11']
     landcover = options['landcover']
@@ -399,8 +415,7 @@ def main():
     #null = flags['n']  ### either zero or null, not both
     #evaluation = flags['e'] -- is there a quick way?
     #shell = flags['g']
-    # if kelvin = flags['c']
-        #r.colors B.ToAR.11 color=kelvin
+    colortable = flags['c']
 
     #
     # Temporary Region and Files
@@ -408,11 +423,6 @@ def main():
 
     if not keep_region:
         grass.use_temp_region()  # to safely modify the region
-
-    global tmp
-    tmpfile = grass.tempfile()  # Temporary file - replace with os.getpid?
-    tmp = "tmp." + grass.basename(tmpfile)  # use its basename
-
  
     #
     # Algorithm Step 1: OLI -> NDVI -> FVC -> Emissivities from look-up table
@@ -422,21 +432,46 @@ def main():
     ndvi(b4, b5)
 
     # compute FVC, output is tmp_fvc
-    fvc(tmp_ndvi)
-
-    # remove tmp_ndvi
-    run('g.remove', name=tmp_ndvi, flags='f')
+    fvc(tmp_ndvi)  # ToDo: where to plug this in?
 
     # get average emissivities from Land Cover Map  OR  Look-Up table?
     emissivity_b10, emissivity_b11 = retrieve_emissivities(emissivity_class)
 
-    # get range for column water vapour
-    cwv_subrange = retrieve_column_water_vapour()  # Random -- FixMe
+    #
+    # Algorithm Step 2
+    #
+
+    # determine column water vapour
+    # use helper function or class -- for testing, select a random one!
+    column_water_vapour = random.uniform(0.0, 6.3)
+
+    # # get mean of adjacent pixels for Ti, Tj
+    # tmp_ti_mean = tmp + '.ti_mean'
+    # print tmp_ti_mean
+    # print
+
+    # tmp_tj_mean = tmp + '.tj_mean'
+    # print tmp_tj_mean
+    # print
+
+    # mean_equation = equation.format(result=tmp_ti_mean,
+    #                                 expression='{m_numerator}/{m_denominator}')
+    # print mean_equation
+    # print
+
+    # ti_mean_equation = mean_equation.format(m_numerator= , m_denominator= )
+    # print ti_mean_equation
+    # print
+    # 
+    # grass.mapcalc(ti_mean_equation, overwrite=True)
+
+    # #tj_mean_equation = mean_equation.format(result=tmp_tj_mean, expression=tj_mean)
+    # #grass.mapcalc(tj_mean_equation, overwrite=True)
 
     # SplitWindowLST class, feed with required input values
     split_window_lst = SplitWindowLST(emissivity_b10,
                                       emissivity_b11,
-                                      cwv_subrange)
+                                      column_water_vapour)
     print "Split Window LST class:", split_window_lst
     print
 
@@ -468,9 +503,6 @@ def main():
 
     # Temporary Map
     tmp_lst = "{prefix}.lst".format(prefix=tmp)
-
-    # mapcalc basic equation
-    equation = "{result} = {expression}"
 
     # mapcalc expression
     split_window_expression = split_window_lst.mapcalc
@@ -506,6 +538,10 @@ def main():
     #    units=units_lst, description=description_lst,
     #    source1=source1_lst, source2=source2_lst,
     #    history=history_lst)
+
+    if colortable:
+        run('r.colors', map=tmp_lst, color='celsius')
+
 
     #
     # Add suffix to basename & rename end product
