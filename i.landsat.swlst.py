@@ -152,16 +152,14 @@ Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 #%end
 
 #%option G_OPT_R_BASENAME_INPUT
-#% key: input_prefix
+#% key: prefix
 #% key_desc: prefix string
 #% type: string
-#% label: Prefix of input bands
-#% description: Prefix of Landsat8 brightness temperatures bands imported in GRASS' data base
+#% label: OLI band names prefix
+#% description: Prefix of Landsat8 OLI band names
 #% required: no
-#% answer = B
+#% answer: B
 #%end
-
-# OR
 
 #%option G_OPT_R_INPUT
 #% key: b4
@@ -198,6 +196,10 @@ Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 #% required : yes
 #%end
 
+#%rules
+#% excludes: prefix, b4, b5, qab
+#%end
+
 #%option G_OPT_R_INPUT
 #% key: e10
 #% key_desc: Emissivity B10
@@ -223,7 +225,7 @@ Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 #% key: emissivity_class
 #% key_desc: emissivity class
 #% description: Land cover class to retrieve average emissivity from a look-up table (case sensitive)
-#% options: Cropland,Forest,Grasslands,Shrublands,Wetlands,Waterbodies,Tundra,Impervious,Barren,Snow
+#% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow
 #% required : yes
 #%end
 
@@ -463,11 +465,10 @@ def main():
     emissivity_b10, emissivity_b11 = retrieve_emissivities(emissivity_class)
 
     #
-    # Algorithm Step 2
+    # Thread 2: TIRS > Brightness Temperatures > MSWVCM > CWV > Coefficients
     #
 
     # determine column water vapour
-
        
     window_size = 3  # could it be else!?
     cwv = Column_Water_Vapour(window_size, t10, t11)
