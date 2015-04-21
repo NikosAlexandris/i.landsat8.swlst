@@ -137,7 +137,6 @@ class Column_Water_Vapour():
         tx_length = len(modifiers)
         return tx_mean_expression.format(Tx_sum=tx_sum, Tx_length=tx_length)
 
-
     def _numerator_for_ratio(self, mean_ti, mean_tj):
         """
         Numerator for Ratio ji. Requires mean values for...
@@ -233,5 +232,4 @@ if __name__ == "__main__":
            'from Landsat 8 TIRS data.'
            ' (Running as stand-alone tool?)\n')
 
-    test_class()
-
+test_class()

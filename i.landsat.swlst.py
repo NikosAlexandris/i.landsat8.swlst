@@ -361,7 +361,7 @@ def retrieve_emissivities(emissivity_class):
     return (emissivity_b10, emissivity_b11)
 
 
-def retrieve_column_water_vapour():
+def retrieve_column_water_vapor():
     """
     """
     cwvkey = random.choice(COLUMN_WATER_VAPOUR.keys())
@@ -428,7 +428,7 @@ def main():
     t10 = options['t10']
     t11 = options['t11']
     qab = options['qab']
-    
+
     #emissivity_b10 = options['emissivity_b10']
     #emissivity_b11 = options['emissivity_b11']
     landcover = options['landcover']
@@ -450,9 +450,9 @@ def main():
 
     if not keep_region:
         grass.use_temp_region()  # to safely modify the region
- 
+
     #
-    # Algorithm Step 1: OLI -> NDVI -> FVC -> Emissivities from look-up table
+    # Part 1: OLI -> NDVI -> FVC -> Emissivities from look-up table
     #
 
     # derive NDVI, output is tmp_ndvi
@@ -465,11 +465,13 @@ def main():
     emissivity_b10, emissivity_b11 = retrieve_emissivities(emissivity_class)
 
     #
-    # Thread 2: TIRS > Brightness Temperatures > MSWVCM > CWV > Coefficients
+    # Part 2: TIRS > Brightness Temperatures > MSWVCM > CWV > Coefficients
     #
 
-    # determine column water vapour
-       
+    # TIRS to Brightness Temperatures internally?
+    # see: https://github.com/micha-silver/grass-landsat8/blob/master/r.in.landsat8.py
+
+    # determine column water vapor (MSWVCM)
     window_size = 3  # could it be else!?
     cwv = Column_Water_Vapour(window_size, t10, t11)
 
@@ -481,7 +483,7 @@ def main():
 
     ti_mean_equation = equation.format(result=tmp_ti_mean, expression=ti_mean_expression)
     grass.mapcalc(ti_mean_equation, overwrite=True)
-    
+
     # --- Debugging helpers ---
     #run('r.info', map=tmp_ti_mean, flags='r')
     #run('g.copy', raster=(tmp_ti_mean,'SomeMap'))
@@ -499,48 +501,48 @@ def main():
                                        expression=tj_mean_expression)
     grass.mapcalc(tj_mean_equation, overwrite=True)
 
-    # estimate ratio Rji for column water vapour
+    # estimate ratio Rji for column water vapor
     tmp_ratio = tmp + '.ratio'
+    
     ratio_expression = cwv.ratio_ji_expression
     ratio_expression = replace_dummies(ratio_expression,
                                        in_ti='Mean_Ti', out_ti=tmp_ti_mean,
                                        in_tj='Mean_Tj', out_tj=tmp_tj_mean)
     ratio_equation = equation.format(result=tmp_ratio,
                                      expression=ratio_expression)
-    # replace the "dummy" string...
-    print "Equations for Ratio:", ratio_equation
-    print
-
     msg = '\n >>> Estimating the Rji ratio'
     g.message(msg)
     grass.mapcalc(ratio_equation, overwrite=True)
 
-    # estimate column water vapour
+    # estimate column water vapor
     tmp_cwv = tmp + '.cwv'
 
-    print ' | The "Column water vapour retrieval expression for mapcalc":\n\n',
-    cwv_expression = cwv.column_water_vapour_expression
+    print ' | The "Column water vapor retrieval expression for mapcalc":\n\n',
+    cwv_expression = cwv.column_water_vapor_expression
     cwv_expression = replace_dummies(cwv_expression,
                                      instring='Ratio_ji',
                                      outstring=tmp_ratio)
 
     cwv_equation = equation.format(result=tmp_cwv, expression=cwv_expression)
-    msg = "\n >>> Retrieving atmospheric column water vapour"
+    
+    msg = "\n >>> Retrieving atmospheric column water vapor"
     g.message(msg)
     grass.mapcalc(cwv_equation, overwrite=True)
     
-    print "Range of CWV:"
-    print
-    run('r.info', map=tmp_cwv, flags='r')
-    print
+    # print "Range of CWV:"
+    # print
+    # run('r.info', map=tmp_cwv, flags='r')
+    # print
 
-    # random column water vapour estimation
-    # column_water_vapour = random.uniform(0.0, 6.3)
-   
+    # random column water vapor estimation -- for testing!
+    tmp_cwv = random.uniform(0.0, 6.3)
+
+###
+### FixMe --- add complex r.mapcalc selection to apply coefficients appropriately
+###
 
     # SplitWindowLST class, feed with required input values
-
-    tmp_cwv = 4.0
+ 
     split_window_lst = SplitWindowLST(emissivity_b10,
                                       emissivity_b11,
                                       tmp_cwv)

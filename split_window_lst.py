@@ -2,6 +2,10 @@
 """
 A class for the Split Window Algorithm for Land Surface Temperature estimation
 @author: nik | Created on Wed Mar 18 11:28:45 2015
+
+ToDo:
+    * USE eval, it is your friend! Current mapcalc expressions are
+    unnecessarily too complex to read.
 """
 
 # import average emissivities
