@@ -188,17 +188,39 @@
 #%end
 
 #%option G_OPT_R_INPUT
+#% key: b10
+#% key_desc: Band 10
+#% description: Band 10 - TIRS (10.60 - 11.19 microns)
+#% required : no
+#%end
+
+#%option G_OPT_R_INPUT
+#% key: b11
+#% key_desc: Band 11
+#% description: Band 11 - TIRS (11.50 - 12.51 microns)
+#% required : no
+#%end
+
+#%option G_OPT_R_INPUT
 #% key: t10
 #% key_desc: Temperature (10)
-#% description: Brightness temperature (K) from band 10 (10.60 - 11.19 microns)
+#% description: Brightness temperature (K) from band 10 
 #% required : yes
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: t11
 #% key_desc: Temperature (11)
-#% description: Brightness temperature (K) from band 11 (11.50 - 12.51 microns)
+#% description: Brightness temperature (K) from band 11 
 #% required : yes
+#%end
+
+#%rules
+#% excludes: b10, t10
+#%end
+
+#%rules
+#% excludes: b11, t11
 #%end
 
 #%option G_OPT_R_INPUT
@@ -208,8 +230,17 @@
 #% required : yes
 #%end
 
+#%option
+#% key: clouds
+#% key_desc: cloud masking
+#% description: Confidence level for cloud masking (see...) -- ToDo!
+#% options: clouds,cirrus,both
+#% answer: high
+#% required: no
+#%end
+
 #%rules
-#% excludes: prefix, b4, b5, qab
+#% excludes: prefix, b4, b5, b10, b11, qab
 #%end
 
 #%option G_OPT_R_INPUT
@@ -243,15 +274,15 @@
 
 #%option G_OPT_R_OUTPUT
 #% key: lst
-#% key_desc: output
+#% key_desc: lst output
 #% description: Name for output Land Surface Temperature map
 #% required: yes
-#% default: lst
+#% answer: lst
 #%end
 
 #%option G_OPT_R_OUTPUT
 #% key: cwv
-#% key_desc: output
+#% key_desc: cwv output
 #% description: Name for output Column Water Vapor map [optional]
 #% required: no
 #%end
@@ -311,10 +342,12 @@ def random_digital_numbers(count=2):
     return digital_numbers
 
 
-def cloud_mask(qab):
+def mask_clouds(qa_band):
         """
         Create and apply a cloud mask based on the Quality Assessment Band
         (BQA.) Source: <http://landsat.usgs.gov/L8QualityAssessmentBand.php
+
+        See also: http://courses.neteler.org/processing-landsat8-data-in-grass-gis-7/#Applying_the_Landsat_8_Quality_Assessment_%28QA%29_Band
         """
         # create cloud map
         msg = ('\n|i Create a cloud mask (highest confidence) '
@@ -322,13 +355,16 @@ def cloud_mask(qab):
         g.message(msg)
 
         tmp_cloudmask = tmp + '.cloudmask'
-        qabits = 'if(qab == 49152, null(), 1)'
+
+        qabits_expression = 'if({qab} == 49152, null(), 1)'.format(qab=qa_band)
+
         cloud_masking_equation = equation.format(result=tmp_cloudmask,
-                                                 expression=qabits)
+                                                 expression=qabits_expression)
+
         grass.mapcalc(cloud_masking_equation)
 
         # create cloud mask
-        run('r.mask cloudmask', overwrite=True)
+        run('r.mask', raster=tmp_cloudmask, overwrite=True)
 
 
 def ndvi(b4, b5):
@@ -401,11 +437,9 @@ def random_column_water_vapor_subrange():
     to assist in testing the module.
     """
     cwvkey = random.choice(COLUMN_WATER_VAPOUR.keys())
-    print " * Some random key:", cwvkey
-    print COLUMN_WATER_VAPOUR[cwvkey].subrange
-    rmse = COLUMN_WATER_VAPOUR[cwvkey].rmse
-    print " * RMSE:", rmse
-
+    # COLUMN_WATER_VAPOUR[cwvkey].subrange
+    # COLUMN_WATER_VAPOUR[cwvkey].rmse
+    return cwvkey
 
 def random_column_water_vapor_value():
     """
@@ -433,7 +467,7 @@ def replace_dummies(string, *args, **kwargs):
     (Idea sourced from: <http://stackoverflow.com/a/9479972/1172302>)
     """
     inout = set(['instring', 'outstring'])
-#    if inout.issubset(set(kwargs)):
+    # if inout.issubset(set(kwargs)):  # alternative
     if inout == set(kwargs):
         instring = kwargs.get('instring', 'None')
         outstring = kwargs.get('outstring', 'None')
@@ -449,6 +483,22 @@ def replace_dummies(string, *args, **kwargs):
         out_tj = kwargs.get('out_tj', 'None')
 
         replacements = (in_ti, str(out_ti)), (in_tj, str(out_tj))
+
+    in_tijm_out = set(['in_ti', 'out_ti', 'in_tj', 'out_tj',
+                        'in_tim', 'out_tim', 'in_tjm', 'out_tjm'])
+
+    if in_tijm_out == set(kwargs):
+        in_ti = kwargs.get('in_ti', 'None')
+        out_ti = kwargs.get('out_ti', 'None')
+        in_tj = kwargs.get('in_tj', 'None')
+        out_tj = kwargs.get('out_tj', 'None')
+        in_tim = kwargs.get('in_tim', 'None')
+        out_tim = kwargs.get('out_tim', 'None')
+        in_tjm = kwargs.get('in_tjm', 'None')
+        out_tjm = kwargs.get('out_tjm', 'None')
+
+        replacements = (in_ti, str(out_ti)), (in_tj, str(out_tj)), \
+                       (in_tim, str(out_tim)), (in_tjm, str(out_tjm))
 
     in_cwv_out = set(['in_ti', 'out_ti', 'in_tj', 'out_tj', 'in_cwv',
                       'out_cwv'])
@@ -467,23 +517,29 @@ def replace_dummies(string, *args, **kwargs):
                   replacements, string)
 
 
-def get_cwv_window_means(t1x, outname, tx_mean_expression):
+def get_cwv_window_means(outname, t1x, t1x_mean_expression):
     """
-    Get window means for Tj
+    Get window means for T1x
     """
-    msg = ('\n >>> Deriving window means from {Tx} using the expression:\n '
-           '{exp}')
-    msg = msg.format(Tx=t1x, exp=tx_mean_expression)
+    msg = ('\n >>> Deriving window means from {Tx} ')
+    msg +=('using the expression:\n {exp}')
+    msg = msg.format(Tx=t1x, exp=t1x_mean_expression)
     g.message(msg)
-    tx_mean_equation = equation.format(result=outname,
-                                       expression=tx_mean_expression)
-    grass.mapcalc(tx_mean_equation, overwrite=True)
 
+    tx_mean_equation = equation.format(result=outname,
+                                       expression=t1x_mean_expression)
+    grass.mapcalc(tx_mean_equation, overwrite=True)
+    
+    # run('r.info', map=outname, flags='r')
 
 def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
     """
     Estimate Ratio ji for the Column Water Vapor retrieval equation.
     """
+    msg = '\n >>> Estimating ratio Rji'
+    msg += ratio_expression
+    g.message(msg)
+ 
     ratio_expression = replace_dummies(ratio_expression,
                                        in_ti='Mean_Ti', out_ti=tmp_ti_mean,
                                        in_tj='Mean_Tj', out_tj=tmp_tj_mean)
@@ -491,30 +547,59 @@ def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
     ratio_equation = equation.format(result=outname,
                                      expression=ratio_expression)
 
-    msg = '\n >>> Estimating ratio Rji'
-    g.message(msg)
     grass.mapcalc(ratio_equation, overwrite=True)
+ 
+    # run('r.info', map=outname, flags='r')
 
 
 def estimate_column_water_vapor(outname, ratio, cwv_expression):
     """
     """
-    print ' | The "Column water vapor retrieval expression for mapcalc":\n\n',
+    msg = "\n >>> Estimating atmospheric column water vapor "
+    msg += '| Mapcalc expression: '
+    msg += cwv_expression
+    g.message(msg)
+
     cwv_expression = replace_dummies(cwv_expression,
                                      instring='Ratio_ji',
                                      outstring=ratio)
 
     cwv_equation = equation.format(result=outname, expression=cwv_expression)
 
-    msg = "\n >>> Retrieving atmospheric column water vapor"
-    g.message(msg)
     grass.mapcalc(cwv_equation, overwrite=True)
+    #run('r.info', map=outname, flags='r')
 
     # uncomment below to save for testing!
     # save_map(outname)
 
 
-def estimate_lst(tmp_filename, t10, t11, cwv_map, mapcalc_expression):
+def estimate_column_water_vapor_big_expression(outname, t10, t11, cwv_expression):
+    """
+    Derive a column water vapor map using a single mapcalc expression based on
+    eval.
+
+            *** To Do: evaluate -- does it work correctly? *** !
+    """
+    msg = "\n >>> Estimating atmospheric column water vapor "
+    #msg += '| One big mapcalc expression: '
+    #msg += cwv_expression
+    g.message(msg)
+    
+    cwv_expression = replace_dummies(cwv_expression,
+                                     in_ti='TIRS10', out_ti=t10,
+                                     in_tj='TIRS11', out_tj=t11)
+
+
+    cwv_equation = equation.format(result=outname, expression=cwv_expression)
+    
+    grass.mapcalc(cwv_equation, overwrite=True)
+    # run('r.info', map=outname, flags='r')
+
+    # uncomment below to save for testing!
+    #save_map(outname)
+
+
+def estimate_lst(outname, t10, t11, cwv_map, lst_expression):
     """
     Produce a Land Surface Temperature map based on a mapcalc expression
     returned from a SplitWindowLST object.
@@ -527,18 +612,20 @@ def estimate_lst(tmp_filename, t10, t11, cwv_map, mapcalc_expression):
     - a valid mapcalc expression
     """
     # replace the "dummy" string...
-    split_window_expression = replace_dummies(mapcalc_expression,
+    split_window_expression = replace_dummies(lst_expression,
                                               in_cwv='Input_CWV',
                                               out_cwv=cwv_map,
                                               in_ti='Input_T10', out_ti=t10,
                                               in_tj='Input_T11', out_tj=t11)
 
-    split_window_equation = equation.format(result=tmp_filename,
+    split_window_equation = equation.format(result=outname,
                                             expression=split_window_expression)
 
     msg = '\n >>> Estimating the Land Surface Temperature'
     g.message(msg)
+    
     grass.mapcalc(split_window_equation, overwrite=True)
+    #run('r.info', map=outname, flags='r')
 
 
 def main():
@@ -559,15 +646,19 @@ def main():
     tmp_lst = "{prefix}.lst".format(prefix=tmp)  # lst
 
     # mapcalc basic equation
-    global equation
+    global equation, citation_lst
     equation = "{result} = {expression}"
 
     # user input
     b4 = options['b4']
     b5 = options['b5']
+    b10 = options['b10']
+    b11 = options['b11']
     t10 = options['t10']
     t11 = options['t11']
     qab = options['qab']
+    lst_output = options['lst']
+    cwv_output = options['cwv']
 
     #emissivity_b10 = options['emissivity_b10']
     #emissivity_b11 = options['emissivity_b11']
@@ -575,13 +666,16 @@ def main():
     emissivity_class = options['emissivity_class']
 
     # flags
+    global info
     info = flags['i']
     keep_region = flags['k']
+    
     #timestamps = not(flags['t'])
     #zero = flags['z']
     #null = flags['n']  ### either zero or null, not both
     #evaluation = flags['e'] -- is there a quick way?
     #shell = flags['g']
+    
     colortable = flags['c']
 
     # Temporary Region
@@ -607,23 +701,34 @@ def main():
 
     # TIRS > Brightness Temperatures
 
-    # perform internally?
-    # see: https://github.com/micha-silver/grass-landsat8/blob/master/r.in.landsat8.py
+    # perform internally? see:
+    # https://github.com/micha-silver/grass-landsat8/blob/master/r.in.landsat8.py
 
     # MSWVCM, determine column water vapor
     window_size = 3  # could it be else!?
     cwv = Column_Water_Vapor(window_size, t10, t11)
     citation_cwv = cwv.citation
 
-    # get window means (of adjacent pixels) for Ti, Tj
-    get_cwv_window_means(t10, tmp_ti_mean, cwv.mean_ti_expression)
-    get_cwv_window_means(t11, tmp_tj_mean, cwv.mean_tj_expression)
+    # To be removed -----------------------------------------------
+    ## get window means (of adjacent pixels) for Ti, Tj
+    #get_cwv_window_means(tmp_ti_mean, t10, cwv.mean_ti_expression)
+    #get_cwv_window_means(tmp_tj_mean, t11, cwv.mean_tj_expression)
 
-    # estimate ratio Rji for column water vapor
-    estimate_ratio_ji(tmp_ratio, tmp_ti_mean, tmp_tj_mean, cwv.ratio_ji_expression)
+    ## estimate ratio Rji for column water vapor
+    #estimate_ratio_ji(tmp_ratio, tmp_ti_mean, tmp_tj_mean,
+    #                  cwv.ratio_ji_expression)
 
-    # estimate Column Water Vapor map (CWV)
-    estimate_column_water_vapor(tmp_cwv, tmp_ratio, cwv.column_water_vapor_expression)
+    ## estimate Column Water Vapor map (CWV)
+    #estimate_column_water_vapor(tmp_cwv, tmp_ratio,
+    #                            cwv.column_water_vapor_expression)
+    # --------------------------------------------- To be removed #
+
+    # estimate using one big mapcalc expression
+    estimate_column_water_vapor_big_expression(tmp_cwv, t10, t11, cwv._build_cwv_mapcalc())
+
+    # save Column Water Vapor map?
+    if cwv_output:
+        run('g.copy', raster=(tmp_cwv, cwv_output))
 
     #
     # Match region to input image if... ?
@@ -631,9 +736,9 @@ def main():
 
     # ToDo: check if extent-B10 == extent-B11? Unnecessary?
     if not keep_region:
-        run('g.region', rast=b10)   # ## FixMe?
+        run('g.region', rast=t10)   # ## FixMe?
         msg = "\n|! Matching region extent to map {name}"
-        msg = msg.format(name=b10)
+        msg = msg.format(name=t10)
         g.message(msg)
 
     elif keep_region:
@@ -642,8 +747,8 @@ def main():
     #
     # Mask clouds
     #
-
-    # mask_clouds()
+    
+    mask_clouds(qab)
 
     #
     # Estimate LST
@@ -651,19 +756,13 @@ def main():
 
     # SplitWindowLST class, feed with required input values
     split_window_lst = SplitWindowLST(emissivity_b10, emissivity_b11)
-
-    # citation, report or add to history
     citation_lst = split_window_lst.citation
-    msg = "Estimating LST via a Split-Window method"
-    msg += citation_lst
-    g.message(msg)
-
     estimate_lst(tmp_lst, t10, t11, tmp_cwv, split_window_lst.sw_lst_mapcalc)
 
-    #
-    # Strings for metadata
-    #
+    # remove mask
+    run('r.mask', flags='r', verbose=True)
 
+    # Strings for metadata
     history_lst = 'Split-Window model: '
     history_lst += split_window_lst.sw_lst_mapcalc
     title_lst = 'Land Surface Temperature (C)'
@@ -678,26 +777,21 @@ def main():
         source1=source1_lst, source2=source2_lst,
         history=history_lst)
 
+    # colors to celsius
     if colortable:
+        g.message('\n >>> Assigning the "celsius" color table to the LST map')
         run('r.colors', map=tmp_lst, color='celsius')
 
-    #
-    # Add suffix to basename & rename end product
-    #
+    # (re)name end product
+    run("g.rename", rast=(tmp_lst, lst_output))
 
-    # name = "{prefix}.{suffix}"
-    # name = name.format(prefix=image.split('@')[0], suffix=outputsuffix)
-    # lst_name = name
-    lst_name = 'LST'
-    run("g.rename", rast=(tmp_lst, lst_name))
-
-    #
     # Restore region
-    #
-
     if not keep_region:
         grass.del_temp_region()  # restoring previous region settings
         g.message("|! Original Region restored")
+
+    if info:
+        print '\nSource: ' + citation_lst
 
 
 if __name__ == "__main__":
