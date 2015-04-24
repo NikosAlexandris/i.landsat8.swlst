@@ -1,0 +1,79 @@
+
+'albedo = if( corine_2000 == 2, 0.2, if( corine_2000 == 12 || corine_2000 == 13
+|| corine_2000 == 18 || corine_2000 == 20, 0.25, if( corine_2000 == 17 ||
+corine_2000 == 23, 0.175, if( corine_2000 == 21, 0.17, if( corine_2000 == 25,
+0.16, if( corine_2000 == 26 || corine_2000 == 27, 0.205, if( corine_2000 == 28
+|| corine_2000 == 29, 0.165), null() ))))))' --o
+
+
+'if( 0.0 < cwv <  range_1, Expression_R1, if( cwv in range_2, Expression_R2,
+if( cwv in range_3, Expression_R3, if( cwv in range_4, Expression_R4, if(
+cwv in range_5, Expression_R5, if( cwv in range_6, Expression_R6), null()
+)))))'
+
+
+
+
+
+# from: [GRASS-dev] r.mapcalc eval function: syntax and existing maps
+r.mapcalc << EOF
+             
+             eval(elev_200 = elevation - 200, \
+             elev_5 = 5 * elevation, \
+             elev_p = pow(elev_5, 2)
+             elevation_result_1 = (0.5 * elev_200) + 0.8 * elev_p
+             
+             EOF
+
+#and
+
+r.mapcalc << EOF
+
+             elevation_result_2 = eval(elev_200 = elevation - 200, \
+             elev_5 = 5 * elevation, \
+             aspect = pow(elev_5, 2), \
+             (0.5 * elev_200) + 0.8 * aspect)
+             
+             EOF
+
+# From the discussion:
+# 
+# Vaclav Petras wrote:
+# 
+# > The questions are now: Are both versions valid?
+# 
+# 
+# Glynn Clements:
+# 
+# Yes, for sufficiently-recent versions of r.mapcalc. The first version
+# won't work in older versions, which required each top-level expression
+# to be an assignment. This was changed in r33674 to allow top-level
+# expressions to be either assignments or function calls (it doesn't
+# actually require that the function is eval(), but nothing else makes
+# sense in that context).
+# 
+# > And if yes, is one of them best practice? And should both be in the
+# > manual?
+# 
+# I'm not really sure.
+# 
+# I prefer the second form for a single map. Where a set of variables
+# are being defined for use in the expressions for multiple output maps,
+# I would prefer the first form. But this is purely a stylistic issue.
+# 
+# 
+# [...]
+# 
+# The key point are:
+# 
+# 1. For each assignment at the top-level, a map will created having the
+# same name as the variable on the left-hand side of the assignment.
+# Assignments nested within expressions create a variable but not a map.
+# 
+# 2. All variables are global; there are no scope rules.
+# 
+# 3. eval() returns its last argument, ignoring the others. Typically
+# all of its arguments except for (possibly) the last argument would be
+# assignments. As the values aren't used, arguments other than the last
+# are only useful for their side effects, so expressions other than
+# assignments aren't useful.

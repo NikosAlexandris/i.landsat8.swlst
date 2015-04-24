@@ -211,9 +211,9 @@ def get_average_emissivities():
     return average_emissivities
 
 
-def get_column_water_vapour():
+def get_column_water_vapor():
     """
-    Read comma separated values for column water vapour coefficients and return
+    Read comma separated values for column water vapor coefficients and return
     a dictionary wiht named tuples
     """
 
@@ -221,10 +221,10 @@ def get_column_water_vapour():
     csvstring = csv_reader("cwv_coefficients.csv")
 
     # convert string to dictionary
-    column_water_vapour_coefficients = csv_to_dictionary(csvstring)
+    column_water_vapor_coefficients = csv_to_dictionary(csvstring)
 
     # return the dictionary with coefficients
-    return column_water_vapour_coefficients
+    return column_water_vapor_coefficients
 
 
 # main
@@ -236,7 +236,7 @@ def main():
 
     - accepted csv are:
       - average emissivity coefficients
-      - column water vapour
+      - column water vapor
     """
 
     # user requested file?

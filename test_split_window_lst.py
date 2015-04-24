@@ -8,11 +8,11 @@
 # required librairies
 import random
 import csv_to_dictionary as coefficients
-from split_window_lst import * 
+from split_window_lst import *
 
 # globals
 EMISSIVITIES = coefficients.get_average_emissivities()
-COLUMN_WATER_VAPOUR = coefficients.get_column_water_vapour()
+COLUMN_WATER_VAPOR = coefficients.get_column_water_vapor()
 
 # helper function(s)
 def random_digital_numbers(count=2):
@@ -31,10 +31,25 @@ def random_digital_numbers(count=2):
     return digital_numbers
 
 
-def random_column_water_vapour():
+def random_brightness_temperature_values(count=2):
+    """
+    Return a user-requested amount of random Brightness Temperature values for testing
+    purposes ranging in [250, 330].
+    """
+    digital_numbers = []
+
+    for dn in range(0, count):
+        digital_numbers.append(random.randint(250, 330))
+
+    if count == 1:
+        return digital_numbers[0]
+
+    return digital_numbers
+
+def random_column_water_vapor():
     """
     Return a rational number ranging in [0.0, 6.3] to assisst in selecting
-    an atmospheric column water vapour subrange, as part of testing the
+    an atmospheric column water vapor subrange, as part of testing the
     Split-WindowLST class.
     """
     return random.uniform(0.0, 6.3)
@@ -52,9 +67,10 @@ def test_split_window_lst():
     print
     print ">>> [Helper functions]"
     print
-    t10 = random_digital_numbers(1)
-    t11 = random.choice(((t10 + 500), (t10 - 500)))
-    print " * Random 12-bit digital numbers for T10, T11:", t10, t11
+    t10 = random_brightness_temperature_values(1)
+    t11 = random.choice(((t10 + 50), (t10 - 50)))  # check some failures as well
+    print " * Random brightness temperature values for T10, T11:", t10, t11
+    print
     print
     print
 
@@ -63,7 +79,7 @@ def test_split_window_lst():
     #
 
     # get emissivities
-    print ">>> [EMISSIVITIES]"
+    print "[ EMISSIVITIES ]"
     print
     EMISSIVITIES = coefficients.get_average_emissivities()
     print " * Dictionary for average emissivities:\n\n", EMISSIVITIES
@@ -89,77 +105,181 @@ def test_split_window_lst():
     print " * Average emissivity for B11:", emissivity_b11
     print
     print
-
-    #
-    # COLUMN_WATER_VAPOUR
-    #
-
-    print ">>> [COLUMN_WATER_VAPOUR]"
-    COLUMN_WATER_VAPOUR = coefficients.get_column_water_vapour()
-    print "\n * Dictionary for column water vapour coefficients:\n\n",
-    print COLUMN_WATER_VAPOUR
     print
 
-    cwvobj = Column_Water_Vapour(3, 'TiRS10', 'TiRS11')
-    print " * Retrieval of column water vapour via class, example: ",  #, cwvobj
+    #
+    # COLUMN_WATER_VAPOR
+    #
+
+    print "[ COLUMN_WATER_VAPOR ]"
+    COLUMN_WATER_VAPOR = coefficients.get_column_water_vapor()
+    print "\n * Dictionary for column water vapor coefficients:\n\n",
+    print COLUMN_WATER_VAPOR
+    print
+
+    cwvobj = Column_Water_Vapor(3, 'TiRS10', 'TiRS11')
+    print " * Retrieval of column water vapor via class, example: ",  #, cwvobj
     print "   cwvobj = Column_Water_Vapour(3, MapName_for_T10, MapName_for_T11)"
-    print " * Mapcalc expression for it:\n\n", cwvobj.column_water_vapour_expression
+    print " * Mapcalc expression for it: ", cwvobj.column_water_vapor_expression
     print
 
-    cwv = random_column_water_vapour()
-    print " * For the test, some random atmospheric column water vapour (g/cm^2):", cwv
+    cwv = random_column_water_vapor()
+    print " * For the test, some random atmospheric column water vapor (g/cm^2):", cwv
 
-    # get a column water vapour subrange
-    swlst = SplitWindowLST(emissivity_b10, emissivity_b11, cwv)
-    cwv_range_x = swlst.cwv_subrange
-    
-    cwvfields = COLUMN_WATER_VAPOUR[cwv_range_x]._fields
-    print " * Fields of namedtuple:", cwvfields
+    #
+    cwv_range_x = random.choice([key for key in COLUMN_WATER_VAPOR.keys()])
+
+    cwvfields = COLUMN_WATER_VAPOR[cwv_range_x]._fields
+    print " * Fields of namedtuple (same for all subranges):", cwvfields
 
     random_cwvfield = random.choice(cwvfields)
     print " * Some random field:", random_cwvfield
 
-    command = 'COLUMN_WATER_VAPOUR.[{key}].{field} ='
+    command = 'COLUMN_WATER_VAPOR.[{key}].{field} ='
     command = command.format(key=cwv_range_x, field=random_cwvfield)
     print " * Example of retrieving values (named tuple): " + command,
-    print COLUMN_WATER_VAPOUR[cwv_range_x].subrange
+    print COLUMN_WATER_VAPOR[cwv_range_x].subrange
     print
-    
-    
-    
+    print
+    print
+
     #
     # class
     #
 
-    print ">>> [class SplitWindowLST]"
+    print "[ class SplitWindowLST ]"
     print
 
-    # cwv_range_x = column_water_vapour_range(cwv)
-    # print " * Atmospheric column water vapour range:", cwv_range_x
+    # cwv_range_x = column_water_vapor_range(cwv)
+    # print " * Atmospheric column water vapor range:", cwv_range_x
 
-    swlst = SplitWindowLST(emissivity_b10, emissivity_b11, cwv)
+    swlst = SplitWindowLST(emissivity_b10, emissivity_b11)
     print "Create object and test '__str__' of SplitWindowLST() class:\n\n", swlst
 
-    print " * Checking 'citation':", swlst.citation
+    print " > The 'citation' attribute:", swlst.citation
     print
 
-    b0, b1, b2, b3, b4, b5, b6, b7 = swlst.cwv_coefficients
-    print " * Column Water Vapour coefficients (b0, b1, ..., b7) in <", swlst.cwv_subrange,
-    print "> :", b0, b1, b2, b3, b4, b5, b6, b7
-
-    print " * RMSE for coefficients:", swlst.rmse
+    # get a column water vapor subrange
+    cwv_range_x = swlst._retrieve_adjacent_cwv_subranges(cwv)
+    print " * The CWV value {cwv} falls inside:".format(cwv=cwv), cwv_range_x, "|Type:", type(cwv_range_x)
+   
+### First, test all _retrieve functions ###
+    
+    print
+    print "( Testing unpacking of values )"
     print
 
-    print " * Checking for the 'compute_lst' method:", swlst.compute_lst
-    print " * Compute the Land Surface Temperature: 'compute_lst()' >>>", swlst.compute_lst(t10, t11)
-    print " * Get it from the object's lst attribute:", swlst.lst
+    if type(cwv_range_x) == str:
+
+        cwv_coefficients_x = swlst._retrieve_cwv_coefficients(cwv_range_x)
+        b0, b1, b2, b3, b4, b5, b6, b7 = cwv_coefficients_x
+        
+        print " * Column Water Vapor coefficients (b0, b1, ..., b7) in <", cwv_range_x,
+        
+        print "> :", b0, b1, b2, b3, b4, b5, b6, b7
+        
+        print " * Checking the '_retrieve_rmse' method:", swlst._retrieve_rmse(cwv_range_x)
+        
+        print " * Testing the '_set_rmse' and 'report_rmse' methods:",
+
+        swlst._set_rmse(cwv_range_x)
+        print swlst.report_rmse()
+            
+        print " * Testing the 'compute_lst' method:", swlst.compute_lst(t10, t11, cwv_coefficients_x)
+
+
+    elif type(cwv_range_x) == tuple and len(cwv_range_x) == 2:
+
+        print " * Two subranges returned:",
+
+        cwv_subrange_a, cwv_subrange_b = tuple(cwv_range_x)[0], tuple(cwv_range_x)[1]
+        print " Subrange a:", cwv_subrange_a, "| Subrange b:", cwv_subrange_b
+    
+        #
+        # Subrange A
+        #
+        
+        print
+        print " > Tests for subrange a"
+        print
+
+        coefficients_a = swlst._retrieve_cwv_coefficients(cwv_subrange_a)
+        
+        b0, b1, b2, b3, b4, b5, b6, b7 = coefficients_a
+        
+        print "   * Column Water Vapor coefficients for", cwv_subrange_a,
+
+        print "> ", b0, b1, b2, b3, b4, b5, b6, b7
+        
+        print "   * Testing the '_set' and 'get' methods:",
+        swlst._set_cwv_coefficients(cwv_subrange_a)  # does not return anything
+        
+        print swlst.get_cwv_coefficients()
+
+        print "   * Model:", swlst._build_model(coefficients_a)
+
+        print "   * Checking the '_retrieve_rmse' method:", swlst._retrieve_rmse(cwv_subrange_a)
+        print "   * Testing the '_set_rmse' and 'report_rmse' methods:",
+        swlst._set_rmse(cwv_subrange_a)
+        
+        print swlst.report_rmse()
+
+
+
+        #
+        # Subrange B
+        #
+
+        print
+        print " > Tests for subrange b"
+        print
+
+        coefficients_b = swlst._retrieve_cwv_coefficients(cwv_subrange_b)
+        
+        b0, b1, b2, b3, b4, b5, b6, b7 = coefficients_b
+        
+        print "   * Column Water Vapor coefficients for", cwv_subrange_b,
+
+        print "> ", b0, b1, b2, b3, b4, b5, b6, b7
+        
+        print "   * Testing the 'get' and '_set' methods:",
+        swlst._set_cwv_coefficients(cwv_subrange_b)
+        
+        print swlst.get_cwv_coefficients()
+        
+        print "   * Model:", swlst._build_model(coefficients_b)
+        
+        print "   * Checking the '_retrieve_rmse' method:", swlst._retrieve_rmse(cwv_subrange_a)
+        print "   * Testing the '_set_rmse' and 'report_rmse' methods:",
+        swlst._set_rmse(cwv_subrange_a)
+        
+        print swlst.report_rmse()
+
+
+
+        #
+        # Average LST
+        #
+
+        print
+        print "( Computing average LST )"
+        print
+
+        print " * Compute the average LST: 'compute_average_lst()' >>>",
+
+        print swlst.compute_average_lst(t10, t11, cwv_subrange_a, cwv_subrange_b)
+
+        print
+
+    print
+    print "[ Subranges ]"
     print
 
-    print " * Checking the 'report_rmse' method:", swlst.report_rmse
-    print " * Testing the 'report_rmse' method:", swlst.report_rmse()
+    key_subrange_generator = ((key, COLUMN_WATER_VAPOR[key].subrange) for key in COLUMN_WATER_VAPOR.keys())
 
-    print " * Get mapcalc:", swlst.mapcalc
-    # print " * Get mapcalc done all internally!?:", swlst.mapcalc_direct
+
+    sw_lst_expression = swlst.swl_st_mapcalc
+    print "Big expression:\n\n", sw_lst_expression
 
 
 # reusable & stand-alone

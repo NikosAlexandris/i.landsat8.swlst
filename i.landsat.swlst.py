@@ -2,22 +2,19 @@
 # -*- coding: utf-8 -*-
 
 """
- MODULE:       i.landsat8.lst
+ MODULE:       i.landsat8.swlst
 
  AUTHOR(S):    Nikos Alexandris <nik@nikosalexandris.net>
                Created on Wed Mar 18 10:00:53 2015
 
- PURPOSE:
-
-               A robust and practical Slit-Window (SW) algorithm estimating
+ PURPOSE:      A robust and practical Slit-Window (SW) algorithm estimating
                land surface temperature, from the Thermal Infra-Red Sensor
                (TIRS) aboard Landsat 8 with an accuracy of better than 1.0 K.
 
-
                The input parameters include:
 
-               - the brightness temperatures (Ti and T j ) of the two adjacent bands
-                 of the TIRS,
+               - the brightness temperatures (Ti and Tj) of the two adjacent
+                 TIRS channels,
 
                - FROM-GLC land cover products and emissivity lookup table, which are
                  a fraction of the FVC that can be estimated from the red and
@@ -28,6 +25,7 @@
                  on Landsat8, by using the method proposed by Carlson (1997) and Sobrino
                  (2001) [34,35].
 
+                The algorithm's flowchart (Figure 3 in the paper [0]) is:
 
                +--------+   +--------------------------+                               
                |Landsat8+--->Cloud screen & calibration|                               
@@ -58,73 +56,87 @@
                                           |LST and emissivity|                         
                                           +------------------+                         
 
-        (Figure 3)  -- FixMe
+               Sources:
+
+               [0] Du, Chen; Ren, Huazhong; Qin, Qiming; Meng, Jinjie;
+               Zhao, Shaohua. 2015. "A Practical Split-Window Algorithm
+               for Estimating Land Surface Temperature from Landsat 8 Data."
+               Remote Sens. 7, no. 1: 647-665.
+               <http://www.mdpi.com/2072-4292/7/1/647/htm#sthash.ba1pt9hj.dpuf>
+
+               [1] Huazhong Ren, Chen Du, Qiming Qin, Rongyuan Liu,
+               Jinjie Meng, and Jing Li. "Atmospheric Water Vapor Retrieval
+               from Landsat 8 and Its Validation." 3045–3048. IEEE, 2014.
 
 
-               Source: Du, Chen; Ren, Huazhong; Qin, Qiming; Meng, Jinjie;
-                       Zhao, Shaohua. 2015. "A Practical Split-Window Algorithm
-                       for Estimating Land Surface Temperature from Landsat 8 Data."
-                       Remote Sens. 7, no. 1: 647-665.
+               Details
+
+               A new refinement of the generalized split-window algorithm
+               proposed by Wan (2014) [19] is added with a quadratic term of
+               the difference amongst the brightness temperatures (Ti, Tj) of
+               the adjacent thermal infrared channels, which can be expressed
+               as (equation 2 in the paper [0])
+
+               LST = b0 +
+                    [b1 + b2 * (1−ε)/ε + b3 * (Δε/ε2)] * (Ti+T)/j2 +
+                    [b4 + b5 * (1−ε)/ε + b6 * (Δε/ε2)] * (Ti−Tj)/2 +
+                     b7 * (Ti−Tj)^2
+
+               where:
+
+               - Ti and Tj are Top of Atmosphere brightness temperatures
+               measured in channels i (~11.0 μm) and j (~12.0 µm),
+               respectively;
+                 - from
+            <http://landsat.usgs.gov/band_designations_landsat_satellites.php>:
+                   - Band 10, Thermal Infrared (TIRS) 1, 10.60-11.19, 100*(30)
+                   - Band 11, Thermal Infrared (TIRS) 2, 11.50-12.51, 100*(30)
+
+               - ε is the average emissivity of the two channels (i.e., ε = 0.5
+               [εi + εj]),
+               
+               - Δε is the channel emissivity difference (i.e., Δε = εi − εj);
+               
+               - bk (k = 0,1,...7) are the algorithm coefficients derived in
+               the following simulated dataset.
+
+               [...]
+
+               In the above equations,
+                   
+                   - dk (k = 0, 1...6) and ek (k = 1, 2, 3, 4) are the
+                   algorithm coefficients;
+                   
+                   - w is the CWV;
+                   
+                   - ε and ∆ε are the average emissivity and emissivity
+                   difference of two adjacent thermal channels, respectively,
+                   which are similar to Equation (2);
+                   
+                   - and fk (k = 0 and 1) is related to the influence of the
+                   atmospheric transmittance and emissivity, i.e., f k =
+                   f(εi,εj,τ i ,τj).
+                
+                Note that the algorithm (Equation (6a)) proposed by
+                Jiménez-Muñoz et al. added CWV directly to estimate LST.
+
+                Rozenstein et al. used CWV to estimate the atmospheric
+                transmittance (τi, τj) and optimize retrieval accuracy
+                explicitly.
+
+                Therefore, if the atmospheric CWV is unknown or cannot be
+                obtained successfully, neither of the two algorithms in
+                Equations (6a) and (6b) will work. By contrast, although our
+                algorithm also needs CWV to determine the coefficients, this
+                algorithm still works for unknown CWVs because the coefficients
+                are obtained regardless of the CWV, as shown in Table 1.
 
  COPYRIGHT:    (C) 2015 by the GRASS Development Team
 
                This program is free software under the GNU General Public
                License (>=v2). Read the file COPYING that comes with GRASS
                for details.
-"""
 
-"""
-A new refinement of the generalized split-window algorithm proposed by Wan 
-(2014) [19] is added with a quadratic term of the difference amongst the 
-brightness temperatures (Ti, Tj) of the adjacent thermal infrared channels, 
-which can be expressed as
-
-LST = b0 + [b1 + b2 * (1−ε)/ε + b3 * (Δε/ε2)] * (Ti+T)/j2 + [b4 + b5 * (1−ε)/ε + b6 * (Δε/ε2)] * (Ti−Tj)/2 + b7 * (Ti−Tj)^2
-(2)
-
-where:
-
-  - Ti and Tj are the TOA brightness temperatures measured in channels i 
-(~11.0 μm) and j (~12.0 µm), respectively;
-  - ε is the average emissivity of the two channels (i.e., ε = 0.5 [εi + εj]),
-  - Δε is the channel emissivity difference (i.e., Δε = εi − εj);
-  - bk (k = 0,1,...7) are the algorithm coefficients derived in the following 
-  simulated dataset.
-
-...
-
-In the above equations,
-    - dk (k = 0, 1...6) and ek (k = 1, 2, 3, 4) are the algorithm coefficients;
-    - w is the CWV;
-    - ε and ∆ε are the average emissivity and emissivity difference of two adjacent
-      thermal channels, respectively, which are similar to Equation (2);
-    - and fk (k = 0 and 1) is related to the influence of the atmospheric transmittance and emissivity,
-      i.e., f k = f(εi,εj,τ i ,τj).
-      
-Note that the algorithm (Equation (6a)) proposed by Jiménez-Muñoz et al. added CWV
-directly to estimate LST.
-
-Rozenstein et al. used CWV to estimate the atmospheric transmittance (τi, τj) and
-optimize retrieval accuracy explicitly.
-
-Therefore, if the atmospheric CWV is unknown or cannot be obtained successfully,
-neither of the two algorithms in Equations (6a) and (6b) will work. By contrast,
-although our algorithm also needs CWV to determine the coefficients, this algorithm
-still works for unknown CWVs because the coefficients are obtained regardless of the CWV,
-as shown in Table 1.
-
-...
-
-
-  Source:
-  - <http://www.mdpi.com/2072-4292/7/1/647/htm#sthash.ba1pt9hj.dpuf>
-
-"""
-
-"""
-From <http://landsat.usgs.gov/band_designations_landsat_satellites.php>
-Band 10 - Thermal Infrared (TIRS) 1 	10.60 - 11.19 	100 * (30)
-Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 """
 
 #%Module
@@ -138,7 +150,7 @@ Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 
 #%flag
 #%  key: i
-#%  description: Print out calibration equations
+#%  description: Print out model equations
 #%end
 
 #%flag
@@ -148,7 +160,7 @@ Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 
 #%flag
 #% key: c
-#% description: Apply the Celsius colortable to the LST output map
+#% description: Apply Celsius colortable to output LST map
 #%end
 
 #%option G_OPT_R_BASENAME_INPUT
@@ -178,14 +190,14 @@ Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 #%option G_OPT_R_INPUT
 #% key: t10
 #% key_desc: Temperature (10)
-#% description: Brightness temperature (K) from Landsat8 band 10 (10.60 - 11.19 microns)
+#% description: Brightness temperature (K) from band 10 (10.60 - 11.19 microns)
 #% required : yes
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: t11
 #% key_desc: Temperature (11)
-#% description: Brightness temperature (K) from Landsat8 band 11 (11.50 - 12.51 microns)
+#% description: Brightness temperature (K) from band 11 (11.50 - 12.51 microns)
 #% required : yes
 #%end
 
@@ -224,12 +236,24 @@ Band 11 - Thermal Infrared (TIRS) 2 	11.50 - 12.51 	100 * (30)
 #%option
 #% key: emissivity_class
 #% key_desc: emissivity class
-#% description: Land cover class to retrieve average emissivity from a look-up table (case sensitive)
+#% description: Manual selection of land cover class to retrieve average emissivity from a look-up table (case sensitive)
 #% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow
 #% required : yes
 #%end
 
 #%option G_OPT_R_OUTPUT
+#% key: lst
+#% key_desc: output
+#% description: Name for output Land Surface Temperature map
+#% required: yes
+#% default: lst
+#%end
+
+#%option G_OPT_R_OUTPUT
+#% key: cwv
+#% key_desc: output
+#% description: Name for output Column Water Vapor map [optional]
+#% required: no
 #%end
 
 import os
@@ -263,6 +287,14 @@ def run(cmd, **kwargs):
     grass.run_command(cmd, quiet=True, **kwargs)
 
 
+def save_map(mapname):
+    """
+    Helper function to save some in-between maps, assisting in debugging
+    """
+    run('r.info', map=mapname, flags='r')
+    run('g.copy', raster=(mapname, 'DebuggingMap'))
+
+
 def random_digital_numbers(count=2):
     """
     Return a user-requested amount of random Digital Number values for testing
@@ -281,12 +313,12 @@ def random_digital_numbers(count=2):
 
 def cloud_mask(qab):
         """
-        Create and apply a cloud mask based on the Quality Assessment Band (BQA)
-
-        Source: <http://landsat.usgs.gov/L8QualityAssessmentBand.php
+        Create and apply a cloud mask based on the Quality Assessment Band
+        (BQA.) Source: <http://landsat.usgs.gov/L8QualityAssessmentBand.php
         """
         # create cloud map
-        msg = "\n|i Create a cloud mask (highest confidence) based on the Quality Assessment band."
+        msg = ('\n|i Create a cloud mask (highest confidence) '
+               'based on the Quality Assessment band.')
         g.message(msg)
 
         tmp_cloudmask = tmp + '.cloudmask'
@@ -309,7 +341,6 @@ def ndvi(b4, b5):
 
     # use i.vi or r.mapcalc?
     run('i.vi', red=b4, nir=b5, viname="ndvi", output=tmp_ndvi, storage_bit=16)
-    print "NDVI map:", tmp_ndvi
 
 
 def fvc(ndvi):
@@ -326,13 +357,16 @@ def fvc(ndvi):
     """
     # name for themporary fvc map
     tmp_fvc = tmp + '.fvc'
-    
+
     # equation for r.mapcalc
     ndvi_inf = 2
     ndvi_bare_soil = 0
 
-    fvc_expression = '(({ndvi} - {ndvi_bare_soil}) / ({ndvi_inf} - {ndvi_bare_soil}))^ 2'
-    fvc_expression = fvc_expression.format(ndvi=ndvi, ndvi_bare_soil=ndvi_bare_soil, ndvi_inf=ndvi_inf)
+    fvc_expression = ('(({ndvi} - {ndvi_bare_soil}) / '
+                      '({ndvi_inf} - {ndvi_bare_soil}))^ 2')
+    fvc_expression = fvc_expression.format(ndvi=ndvi,
+                                           ndvi_bare_soil=ndvi_bare_soil,
+                                           ndvi_inf=ndvi_inf)
     fvc_equation = equation.format(result=tmp_fvc, expression=fvc_expression)
 
     # compute fvc
@@ -341,7 +375,7 @@ def fvc(ndvi):
     # remove temporary ndvi map
     run('g.remove', type='raster', name=tmp_ndvi, flags='f')
 
- 
+
 def retrieve_emissivities(emissivity_class):
     """
     Get average emissivities from an emissivity look-up table.
@@ -354,21 +388,30 @@ def retrieve_emissivities(emissivity_class):
         emissivity_class = random.choice(EMISSIVITIES.keys())
         print " * Some random emissivity class (key):", emissivity_class
 
-    fields = EMISSIVITIES[emissivity_class]._fields
+    # fields = EMISSIVITIES[emissivity_class]._fields
     emissivity_b10 = EMISSIVITIES[emissivity_class].TIRS10
     emissivity_b11 = EMISSIVITIES[emissivity_class].TIRS11
 
     return (emissivity_b10, emissivity_b11)
 
 
-def retrieve_column_water_vapor():
+def random_column_water_vapor_subrange():
     """
+    Helper function returning a random column water vapour key
+    to assist in testing the module.
     """
     cwvkey = random.choice(COLUMN_WATER_VAPOUR.keys())
     print " * Some random key:", cwvkey
     print COLUMN_WATER_VAPOUR[cwvkey].subrange
     rmse = COLUMN_WATER_VAPOUR[cwvkey].rmse
     print " * RMSE:", rmse
+
+
+def random_column_water_vapor_value():
+    """
+    Helper function returning a random value for column water vapor.
+    """
+    return random.uniform(0.0, 6.3)
 
 
 def replace_dummies(string, *args, **kwargs):
@@ -390,22 +433,112 @@ def replace_dummies(string, *args, **kwargs):
     (Idea sourced from: <http://stackoverflow.com/a/9479972/1172302>)
     """
     inout = set(['instring', 'outstring'])
-    if inout.issubset(set(kwargs)):
+#    if inout.issubset(set(kwargs)):
+    if inout == set(kwargs):
         instring = kwargs.get('instring', 'None')
         outstring = kwargs.get('outstring', 'None')
-    
-        # the comma in the end *is* important!
+
+        # end comma important!
         replacements = (str(instring), str(outstring)),
 
     in_tij_out = set(['in_ti', 'out_ti', 'in_tj', 'out_tj'])
-    if in_tij_out.issubset(set(kwargs)):
+    if in_tij_out == set(kwargs):
         in_ti = kwargs.get('in_ti', 'None')
         out_ti = kwargs.get('out_ti', 'None')
         in_tj = kwargs.get('in_tj', 'None')
         out_tj = kwargs.get('out_tj', 'None')
+
         replacements = (in_ti, str(out_ti)), (in_tj, str(out_tj))
 
-    return reduce(lambda alpha, omega: alpha.replace(*omega), replacements, string)
+    in_cwv_out = set(['in_ti', 'out_ti', 'in_tj', 'out_tj', 'in_cwv',
+                      'out_cwv'])
+    if in_cwv_out == set(kwargs):
+        in_cwv = kwargs.get('in_cwv', 'None')
+        out_cwv = kwargs.get('out_cwv', 'None')
+        in_ti = kwargs.get('in_ti', 'None')
+        out_ti = kwargs.get('out_ti', 'None')
+        in_tj = kwargs.get('in_tj', 'None')
+        out_tj = kwargs.get('out_tj', 'None')
+
+        replacements = (in_ti, str(out_ti)), (in_tj, str(out_tj)), \
+                       (in_cwv, str(out_cwv))
+
+    return reduce(lambda alpha, omega: alpha.replace(*omega),
+                  replacements, string)
+
+
+def get_cwv_window_means(t1x, outname, tx_mean_expression):
+    """
+    Get window means for Tj
+    """
+    msg = ('\n >>> Deriving window means from {Tx} using the expression:\n '
+           '{exp}')
+    msg = msg.format(Tx=t1x, exp=tx_mean_expression)
+    g.message(msg)
+    tx_mean_equation = equation.format(result=outname,
+                                       expression=tx_mean_expression)
+    grass.mapcalc(tx_mean_equation, overwrite=True)
+
+
+def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
+    """
+    Estimate Ratio ji for the Column Water Vapor retrieval equation.
+    """
+    ratio_expression = replace_dummies(ratio_expression,
+                                       in_ti='Mean_Ti', out_ti=tmp_ti_mean,
+                                       in_tj='Mean_Tj', out_tj=tmp_tj_mean)
+
+    ratio_equation = equation.format(result=outname,
+                                     expression=ratio_expression)
+
+    msg = '\n >>> Estimating ratio Rji'
+    g.message(msg)
+    grass.mapcalc(ratio_equation, overwrite=True)
+
+
+def estimate_column_water_vapor(outname, ratio, cwv_expression):
+    """
+    """
+    print ' | The "Column water vapor retrieval expression for mapcalc":\n\n',
+    cwv_expression = replace_dummies(cwv_expression,
+                                     instring='Ratio_ji',
+                                     outstring=ratio)
+
+    cwv_equation = equation.format(result=outname, expression=cwv_expression)
+
+    msg = "\n >>> Retrieving atmospheric column water vapor"
+    g.message(msg)
+    grass.mapcalc(cwv_equation, overwrite=True)
+
+    # uncomment below to save for testing!
+    # save_map(outname)
+
+
+def estimate_lst(tmp_filename, t10, t11, cwv_map, mapcalc_expression):
+    """
+    Produce a Land Surface Temperature map based on a mapcalc expression
+    returned from a SplitWindowLST object.
+
+    Inputs are:
+
+    - brightness temperature maps t10, t11
+    - column water vapor map
+    - a temporary filename
+    - a valid mapcalc expression
+    """
+    # replace the "dummy" string...
+    split_window_expression = replace_dummies(mapcalc_expression,
+                                              in_cwv='Input_CWV',
+                                              out_cwv=cwv_map,
+                                              in_ti='Input_T10', out_ti=t10,
+                                              in_tj='Input_T11', out_tj=t11)
+
+    split_window_equation = equation.format(result=tmp_filename,
+                                            expression=split_window_expression)
+
+    msg = '\n >>> Estimating the Land Surface Temperature'
+    g.message(msg)
+    grass.mapcalc(split_window_equation, overwrite=True)
 
 
 def main():
@@ -418,11 +551,18 @@ def main():
     tmpfile = grass.tempfile()  # replace with os.getpid?
     tmp = "tmp." + grass.basename(tmpfile)  # use its basename
 
+    # Temporary filenames
+    tmp_ti_mean = tmp + '.ti_mean'  # for cwv
+    tmp_tj_mean = tmp + '.tj_mean'  # for cwv
+    tmp_ratio = tmp + '.ratio'  # for cwv
+    tmp_cwv = tmp + '.cwv'  # column water vapor map
+    tmp_lst = "{prefix}.lst".format(prefix=tmp)  # lst
+
     # mapcalc basic equation
     global equation
     equation = "{result} = {expression}"
 
-
+    # user input
     b4 = options['b4']
     b5 = options['b5']
     t10 = options['t10']
@@ -444,10 +584,7 @@ def main():
     #shell = flags['g']
     colortable = flags['c']
 
-    #
-    # Temporary Region and Files
-    #
-
+    # Temporary Region
     if not keep_region:
         grass.use_temp_region()  # to safely modify the region
 
@@ -468,97 +605,31 @@ def main():
     # Part 2: TIRS > Brightness Temperatures > MSWVCM > CWV > Coefficients
     #
 
-    # TIRS to Brightness Temperatures internally?
+    # TIRS > Brightness Temperatures
+
+    # perform internally?
     # see: https://github.com/micha-silver/grass-landsat8/blob/master/r.in.landsat8.py
 
-    # determine column water vapor (MSWVCM)
+    # MSWVCM, determine column water vapor
     window_size = 3  # could it be else!?
-    cwv = Column_Water_Vapour(window_size, t10, t11)
+    cwv = Column_Water_Vapor(window_size, t10, t11)
+    citation_cwv = cwv.citation
 
-    # get mean of adjacent pixels for Ti, Tj
-    tmp_ti_mean = tmp + '.ti_mean'
-    ti_mean_expression = cwv.mean_ti_expression
-    msg = '\n >>> Deriving window mean from {Ti} using the expression:\n {exp}'.format(Ti=t10, exp=ti_mean_expression)
-    g.message(msg)
-
-    ti_mean_equation = equation.format(result=tmp_ti_mean, expression=ti_mean_expression)
-    grass.mapcalc(ti_mean_equation, overwrite=True)
-
-    # --- Debugging helpers ---
-    #run('r.info', map=tmp_ti_mean, flags='r')
-    #run('g.copy', raster=(tmp_ti_mean,'SomeMap'))
-    # --------------------------------------------
-
-    # get mean of adjacent pixels for Ti, 
-    tmp_tj_mean = tmp + '.tj_mean'
-    tj_mean_expression = cwv.mean_tj_expression
-    print tj_mean_expression
-
-    msg = '\n >>> Deriving window mean from {Tj} using the expression: {exp}'.format(Tj=t11, exp=tj_mean_expression)
-    g.message(msg)
-
-    tj_mean_equation = equation.format(result=tmp_tj_mean,
-                                       expression=tj_mean_expression)
-    grass.mapcalc(tj_mean_equation, overwrite=True)
+    # get window means (of adjacent pixels) for Ti, Tj
+    get_cwv_window_means(t10, tmp_ti_mean, cwv.mean_ti_expression)
+    get_cwv_window_means(t11, tmp_tj_mean, cwv.mean_tj_expression)
 
     # estimate ratio Rji for column water vapor
-    tmp_ratio = tmp + '.ratio'
-    
-    ratio_expression = cwv.ratio_ji_expression
-    ratio_expression = replace_dummies(ratio_expression,
-                                       in_ti='Mean_Ti', out_ti=tmp_ti_mean,
-                                       in_tj='Mean_Tj', out_tj=tmp_tj_mean)
-    ratio_equation = equation.format(result=tmp_ratio,
-                                     expression=ratio_expression)
-    msg = '\n >>> Estimating the Rji ratio'
-    g.message(msg)
-    grass.mapcalc(ratio_equation, overwrite=True)
+    estimate_ratio_ji(tmp_ratio, tmp_ti_mean, tmp_tj_mean, cwv.ratio_ji_expression)
 
-    # estimate column water vapor
-    tmp_cwv = tmp + '.cwv'
-
-    print ' | The "Column water vapor retrieval expression for mapcalc":\n\n',
-    cwv_expression = cwv.column_water_vapor_expression
-    cwv_expression = replace_dummies(cwv_expression,
-                                     instring='Ratio_ji',
-                                     outstring=tmp_ratio)
-
-    cwv_equation = equation.format(result=tmp_cwv, expression=cwv_expression)
-    
-    msg = "\n >>> Retrieving atmospheric column water vapor"
-    g.message(msg)
-    grass.mapcalc(cwv_equation, overwrite=True)
-    
-    # print "Range of CWV:"
-    # print
-    # run('r.info', map=tmp_cwv, flags='r')
-    # print
-
-    # random column water vapor estimation -- for testing!
-    tmp_cwv = random.uniform(0.0, 6.3)
-
-###
-### FixMe --- add complex r.mapcalc selection to apply coefficients appropriately
-###
-
-    # SplitWindowLST class, feed with required input values
- 
-    split_window_lst = SplitWindowLST(emissivity_b10,
-                                      emissivity_b11,
-                                      tmp_cwv)
-    print "Split Window LST class:", split_window_lst
-    print
-
-    # citation, report or add to history
-    citation = split_window_lst.citation
-    print "Citation:", citation
-    print
+    # estimate Column Water Vapor map (CWV)
+    estimate_column_water_vapor(tmp_cwv, tmp_ratio, cwv.column_water_vapor_expression)
 
     #
     # Match region to input image if... ?
     #
 
-    # ToDo: check if extent-B10 == extent-B11? Uneccessay?
+    # ToDo: check if extent-B10 == extent-B11? Unnecessary?
     if not keep_region:
         run('g.region', rast=b10)   # ## FixMe?
         msg = "\n|! Matching region extent to map {name}"
@@ -574,50 +645,41 @@ def main():
 
     # mask_clouds()
 
+    #
+    # Estimate LST
+    #
 
-    # Temporary Map
-    tmp_lst = "{prefix}.lst".format(prefix=tmp)
+    # SplitWindowLST class, feed with required input values
+    split_window_lst = SplitWindowLST(emissivity_b10, emissivity_b11)
 
-    # mapcalc expression
-    split_window_expression = split_window_lst.mapcalc
+    # citation, report or add to history
+    citation_lst = split_window_lst.citation
+    msg = "Estimating LST via a Split-Window method"
+    msg += citation_lst
+    g.message(msg)
 
-    # replace the "dummy" string...
-    split_window_expression = replace_dummies(split_window_expression,
-                                              in_ti='Input_T10', out_ti=t10,
-                                              in_tj='Input_T11', out_tj=t11)
-    print "Split-Window expression:", split_window_expression
-    print
-
-    split_window_equation = equation.format(result=tmp_lst,
-                                            expression=split_window_expression)
-
-    grass.mapcalc(split_window_equation, overwrite=True)
+    estimate_lst(tmp_lst, t10, t11, tmp_cwv, split_window_lst.sw_lst_mapcalc)
 
     #
     # Strings for metadata
     #
 
-    # history_calibration = 'Regression model: '
-    # history_calibration += mapcalc_formula
-    # if ndi:
-    #     history_calibration += '(NDI: {ndi})'.format(ndi=ndi)
-    # title_calibration = 'Calibrated DMSP-OLS Stable Lights'
-    # description_calibration = ('Inter-satellite calibrated average '
-    #                            'Digital Number values')
-    # units_calibration = 'Digital Numbers (Calibrated)'
-
-    # source1_calibration = citation
-    # source2_calibration = ''
+    history_lst = 'Split-Window model: '
+    history_lst += split_window_lst.sw_lst_mapcalc
+    title_lst = 'Land Surface Temperature (C)'
+    description_lst = ('Split-Window LST')
+    units_lst = 'Celsius'
+    source1_lst = citation_lst
+    source2_lst = citation_cwv
 
     # history entry
-    #run("r.support", map=tmp_lst, title=title_lst,
-    #    units=units_lst, description=description_lst,
-    #    source1=source1_lst, source2=source2_lst,
-    #    history=history_lst)
+    run("r.support", map=tmp_lst, title=title_lst,
+        units=units_lst, description=description_lst,
+        source1=source1_lst, source2=source2_lst,
+        history=history_lst)
 
     if colortable:
         run('r.colors', map=tmp_lst, color='celsius')
-
 
     #
     # Add suffix to basename & rename end product

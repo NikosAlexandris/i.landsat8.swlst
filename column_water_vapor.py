@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Determinatin of atmospheric column water vapour based on
+Determinatin of atmospheric column water vapor based on
 Huazhong Ren, Chen Du, Qiming Qin, Rongyuan Liu, Jinjie Meng, Jing Li
 
 @author nik | 2015-04-18 03:48:20
@@ -13,14 +13,14 @@ DUMMY_Ti_MEAN = 'Mean_Ti'
 DUMMY_Tj_MEAN = 'Mean_Tj'
 DUMMY_Rji = 'Ratio_ji'
 
-class Column_Water_Vapour():
+class Column_Water_Vapor():
     """
     Retrieving atmospheric column water vapor from Landsat8 TIRS data based on
     the modified split-window covariance and variance ratio (MSWCVR).
 
     -------------------------------------------------------------------------
     *Note,* this class produces valid expressions for GRASS GIS' mapcalc raster
-    processing module and does not directly compute column water vapour
+    processing module and does not directly compute column water vapor
     estimations.
     -------------------------------------------------------------------------
 
@@ -71,6 +71,13 @@ class Column_Water_Vapour():
     def __init__(self, window_size, ti, tj):
         """
         """
+
+        # citation
+        self.citation = ('Huazhong Ren, Chen Du, Qiming Qin, Rongyuan Liu, '
+                         'Jinjie Meng, and Jing Li. '
+                         '"Atmospheric Water Vapor Retrieval from Landsat 8 '
+                         'and Its Validation." 3045-3048. IEEE, 2014.')
+ 
         # model constants
         self.c0 = -9.674
         self.c1 = 0.653
@@ -100,17 +107,14 @@ class Column_Water_Vapour():
         # ratio ji
         self.ratio_ji_expression = self._ratio_ji_expression()
 
-        # column water vapour
-        self.column_water_vapour_expression = self._column_water_vapour_expression()
-
-    def _citation(self):
-        pass
+        # column water vapor
+        self.column_water_vapor_expression = self._column_water_vapor_expression()
 
     def __str__(self):
         """
         """
-        msg = 'Expression for r.mapcalc to determine column water vapour: '
-        return msg + str(self.column_water_vapour_expression)
+        msg = 'Expression for r.mapcalc to determine column water vapor: '
+        return msg + str(self.column_water_vapor_expression)
 
     def _derive_adjacent_pixels(self):
         """
@@ -172,7 +176,7 @@ class Column_Water_Vapour():
         rji = '( {numerator} ) / ( {denominator} )'
         return rji.format(numerator=rji_numerator, denominator=rji_denominator)
 
-    def _column_water_vapour_complete_expression(self):
+    def _column_water_vapor_complete_expression(self):
         """
         """
         cwv_expression = '({c0}) + ({c1}) * ({Rji}) + ({c2}) * ({Rji})^2'
@@ -181,7 +185,7 @@ class Column_Water_Vapour():
                                      Rji=self.ratio_ji_expression,
                                      c2=self.c2)
 
-    def _column_water_vapour_expression(self):
+    def _column_water_vapor_expression(self):
         """
         """
         cwv_expression = '({c0}) + ({c1}) * ({Rji}) + ({c2}) * ({Rji})^2'
@@ -191,45 +195,8 @@ class Column_Water_Vapour():
                                      c2=self.c2)
 
 
-def test_class():
-    
-    print
-    print "Testing the Column_Water_Vapour class"
-    print
-
-    obj = Column_Water_Vapour(3, 'TIRS10', 'TIRS11')
-    print " | Testing the '__str__' method:\n\n ", obj
-    print
-    
-    print " | Adjacent pixels:", obj.adjacent_pixels
-    print
-
-    print " | Map Ti:", obj.ti
-    print " | Map Tj:", obj.tj
-    print
-
-    print " | Modifiers for Ti:", obj.modifiers_ti
-    print " | Modifiers for Tj:", obj.modifiers_tj
-    print " | Zipped modifiers_tj:", obj.modifiers
-    print
-
-    print " | Expression for Ti mean:", obj.mean_ti_expression
-    print " | Expression for Tj mean:", obj.mean_tj_expression
-    print
-
-    print " | Numerator for Ratio (method):", obj._numerator_for_ratio('TestValue_TiMean', 'TestValue_TjMean')
-    print " | Denominator for Ratio (method):", obj._denominator_for_ratio('TestValue_TiMean')
-
-    print " | Ratio ji expression for mapcalc:", obj.ratio_ji_expression
-    print
-
-    print ' | The "Column water vapour retrieval expression for mapcalc":\n\n', obj.column_water_vapour_expression
-    print
-
 # reusable & stand-alone
 if __name__ == "__main__":
-    print ('Atmpspheric column water vapour retrieval '
+    print ('Atmpspheric column water vapor retrieval '
            'from Landsat 8 TIRS data.'
-           ' (Running as stand-alone tool?)\n')
-
-test_class()
+           ' (Running as stand-alone tool?)')
