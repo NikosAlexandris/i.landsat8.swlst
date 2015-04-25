@@ -27,34 +27,34 @@
 
                 The algorithm's flowchart (Figure 3 in the paper [0]) is:
 
-               +--------+   +--------------------------+                               
-               |Landsat8+--->Cloud screen & calibration|                               
-               +--------+   +---+--------+-------------+                               
-                                |        |                                             
-                                |        |                                             
-                              +-v-+   +--v-+                                           
-                              |OLI|   |TIRS|                                           
-                              +-+-+   +--+-+                                           
-                                |        |                                             
-                                |        |                                             
+               +--------+   +--------------------------+
+               |Landsat8+--->Cloud screen & calibration|
+               +--------+   +---+--------+-------------+
+                                |        |
+                                |        |
+                              +-v-+   +--v-+
+                              |OLI|   |TIRS|
+                              +-+-+   +--+-+
+                                |        |
+                                |        |
                              +--v-+   +--v-------------------+          +-------------+
                              |NDVI|   |Brightness temperature+---------->MSWCVM method|
               +----------+   +--+-+   +--+-------------------+          +----------+--+
-              |Land cover|      |        |                                         |   
-              +----------+      |        |                                         |   
+              |Land cover|      |        |                                         |
+              +----------+      |        |                                         |
                       |       +-v-+   +--v-------------------+    +----------------v--+
                       |       |FVC|   |Split Window Algorithm|    |Column Water Vapour|
 +---------------------v--+    +-+-+   +-------------------+--+    +----------------+--+
-|Emissivity look|up table|      |                         |                        |   
-+---------------------+--+      |                         |                        |   
+|Emissivity look|up table|      |                         |                        |
++---------------------+--+      |                         |                        |
                       |      +--v--------------------+    |    +-------------------v--+
                       +------>Pixel emissivity ei, ej+--> | <--+Algorithm coefficients|
                              +-----------------------+    |    +----------------------+
-                                                          |                            
-                                                          |                            
-                                          +---------------v--+                         
-                                          |LST and emissivity|                         
-                                          +------------------+                         
+                                                          |
+                                                          |
+                                          +---------------v--+
+                                          |LST and emissivity|
+                                          +------------------+
 
                Sources:
 
@@ -94,29 +94,29 @@
 
                - ε is the average emissivity of the two channels (i.e., ε = 0.5
                [εi + εj]),
-               
+
                - Δε is the channel emissivity difference (i.e., Δε = εi − εj);
-               
+
                - bk (k = 0,1,...7) are the algorithm coefficients derived in
                the following simulated dataset.
 
                [...]
 
                In the above equations,
-                   
+
                    - dk (k = 0, 1...6) and ek (k = 1, 2, 3, 4) are the
                    algorithm coefficients;
-                   
+
                    - w is the CWV;
-                   
+
                    - ε and ∆ε are the average emissivity and emissivity
                    difference of two adjacent thermal channels, respectively,
                    which are similar to Equation (2);
-                   
+
                    - and fk (k = 0 and 1) is related to the influence of the
                    atmospheric transmittance and emissivity, i.e., f k =
                    f(εi,εj,τ i ,τj).
-                
+
                 Note that the algorithm (Equation (6a)) proposed by
                 Jiménez-Muñoz et al. added CWV directly to estimate LST.
 
@@ -204,14 +204,14 @@
 #%option G_OPT_R_INPUT
 #% key: t10
 #% key_desc: Temperature (10)
-#% description: Brightness temperature (K) from band 10 
+#% description: Brightness temperature (K) from band 10
 #% required : yes
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: t11
 #% key_desc: Temperature (11)
-#% description: Brightness temperature (K) from band 11 
+#% description: Brightness temperature (K) from band 11
 #% required : yes
 #%end
 
@@ -296,7 +296,7 @@ import atexit
 import grass.script as grass
 #from grass.exceptions import CalledModuleError
 from grass.pygrass.modules.shortcuts import general as g
-#from grass.pygrass.modules.shortcuts import raster as r
+from grass.pygrass.modules.shortcuts import raster as r
 #from grass.pygrass.raster.abstract import Info
 
 from split_window_lst import *
@@ -349,28 +349,32 @@ def mask_clouds(qa_band):
 
         See also: http://courses.neteler.org/processing-landsat8-data-in-grass-gis-7/#Applying_the_Landsat_8_Quality_Assessment_%28QA%29_Band
         """
-        # create cloud map
         msg = ('\n|i Create a cloud mask (highest confidence) '
                'based on the Quality Assessment band.')
         g.message(msg)
 
         tmp_cloudmask = tmp + '.cloudmask'
 
-        qabits_expression = 'if({qab} == 49152, null(), 1)'.format(qab=qa_band)
+        qabits_expression = 'if({qab} == 61440, 1, null() )'.format(qab=qa_band)
 
         cloud_masking_equation = equation.format(result=tmp_cloudmask,
                                                  expression=qabits_expression)
 
         grass.mapcalc(cloud_masking_equation)
 
-        # create cloud mask
-        run('r.mask', raster=tmp_cloudmask, overwrite=True)
+        r.mask(raster=tmp_cloudmask, flags='i', overwrite=True)
+       
+        # for testing...
+        save_map(tmp_cloudmask)
 
 
 def ndvi(b4, b5):
     """
     Derive NDVI
     """
+    msg = ('\n|i Deriving NDVI from bands 4 and 5 (currently using i.vi).')
+    g.message(msg)
+
     # temporary map
     global tmp_ndvi
     tmp_ndvi = tmp + '.ndvi'
@@ -391,6 +395,9 @@ def fvc(ndvi):
     - NDVI_inf for vegetation with infinite LAI
     - NDVI_s for bare soil
     """
+    msg = ('\n|i Deriving FVC map from NDVI.')
+    g.message(msg)
+
     # name for themporary fvc map
     tmp_fvc = tmp + '.fvc'
 
@@ -441,6 +448,7 @@ def random_column_water_vapor_subrange():
     # COLUMN_WATER_VAPOUR[cwvkey].rmse
     return cwvkey
 
+
 def random_column_water_vapor_value():
     """
     Helper function returning a random value for column water vapor.
@@ -485,7 +493,7 @@ def replace_dummies(string, *args, **kwargs):
         replacements = (in_ti, str(out_ti)), (in_tj, str(out_tj))
 
     in_tijm_out = set(['in_ti', 'out_ti', 'in_tj', 'out_tj',
-                        'in_tim', 'out_tim', 'in_tjm', 'out_tjm'])
+                       'in_tim', 'out_tim', 'in_tjm', 'out_tjm'])
 
     if in_tijm_out == set(kwargs):
         in_ti = kwargs.get('in_ti', 'None')
@@ -521,25 +529,27 @@ def get_cwv_window_means(outname, t1x, t1x_mean_expression):
     """
     Get window means for T1x
     """
-    msg = ('\n >>> Deriving window means from {Tx} ')
-    msg +=('using the expression:\n {exp}')
+    msg = ('\n |i Deriving window means from {Tx} ')
+    msg += ('using the expression:\n {exp}')
     msg = msg.format(Tx=t1x, exp=t1x_mean_expression)
     g.message(msg)
 
     tx_mean_equation = equation.format(result=outname,
                                        expression=t1x_mean_expression)
     grass.mapcalc(tx_mean_equation, overwrite=True)
-    
-    # run('r.info', map=outname, flags='r')
+
+    if info:
+        run('r.info', map=outname, flags='r')
+
 
 def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
     """
     Estimate Ratio ji for the Column Water Vapor retrieval equation.
     """
-    msg = '\n >>> Estimating ratio Rji'
+    msg = '\n |i Estimating ratio Rji'
     msg += ratio_expression
     g.message(msg)
- 
+
     ratio_expression = replace_dummies(ratio_expression,
                                        in_ti='Mean_Ti', out_ti=tmp_ti_mean,
                                        in_tj='Mean_Tj', out_tj=tmp_tj_mean)
@@ -548,14 +558,15 @@ def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
                                      expression=ratio_expression)
 
     grass.mapcalc(ratio_equation, overwrite=True)
- 
-    # run('r.info', map=outname, flags='r')
+
+    if info:
+        run('r.info', map=outname, flags='r')
 
 
 def estimate_column_water_vapor(outname, ratio, cwv_expression):
     """
     """
-    msg = "\n >>> Estimating atmospheric column water vapor "
+    msg = "\n|i Estimating atmospheric column water vapor "
     msg += '| Mapcalc expression: '
     msg += cwv_expression
     g.message(msg)
@@ -567,34 +578,45 @@ def estimate_column_water_vapor(outname, ratio, cwv_expression):
     cwv_equation = equation.format(result=outname, expression=cwv_expression)
 
     grass.mapcalc(cwv_equation, overwrite=True)
-    #run('r.info', map=outname, flags='r')
+
+    if info:
+        run('r.info', map=outname, flags='r')
+
+    # save Column Water Vapor map?
+    if cwv_output:
+        run('g.copy', raster=(outname, cwv_output))
 
     # uncomment below to save for testing!
     # save_map(outname)
 
 
-def estimate_column_water_vapor_big_expression(outname, t10, t11, cwv_expression):
+def estimate_cwv_big_expression(outname, t10, t11, cwv_expression):
     """
     Derive a column water vapor map using a single mapcalc expression based on
     eval.
 
             *** To Do: evaluate -- does it work correctly? *** !
     """
-    msg = "\n >>> Estimating atmospheric column water vapor "
+    msg = "\n|i Estimating atmospheric column water vapor "
     #msg += '| One big mapcalc expression: '
     #msg += cwv_expression
     g.message(msg)
-    
+
     cwv_expression = replace_dummies(cwv_expression,
                                      in_ti='TIRS10', out_ti=t10,
                                      in_tj='TIRS11', out_tj=t11)
 
-
     cwv_equation = equation.format(result=outname, expression=cwv_expression)
-    
-    grass.mapcalc(cwv_equation, overwrite=True)
-    # run('r.info', map=outname, flags='r')
 
+    grass.mapcalc(cwv_equation, overwrite=True)
+
+    if info:
+        run('r.info', map=outname, flags='r')
+
+    # save Column Water Vapor map?
+    if cwv_output:
+        run('g.copy', raster=(outname, cwv_output))
+    
     # uncomment below to save for testing!
     #save_map(outname)
 
@@ -621,11 +643,13 @@ def estimate_lst(outname, t10, t11, cwv_map, lst_expression):
     split_window_equation = equation.format(result=outname,
                                             expression=split_window_expression)
 
-    msg = '\n >>> Estimating the Land Surface Temperature'
+    msg = '\n|i Estimating the Land Surface Temperature'
     g.message(msg)
-    
+
     grass.mapcalc(split_window_equation, overwrite=True)
-    #run('r.info', map=outname, flags='r')
+
+    if info:
+        run('r.info', map=outname, flags='r')
 
 
 def main():
@@ -658,6 +682,8 @@ def main():
     t11 = options['t11']
     qab = options['qab']
     lst_output = options['lst']
+    
+    global cwv_output
     cwv_output = options['cwv']
 
     #emissivity_b10 = options['emissivity_b10']
@@ -669,18 +695,38 @@ def main():
     global info
     info = flags['i']
     keep_region = flags['k']
-    
+
     #timestamps = not(flags['t'])
     #zero = flags['z']
     #null = flags['n']  ### either zero or null, not both
     #evaluation = flags['e'] -- is there a quick way?
     #shell = flags['g']
-    
+
     colortable = flags['c']
+
+    #
+    # Match region to input image if... ?
+    #
 
     # Temporary Region
     if not keep_region:
-        grass.use_temp_region()  # to safely modify the region
+        grass.use_temp_region()  # safely modify the region
+
+        # ToDo: check if extent-B10 == extent-B11? Unnecessary?
+        
+        run('g.region', rast=t10)   # ## FixMe?
+        msg = "\n|! Matching region extent to map {name}"
+        msg = msg.format(name=t10)
+        g.message(msg)
+
+    elif keep_region:
+        grass.warning(_('Operating on current region'))
+
+    #
+    # Mask clouds
+    #
+
+    mask_clouds(qab)
 
     #
     # Part 1: OLI -> NDVI -> FVC -> Emissivities from look-up table
@@ -710,45 +756,23 @@ def main():
     citation_cwv = cwv.citation
 
     # To be removed -----------------------------------------------
-    ## get window means (of adjacent pixels) for Ti, Tj
-    #get_cwv_window_means(tmp_ti_mean, t10, cwv.mean_ti_expression)
-    #get_cwv_window_means(tmp_tj_mean, t11, cwv.mean_tj_expression)
+    # get window means (of adjacent pixels) for Ti, Tj
+    get_cwv_window_means(tmp_ti_mean, t10, cwv.mean_ti_expression)
+    get_cwv_window_means(tmp_tj_mean, t11, cwv.mean_tj_expression)
 
-    ## estimate ratio Rji for column water vapor
-    #estimate_ratio_ji(tmp_ratio, tmp_ti_mean, tmp_tj_mean,
-    #                  cwv.ratio_ji_expression)
+    # estimate ratio Rji for column water vapor
+    estimate_ratio_ji(tmp_ratio, tmp_ti_mean, tmp_tj_mean,
+                      cwv.ratio_ji_expression)
 
-    ## estimate Column Water Vapor map (CWV)
-    #estimate_column_water_vapor(tmp_cwv, tmp_ratio,
-    #                            cwv.column_water_vapor_expression)
+    # estimate Column Water Vapor map (CWV)
+    estimate_column_water_vapor(tmp_cwv, tmp_ratio,
+                                cwv.column_water_vapor_expression)
     # --------------------------------------------- To be removed #
 
     # estimate using one big mapcalc expression
-    estimate_column_water_vapor_big_expression(tmp_cwv, t10, t11, cwv._build_cwv_mapcalc())
+    #estimate_cwv_big_expression(tmp_cwv, t10, t11, cwv._big_cwv_expression())
 
-    # save Column Water Vapor map?
-    if cwv_output:
-        run('g.copy', raster=(tmp_cwv, cwv_output))
 
-    #
-    # Match region to input image if... ?
-    #
-
-    # ToDo: check if extent-B10 == extent-B11? Unnecessary?
-    if not keep_region:
-        run('g.region', rast=t10)   # ## FixMe?
-        msg = "\n|! Matching region extent to map {name}"
-        msg = msg.format(name=t10)
-        g.message(msg)
-
-    elif keep_region:
-        grass.warning(_('Operating on current region'))
-
-    #
-    # Mask clouds
-    #
-    
-    mask_clouds(qab)
 
     #
     # Estimate LST
@@ -760,7 +784,7 @@ def main():
     estimate_lst(tmp_lst, t10, t11, tmp_cwv, split_window_lst.sw_lst_mapcalc)
 
     # remove mask
-    run('r.mask', flags='r', verbose=True)
+    r.mask(flags='r', verbose=True)
 
     # Strings for metadata
     history_lst = 'Split-Window model: '
