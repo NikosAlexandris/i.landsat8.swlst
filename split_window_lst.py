@@ -334,6 +334,7 @@ class SplitWindowLST():
 
     def _set_average_lst(self):
         """
+        Set the average LST pixel value
         """
         pass
 
