@@ -13,6 +13,7 @@ DUMMY_Ti_MEAN = 'Mean_Ti'
 DUMMY_Tj_MEAN = 'Mean_Tj'
 DUMMY_Rji = 'Ratio_ji'
 
+
 class Column_Water_Vapor():
     """
     Retrieving atmospheric column water vapor from Landsat8 TIRS data based on
@@ -25,12 +26,13 @@ class Column_Water_Vapor():
     -------------------------------------------------------------------------
 
     With a vital assumption that the atmosphere is unchanged over the
-    neighboring pixels, the MSWCVR method relates the atmospheric CWV to the ratio
-    of the upward transmittances in two thermal infrared bands, whereas the
-    transmittance ratio can be calculated based on the TOA brightness temperatures
-    of the two bands.
+    neighboring pixels, the MSWCVR method relates the atmospheric CWV to the
+    ratio of the upward transmittances in two thermal infrared bands, whereas
+    the transmittance ratio can be calculated based on the TOA brightness
+    temperatures of the two bands.
 
-    Considering N adjacent pixels, the CWV in the MSWCVR method is estimated as:
+    Considering N adjacent pixels, the CWV in the MSWCVR method is estimated
+    as:
 
     - cwv = c0 + c1 * (tj / ti) + c2 * (tj / ti)^2
     - tj/ti ~ Rji = SUM [ ( Tik - mean(Ti) ) * (Tjk - mean(Tj) ) ] /
@@ -77,18 +79,16 @@ class Column_Water_Vapor():
                          'Jinjie Meng, and Jing Li. '
                          '"Atmospheric Water Vapor Retrieval from Landsat 8 '
                          'and Its Validation." 3045-3048. IEEE, 2014.')
- 
+
         # model constants
         self.c0 = -9.674
         self.c1 = 0.653
         self.c2 = 9.087
 
-        # window of N (= n by n) pixels
+        # window of N (= n by n) pixels, adjacent pixels
         self.window_size = window_size
         self.window_height = self.window_size
         self.window_width = self.window_size
-
-        # size of window, adjacent pixels
         self.adjacent_pixels = self._derive_adjacent_pixels()
 
         # maps for transmittance
@@ -103,13 +103,19 @@ class Column_Water_Vapor():
         # mapcalc expression for means
         self.mean_ti_expression = self._mean_tirs_expression(self.modifiers_ti)
         self.mean_tj_expression = self._mean_tirs_expression(self.modifiers_tj)
-        #self.means_tji_expression = self._means_tji_expression()
+
+        # mapcalc expression for medians
+        self.median_ti_expression = \
+            self._median_tirs_expression(self.modifiers_ti)
+        self.median_tj_expression = \
+            self._median_tirs_expression(self.modifiers_tj)
 
         # ratio ji
         self.ratio_ji_expression = self._ratio_ji_expression()
 
         # column water vapor
-        self.column_water_vapor_expression = self._column_water_vapor_expression()
+        self.column_water_vapor_expression = \
+            self._column_water_vapor_expression()
 
     def __str__(self):
         """
@@ -141,12 +147,17 @@ class Column_Water_Vapor():
         pixel modifiers.
         """
         tx_mean_expression = '({Tx_sum}) / {Tx_length}'
-
         tx_sum = ' + '.join(modifiers)
-
         tx_length = len(modifiers)
 
         return tx_mean_expression.format(Tx_sum=tx_sum, Tx_length=tx_length)
+
+    def _median_tirs_expression(self, modifiers):
+        """
+        Return mapcalc expression for window means based on the given mapcalc
+        pixel modifiers.
+        """
+        pass
 
     def _numerator_for_ratio(self, mean_ti, mean_tj):
         """
@@ -154,12 +165,12 @@ class Column_Water_Vapor():
         """
         if not mean_ti:
             mean_ti = 'Ti_mean'
-        
+
         if not mean_tj:
             mean_tj = 'Tj_mean'
 
         rji_numerator = '({Ti} - {Tim}) * ({Tj} - {Tjm})'
-        
+
         return ' + '.join([rji_numerator.format(Ti=mod_ti,
                                                 Tim=mean_ti,
                                                 Tj=mod_tj,
@@ -174,7 +185,7 @@ class Column_Water_Vapor():
             mean_ti = 'Ti_mean'
 
         rji_denominator = '({Ti} - {Tim})^2'
-        
+
         return ' + '.join([rji_denominator.format(Ti=mod,
                                                   Tim=mean_ti)
                           for mod in self.modifiers_ti])
@@ -193,20 +204,6 @@ class Column_Water_Vapor():
 
         return rji.format(numerator=rji_numerator, denominator=rji_denominator)
 
-    def _column_water_vapor_complete_expression(self):
-        """
-        An attempt to return a complete mapcalc expression incorporating all of
-        the above (means for ti, tj, numerator, denominator).
-
-        *** To Do / To Test ****
-        """
-        cwv_expression = '({c0}) + ({c1}) * ({Rji}) + ({c2}) * ({Rji})^2'
-
-        return cwv_expression.format(c0=self.c0,
-                                     c1=self.c1,
-                                     Rji=self.ratio_ji_expression,
-                                     c2=self.c2)
-
     def _column_water_vapor_expression(self):
         """
         """
@@ -216,27 +213,29 @@ class Column_Water_Vapor():
                                      Rji=DUMMY_Rji,
                                      c2=self.c2)
 
-    # build one big expression
-    def _build_cwv_mapcalc(self):
+    def _big_cwv_expression(self):
         """
         Build and return a valid mapcalc expression for deriving a Column
         Water Vapor map from Landsat8's brightness temperature channels
         B10, B11 based on the MSWCVM method (see citation).
+
+        *** ToDo: Why is it different than the step-by-step approach, as
+            implemented in _column_water_vapor_expression() ? ***
         """
         modifiers_ti = self._derive_modifiers(self.ti)
-        #print "   > Modifiers (Ti):", modifiers_ti
+        # print "   > Modifiers (Ti):", modifiers_ti
 
         ti_sum = ' + '.join(modifiers_ti)
-        #print "   > Sum (Ti):", ti_sum
+        # print "   > Sum (Ti):", ti_sum
 
         ti_length = len(modifiers_ti)
-        #print "   > Length (Ti):", ti_length
+        # print "   > Length (Ti):", ti_length
 
         ti_mean = '({sum}) / {length}'.format(sum=ti_sum, length=ti_length)
-        #print "   > Mean (Ti):", ti_mean
+        # print "   > Mean (Ti):", ti_mean
 
-        #print "   > Repeating same for Tj... (hidden)"
-        #print
+        # print "   > Repeating same for Tj... (hidden)"
+        # print
 
         modifiers_tj = self._derive_modifiers(self.tj)
         tj_sum = ' + '.join(modifiers_tj)
@@ -246,20 +245,26 @@ class Column_Water_Vapor():
         numerator = self._numerator_for_ratio(ti_mean, tj_mean)
         denominator = self._denominator_for_ratio(ti_mean)
 
-        #print "   > Numerator:", numerator
-        #print
+        # print "   > Numerator:", numerator
+        # print
 
-        #print "   > Denominator:", denominator
-        #print
+        # print "   > Denominator:", denominator
+        # print
 
-        #print "   Ratio ji expression:", self._ratio_ji_expression()
-        #print
+        # print "   Ratio ji expression:", self._ratio_ji_expression()
+        # print
 
-        cwv = ('eval(ti_mean = {tim},'
+        cwv = ('eval('
+               '\ \n  ti_mean = {tim},'
+               '\ \n'
                '\ \n  tj_mean = {tjm},'
+               '\ \n'
                '\ \n  numerator = {numerator},'
+               '\ \n'
                '\ \n  denominator = {denominator},'
+               '\ \n'
                '\ \n  rji = numerator / denominator,'
+               '\ \n'
                '\ \n  {c0} + {c1} * rji + {c2} * rji^2)')
 
         cwv_expression = cwv.format(tim=ti_mean, tjm=tj_mean,
