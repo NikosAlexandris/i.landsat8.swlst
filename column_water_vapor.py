@@ -34,21 +34,27 @@ class Column_Water_Vapor():
     Considering N adjacent pixels, the CWV in the MSWCVR method is estimated
     as:
 
-    - cwv = c0 + c1 * (tj / ti) + c2 * (tj / ti)^2
-    - tj/ti ~ Rji = SUM [ ( Tik - mean(Ti) ) * (Tjk - mean(Tj) ) ] /
-                  / SUM [ ( Tik - mean(Tj) )^2 ]
+    - cwv  =  c0  +  c1  *  (tj / ti)  +  c2  *  (tj / ti)^2
+
+    - tj/ti ~ Rji = SUM [ ( Tik - Ti_mean ) * ( Tjk - Tj_mean ) ] /
+                    SUM [ ( Tik - Tj_mean )^2 ]
 
     In Equation (3a):
 
     - c0, c1 and c2 are coefficients obtained from simulated data;
+
     - τ is the band effective atmospheric transmittance;
+    
     - N is the number of adjacent pixels (excluding water and cloud pixels)
     in a spatial window of size n (i.e., N = n × n);
+    
     - Ti,k and Tj,k are Top of Atmosphere brightness temperatures (K) of
     bands i and j for the kth pixel;
+    
     - mean(Ti) and mean(Tj) are the mean or median brightness temperatures of
     the N pixels for the two bands.
 
+    
     The regression coefficients:
 
     - c0 = −9.674
@@ -104,7 +110,7 @@ class Column_Water_Vapor():
         self.mean_ti_expression = self._mean_tirs_expression(self.modifiers_ti)
         self.mean_tj_expression = self._mean_tirs_expression(self.modifiers_tj)
 
-        # mapcalc expression for medians
+        # mapcalc expression for medians  --  ToDo
         self.median_ti_expression = \
             self._median_tirs_expression(self.modifiers_ti)
         self.median_tj_expression = \
@@ -146,11 +152,12 @@ class Column_Water_Vapor():
         Return mapcalc expression for window means based on the given mapcalc
         pixel modifiers.
         """
-        tx_mean_expression = '({Tx_sum}) / {Tx_length}'
-        tx_sum = ' + '.join(modifiers)
+        tx_mean_expression = '{sum_of_tx} / {length_of_tx}'
+        tx_sum = '(' + ' + '.join(modifiers) + ')'
         tx_length = len(modifiers)
 
-        return tx_mean_expression.format(Tx_sum=tx_sum, Tx_length=tx_length)
+        return tx_mean_expression.format(sum_of_tx=tx_sum,
+                                         length_of_tx=tx_length)
 
     def _median_tirs_expression(self, modifiers):
         """
@@ -169,13 +176,34 @@ class Column_Water_Vapor():
         if not mean_tj:
             mean_tj = 'Tj_mean'
 
-        rji_numerator = '({Ti} - {Tim}) * ({Tj} - {Tjm})'
+        rji_numerator = '(' + '({Ti} - {Tim}) * ({Tj} - {Tjm})' + ')'
 
         return ' + '.join([rji_numerator.format(Ti=mod_ti,
                                                 Tim=mean_ti,
                                                 Tj=mod_tj,
                                                 Tjm=mean_tj)
                           for mod_ti, mod_tj in self.modifiers])
+
+    def _numerator_for_ratio_big(self, **kwargs):
+        """
+        Numerator for Ratio ji. Requires two strings, one to represent the mean
+        of 'Ti's ('mean_ti') and one for the mean of 'Tj's ('mean_tj').
+
+        Example:
+                _numerator_for_ratio_big(mean_ti='Some_String',
+                                        mean_tj='Another_String')
+        """
+        mean_ti = kwargs.get('mean_ti', 'ti_mean')
+        mean_tj = kwargs.get('mean_tj', 'tj_mean')
+
+        terms = '({Ti} - {Tim}) * ({Tj} - {Tjm})'
+        terms = ' + '.join([terms.format(Ti=mod_ti,
+                                         Tim=mean_ti,
+                                         Tj=mod_tj,
+                                         Tjm=mean_tj)
+                           for mod_ti, mod_tj in self.modifiers])
+
+        return terms
 
     def _denominator_for_ratio(self, mean_ti):
         """
@@ -190,6 +218,19 @@ class Column_Water_Vapor():
                                                   Tim=mean_ti)
                           for mod in self.modifiers_ti])
 
+    def _denominator_for_ratio_big(self, **kwargs):
+        """
+        Denominator for Ratio ji.
+        """
+        mean_ti = kwargs.get('mean_ti', 'ti_mean')
+        
+        terms = '({Ti} - {Tim})^2'
+        terms = ' + '.join([terms.format(Ti=mod,
+                                         Tim=mean_ti)
+                           for mod in self.modifiers_ti])
+
+        return terms
+
     def _ratio_ji_expression(self):
         """
         Returns a mapcalc expression for the Ratio ji, part of the column water
@@ -200,7 +241,7 @@ class Column_Water_Vapor():
 
         rji_denominator = self._denominator_for_ratio(mean_ti=DUMMY_Ti_MEAN)
 
-        rji = '{numerator} / {denominator}'
+        rji = '( {numerator} )  /  ( {denominator} )'
 
         return rji.format(numerator=rji_numerator, denominator=rji_denominator)
 
@@ -208,10 +249,8 @@ class Column_Water_Vapor():
         """
         """
         cwv_expression = '({c0}) + ({c1}) * ({Rji}) + ({c2}) * ({Rji})^2'
-        return cwv_expression.format(c0=self.c0,
-                                     c1=self.c1,
-                                     Rji=DUMMY_Rji,
-                                     c2=self.c2)
+        return cwv_expression.format(c0=self.c0, c1=self.c1,
+                                     Rji=DUMMY_Rji, c2=self.c2)
 
     def _big_cwv_expression(self):
         """
@@ -225,25 +264,30 @@ class Column_Water_Vapor():
         modifiers_ti = self._derive_modifiers(self.ti)
         # print "   > Modifiers (Ti):", modifiers_ti
 
-        ti_sum = ' + '.join(modifiers_ti)
+        ti_sum = '(' + ' + '.join(modifiers_ti) + ')'
         # print "   > Sum (Ti):", ti_sum
 
         ti_length = len(modifiers_ti)
         # print "   > Length (Ti):", ti_length
 
-        ti_mean = '({sum}) / {length}'.format(sum=ti_sum, length=ti_length)
+        ti_mean = '{sum} / {length}'.format(sum=ti_sum, length=ti_length)
         # print "   > Mean (Ti):", ti_mean
 
         # print "   > Repeating same for Tj... (hidden)"
         # print
 
         modifiers_tj = self._derive_modifiers(self.tj)
-        tj_sum = ' + '.join(modifiers_tj)
+        tj_sum = '(' + ' + '.join(modifiers_tj) + ')'
         tj_length = len(modifiers_tj)
-        tj_mean = '({sum}) / {length}'.format(sum=tj_sum, length=tj_length)
+        tj_mean = '{sum} / {length}'.format(sum=tj_sum, length=tj_length)
 
-        numerator = self._numerator_for_ratio(ti_mean, tj_mean)
-        denominator = self._denominator_for_ratio(ti_mean)
+        string_for_mean_ti = 'ti_mean'
+        string_for_mean_tj = 'tj_mean'
+
+        numerator = self._numerator_for_ratio_big(mean_ti=string_for_mean_ti,
+                                                  mean_tj=string_for_mean_tj)
+        denominator = \
+            self._denominator_for_ratio_big(mean_ti=string_for_mean_ti)
 
         # print "   > Numerator:", numerator
         # print

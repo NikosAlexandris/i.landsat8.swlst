@@ -4,18 +4,21 @@ ToDo:
 
 - Evaluate the BIG mapcalc expressions -- are they correct?
 
-- Why does the multi-step approach on deriving the CWV map differ from the
+- ~~Why does the multi-step approach on deriving the CWV map differ from the
   single big mapcalc expression? See column_water_vapor? See
-  column_water_vapor.py (function: _build_cwv_mapcalc()).  
+  column_water_vapor.py (function: _build_cwv_mapcalc()).~~ Fixed
 
 - Implement direct conversion of B10, B11 to brightness temperature values
 
-- Get the FROM-GLC map, implement mechanism to read land cover classes from it
+- ~~Get the FROM-GLC map,~~ Found
+- implement mechanism to read land cover classes from it
   and use'm to retrieve emissivities
 
-- How to use the FVC?
+- ~~How to use the FVC?~~ Don't. Just use the Look-up table!
 
 [Mid]
+
+- Use existing i.emissivity?
 
 - Raster Row I/O
 
