@@ -349,7 +349,7 @@ def mask_clouds(qa_band):
 
         See also: http://courses.neteler.org/processing-landsat8-data-in-grass-gis-7/#Applying_the_Landsat_8_Quality_Assessment_%28QA%29_Band
         """
-        msg = ('\n|i Create a cloud mask (highest confidence) '
+        msg = ('\n|i Masking clouds (highest confidence) '
                'based on the Quality Assessment band.')
         g.message(msg)
 
@@ -546,8 +546,8 @@ def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
     """
     Estimate Ratio ji for the Column Water Vapor retrieval equation.
     """
-    msg = '\n |i Estimating ratio Rji'
-    msg += ratio_expression
+    msg = '\n |i Estimating ratio Rji...'
+    msg +='\n' +  ratio_expression
     g.message(msg)
 
     ratio_expression = replace_dummies(ratio_expression,
@@ -599,7 +599,9 @@ def estimate_cwv_big_expression(outname, t10, t11, cwv_expression):
     """
     msg = "\n|i Estimating atmospheric column water vapor "
     #msg += '| One big mapcalc expression: '
+    # print '| One big mapcalc expression: '
     #msg += cwv_expression
+    # print cwv_expression
     g.message(msg)
 
     cwv_expression = replace_dummies(cwv_expression,
@@ -643,7 +645,7 @@ def estimate_lst(outname, t10, t11, cwv_map, lst_expression):
     split_window_equation = equation.format(result=outname,
                                             expression=split_window_expression)
 
-    msg = '\n|i Estimating the Land Surface Temperature'
+    msg = '\n|i Estimating land surface temperature'
     g.message(msg)
 
     grass.mapcalc(split_window_equation, overwrite=True)
@@ -732,11 +734,11 @@ def main():
     # Part 1: OLI -> NDVI -> FVC -> Emissivities from look-up table
     #
 
-    # derive NDVI, output is tmp_ndvi
-    ndvi(b4, b5)
+    ## derive NDVI, output is tmp_ndvi
+    #ndvi(b4, b5)
 
-    # compute FVC, output is tmp_fvc
-    fvc(tmp_ndvi)  # ToDo: where to plug this in?
+    ## compute FVC, output is tmp_fvc
+    #fvc(tmp_ndvi)  # ToDo: where to plug this in?
 
     # get average emissivities from Land Cover Map  OR  Look-Up table?
     emissivity_b10, emissivity_b11 = retrieve_emissivities(emissivity_class)
@@ -755,24 +757,22 @@ def main():
     cwv = Column_Water_Vapor(window_size, t10, t11)
     citation_cwv = cwv.citation
 
-    # To be removed -----------------------------------------------
-    # get window means (of adjacent pixels) for Ti, Tj
-    get_cwv_window_means(tmp_ti_mean, t10, cwv.mean_ti_expression)
-    get_cwv_window_means(tmp_tj_mean, t11, cwv.mean_tj_expression)
+    ## To be removed -----------------------------------------------
+    ## get window means (of adjacent pixels) for Ti, Tj
+    #get_cwv_window_means(tmp_ti_mean, t10, cwv.mean_ti_expression)
+    #get_cwv_window_means(tmp_tj_mean, t11, cwv.mean_tj_expression)
 
-    # estimate ratio Rji for column water vapor
-    estimate_ratio_ji(tmp_ratio, tmp_ti_mean, tmp_tj_mean,
-                      cwv.ratio_ji_expression)
+    ## estimate ratio Rji for column water vapor
+    #estimate_ratio_ji(tmp_ratio, tmp_ti_mean, tmp_tj_mean,
+    #                  cwv.ratio_ji_expression)
 
-    # estimate Column Water Vapor map (CWV)
-    estimate_column_water_vapor(tmp_cwv, tmp_ratio,
-                                cwv.column_water_vapor_expression)
-    # --------------------------------------------- To be removed #
+    ## estimate Column Water Vapor map (CWV)
+    #estimate_column_water_vapor(tmp_cwv, tmp_ratio,
+    #                            cwv.column_water_vapor_expression)
+    ### --------------------------------------------- To be removed #
 
     # estimate using one big mapcalc expression
-    #estimate_cwv_big_expression(tmp_cwv, t10, t11, cwv._big_cwv_expression())
-
-
+    estimate_cwv_big_expression(tmp_cwv, t10, t11, cwv._big_cwv_expression())
 
     #
     # Estimate LST
@@ -803,7 +803,7 @@ def main():
 
     # colors to celsius
     if colortable:
-        g.message('\n >>> Assigning the "celsius" color table to the LST map')
+        g.message('\n|i Assigning the "celsius" color table to the LST map')
         run('r.colors', map=tmp_lst, color='celsius')
 
     # (re)name end product
