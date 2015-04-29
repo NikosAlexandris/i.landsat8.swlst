@@ -38,6 +38,7 @@ def check_t1x_range(number):
 
 def check_cwv(cwv):
     """
+    Check whether a column water value lies within a "valid" range. Which is?
     """
     if cwv < 0.0 or cwv > 6.3:
         raise ValueError('The column water vapor estimation is out of the '
@@ -210,8 +211,10 @@ class SplitWindowLST():
             # self._cwv_subrange_a, self._cwv_subrange_b = tuple(result)
             return result[0], result[1]
 
-    def _set_adjacent_cwv_subranges(self):
+    def _set_adjacent_cwv_subranges(self, column_water_vapor):
         """
+        Set the retrieved cwv subranges as an attribute, though not a public
+        one.
         """
         result = self._retrieve_adjacent_cwv_subranges(column_water_vapor)
         if len(result) == 1:
@@ -224,7 +227,7 @@ class SplitWindowLST():
 
     def _retrieve_cwv_coefficients(self, subrange):
         """
-        Set column water vapor coefficients for requested subrange
+        Retrieve column water vapor coefficients for requested subrange
         """
         b0 = COLUMN_WATER_VAPOR[subrange].b0
         b1 = COLUMN_WATER_VAPOR[subrange].b1
@@ -248,12 +251,13 @@ class SplitWindowLST():
 
     def _set_cwv_coefficients(self, subrange):
         """
+        Set the coefficients as an attribute.
         """
         self.cwv_coefficients = self._retrieve_cwv_coefficients(subrange)
 
     def get_cwv_coefficients(self):
         """
-        Return the column water vapor coefficients
+        Return the column water vapor coefficients from the object's attribute.
         """
         if self.cwv_coefficients:
             return self.cwv_coefficients
@@ -269,6 +273,7 @@ class SplitWindowLST():
 
     def _set_rmse(self, subrange):
         """
+        Set the RMSE as an attribute.
         """
         self.rmse = self._retrieve_rmse(subrange)
 
@@ -485,7 +490,7 @@ class SplitWindowLST():
 
     def _build_mapcalc_average(self):
         """
-        Build formula for GRASS GIS' mapcalc
+        Build formula for GRASS GIS' mapcalc -- to do!
         """
         # formula = '{c0} + {c1}*{dummy} + {c2}*{dummy}^2'
         formula = ('{b0} + '

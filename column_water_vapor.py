@@ -92,7 +92,9 @@ class Column_Water_Vapor():
         self.c2 = 9.087
 
         # window of N (= n by n) pixels, adjacent pixels
+        assert window_size % 2 != 0, "Window size should be an even number!"
         self.window_size = window_size
+
         self.window_height = self.window_size
         self.window_width = self.window_size
         self.adjacent_pixels = self._derive_adjacent_pixels()
@@ -168,7 +170,9 @@ class Column_Water_Vapor():
 
     def _numerator_for_ratio(self, mean_ti, mean_tj):
         """
-        Numerator for Ratio ji.
+        Numerator for Ratio ji. Use this function for the step-by-step approach
+        to estimate the column water vapor from within the main code (main
+        function) of the module i.landsat8.swlst
         """
         if not mean_ti:
             mean_ti = 'Ti_mean'
@@ -187,7 +191,8 @@ class Column_Water_Vapor():
     def _numerator_for_ratio_big(self, **kwargs):
         """
         Numerator for Ratio ji. Requires two strings, one to represent the mean
-        of 'Ti's ('mean_ti') and one for the mean of 'Tj's ('mean_tj').
+        of 'Ti's ('mean_ti') and one for the mean of 'Tj's ('mean_tj'). Use
+        this function for the big mapcalc expression.
 
         Example:
                 _numerator_for_ratio_big(mean_ti='Some_String',
@@ -207,7 +212,9 @@ class Column_Water_Vapor():
 
     def _denominator_for_ratio(self, mean_ti):
         """
-        Denominator for Ratio ji.
+        Denominator for Ratio ji. Use this function for the step-by-step approach
+        to estimate the column water vapor from within the main code (main
+        function) of the module i.landsat8.swlst
         """
         if not mean_ti:
             mean_ti = 'Ti_mean'
@@ -220,7 +227,11 @@ class Column_Water_Vapor():
 
     def _denominator_for_ratio_big(self, **kwargs):
         """
-        Denominator for Ratio ji.
+        Denominator for Ratio ji. Use this function for the big mapcalc
+        expression.
+        
+        Example:
+                _denominator_for_ratio_big(mean_ti='Some_String')
         """
         mean_ti = kwargs.get('mean_ti', 'ti_mean')
         
@@ -242,13 +253,18 @@ class Column_Water_Vapor():
         rji_denominator = self._denominator_for_ratio(mean_ti=DUMMY_Ti_MEAN)
 
         rji = '( {numerator} )  /  ( {denominator} )'
-
-        return rji.format(numerator=rji_numerator, denominator=rji_denominator)
+        rji = rji.format(numerator=rji_numerator, denominator=rji_denominator)
+        
+        return rji
 
     def _column_water_vapor_expression(self):
         """
+        Use this function for the step-by-step approach to estimate the column
+        water vapor from within the main code (main function) of the module
+        i.landsat8.swlst
         """
         cwv_expression = '({c0}) + ({c1}) * ({Rji}) + ({c2}) * ({Rji})^2'
+        
         return cwv_expression.format(c0=self.c0, c1=self.c1,
                                      Rji=DUMMY_Rji, c2=self.c2)
 
