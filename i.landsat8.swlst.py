@@ -343,29 +343,29 @@ def random_digital_numbers(count=2):
 
 
 def mask_clouds(qa_band):
-        """
-        Create and apply a cloud mask based on the Quality Assessment Band
-        (BQA.) Source: <http://landsat.usgs.gov/L8QualityAssessmentBand.php
+    """
+    Create and apply a cloud mask based on the Quality Assessment Band
+    (BQA.) Source: <http://landsat.usgs.gov/L8QualityAssessmentBand.php
 
-        See also: http://courses.neteler.org/processing-landsat8-data-in-grass-gis-7/#Applying_the_Landsat_8_Quality_Assessment_%28QA%29_Band
-        """
-        msg = ('\n|i Masking clouds (highest confidence) '
-               'based on the Quality Assessment band.')
-        g.message(msg)
+    See also: http://courses.neteler.org/processing-landsat8-data-in-grass-gis-7/#Applying_the_Landsat_8_Quality_Assessment_%28QA%29_Band
+    """
+    msg = ('\n|i Masking clouds (highest confidence) '
+            'based on the Quality Assessment band.')
+    g.message(msg)
 
-        tmp_cloudmask = tmp + '.cloudmask'
+    tmp_cloudmask = tmp + '.cloudmask'
 
-        qabits_expression = 'if({qab} == 61440, 1, null() )'.format(qab=qa_band)
+    qabits_expression = 'if({qab} == 61440, 1, null() )'.format(qab=qa_band)
 
-        cloud_masking_equation = equation.format(result=tmp_cloudmask,
-                                                 expression=qabits_expression)
+    cloud_masking_equation = equation.format(result=tmp_cloudmask,
+                                                expression=qabits_expression)
 
-        grass.mapcalc(cloud_masking_equation)
+    grass.mapcalc(cloud_masking_equation)
 
-        r.mask(raster=tmp_cloudmask, flags='i', overwrite=True)
-       
-        # for testing...
-        save_map(tmp_cloudmask)
+    r.mask(raster=tmp_cloudmask, flags='i', overwrite=True)
+
+    # for testing...
+    save_map(tmp_cloudmask)
 
 
 def ndvi(b4, b5):
@@ -618,7 +618,7 @@ def estimate_cwv_big_expression(outname, t10, t11, cwv_expression):
     # save Column Water Vapor map?
     if cwv_output:
         run('g.copy', raster=(outname, cwv_output))
-    
+
     # uncomment below to save for testing!
     #save_map(outname)
 
@@ -684,7 +684,7 @@ def main():
     t11 = options['t11']
     qab = options['qab']
     lst_output = options['lst']
-    
+
     global cwv_output
     cwv_output = options['cwv']
 
@@ -715,7 +715,7 @@ def main():
         grass.use_temp_region()  # safely modify the region
 
         # ToDo: check if extent-B10 == extent-B11? Unnecessary?
-        
+
         run('g.region', rast=t10)   # ## FixMe?
         msg = "\n|! Matching region extent to map {name}"
         msg = msg.format(name=t10)
@@ -756,20 +756,6 @@ def main():
     window_size = 3  # could it be else!?
     cwv = Column_Water_Vapor(window_size, t10, t11)
     citation_cwv = cwv.citation
-
-    ## To be removed -----------------------------------------------
-    ## get window means (of adjacent pixels) for Ti, Tj
-    #get_cwv_window_means(tmp_ti_mean, t10, cwv.mean_ti_expression)
-    #get_cwv_window_means(tmp_tj_mean, t11, cwv.mean_tj_expression)
-
-    ## estimate ratio Rji for column water vapor
-    #estimate_ratio_ji(tmp_ratio, tmp_ti_mean, tmp_tj_mean,
-    #                  cwv.ratio_ji_expression)
-
-    ## estimate Column Water Vapor map (CWV)
-    #estimate_column_water_vapor(tmp_cwv, tmp_ratio,
-    #                            cwv.column_water_vapor_expression)
-    ### --------------------------------------------- To be removed #
 
     # estimate using one big mapcalc expression
     estimate_cwv_big_expression(tmp_cwv, t10, t11, cwv._big_cwv_expression())
