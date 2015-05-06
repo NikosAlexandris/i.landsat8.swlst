@@ -16,14 +16,15 @@
                - the brightness temperatures (Ti and Tj) of the two adjacent
                  TIRS channels,
 
-               - FROM-GLC land cover products and emissivity lookup table, which are
-                 a fraction of the FVC that can be estimated from the red and
-                 near-infrared reflectance of the Operational Land Imager (OLI).
+               - FROM-GLC land cover products and emissivity lookup table,
+                 which are a fraction of the FVC that can be estimated from the
+                 red and near-infrared reflectance of the Operational Land
+                 Imager (OLI).
 
-               - The FVC is estimated from the NDVI, calculated from the red and
-                 near-infrared reflectance of Operational Land Imager, another payload
-                 on Landsat8, by using the method proposed by Carlson (1997) and Sobrino
-                 (2001) [34,35].
+               - The FVC is estimated from the NDVI, calculated from the red
+                 and near-infrared reflectance of Operational Land Imager,
+                 another payload on Landsat8, by using the method proposed by
+                 Carlson (1997) and Sobrino (2001) [34,35].
 
                 The algorithm's flowchart (Figure 3 in the paper [0]) is:
 
@@ -350,7 +351,7 @@ def mask_clouds(qa_band):
     See also: http://courses.neteler.org/processing-landsat8-data-in-grass-gis-7/#Applying_the_Landsat_8_Quality_Assessment_%28QA%29_Band
     """
     msg = ('\n|i Masking clouds (highest confidence) '
-            'based on the Quality Assessment band.')
+           'based on the Quality Assessment band.')
     g.message(msg)
 
     tmp_cloudmask = tmp + '.cloudmask'
@@ -358,7 +359,7 @@ def mask_clouds(qa_band):
     qabits_expression = 'if({qab} == 61440, 1, null() )'.format(qab=qa_band)
 
     cloud_masking_equation = equation.format(result=tmp_cloudmask,
-                                                expression=qabits_expression)
+                                             expression=qabits_expression)
 
     grass.mapcalc(cloud_masking_equation)
 
@@ -366,57 +367,6 @@ def mask_clouds(qa_band):
 
     # for testing...
     save_map(tmp_cloudmask)
-
-
-def ndvi(b4, b5):
-    """
-    Derive NDVI
-    """
-    msg = ('\n|i Deriving NDVI from bands 4 and 5 (currently using i.vi).')
-    g.message(msg)
-
-    # temporary map
-    global tmp_ndvi
-    tmp_ndvi = tmp + '.ndvi'
-
-    # use i.vi or r.mapcalc?
-    run('i.vi', red=b4, nir=b5, viname="ndvi", output=tmp_ndvi, storage_bit=16)
-
-
-def fvc(ndvi):
-    """
-    Derive the Fraction of Vegetation Cover from the NDVI
-    based on a simple radiative transfer model (Carlson and Ripley, 1997)
-
-    f = ((NDVI - NDVI_s) / (NDVI_inf - NSVI_s))^2
-
-    where:
-
-    - NDVI_inf for vegetation with infinite LAI
-    - NDVI_s for bare soil
-    """
-    msg = ('\n|i Deriving FVC map from NDVI.')
-    g.message(msg)
-
-    # name for themporary fvc map
-    tmp_fvc = tmp + '.fvc'
-
-    # equation for r.mapcalc
-    ndvi_inf = 2
-    ndvi_bare_soil = 0
-
-    fvc_expression = ('(({ndvi} - {ndvi_bare_soil}) / '
-                      '({ndvi_inf} - {ndvi_bare_soil}))^ 2')
-    fvc_expression = fvc_expression.format(ndvi=ndvi,
-                                           ndvi_bare_soil=ndvi_bare_soil,
-                                           ndvi_inf=ndvi_inf)
-    fvc_equation = equation.format(result=tmp_fvc, expression=fvc_expression)
-
-    # compute fvc
-    grass.mapcalc(fvc_equation, overwrite=True)
-
-    # remove temporary ndvi map
-    run('g.remove', type='raster', name=tmp_ndvi, flags='f')
 
 
 def retrieve_emissivities(emissivity_class):
@@ -547,7 +497,7 @@ def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
     Estimate Ratio ji for the Column Water Vapor retrieval equation.
     """
     msg = '\n |i Estimating ratio Rji...'
-    msg +='\n' +  ratio_expression
+    msg += '\n' + ratio_expression
     g.message(msg)
 
     ratio_expression = replace_dummies(ratio_expression,
