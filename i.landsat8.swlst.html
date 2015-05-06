@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>GRASS GIS manual: i.landsat8.swlst.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" href="grassdocs.css" type="text/css">
+</head>
+<body bgcolor="white">
+<div id="container">
+
+<a href="index.html"><img src="grass_logo.png" alt="GRASS logo"></a>
+<hr class="header">
+
+<h2>NAME</h2>
+<em><b>i.landsat8.swlst.py</b></em>  - Practical split-window algorithm estimating Land Surface Temperature from Landsat 8 OLI/TIRS imagery (Du, Chen; Ren, Huazhong; Qin, Qiming; Meng, Jinjie; Zhao, Shaohua. 2015)
+<h2>KEYWORDS</h2>
+<a href="imagery.html">imagery</a>, <a href="topic_split_window.html">split window</a>, <a href="keywords.html#land surface temperature">land surface temperature</a>, <a href="keywords.html#lst">lst</a>, <a href="keywords.html#landsat8">landsat8</a>
+<h2>SYNOPSIS</h2>
+<div id="name"><b>i.landsat8.swlst.py</b><br></div>
+<b>i.landsat8.swlst.py --help</b><br>
+<div id="synopsis"><b>i.landsat8.swlst.py</b> [-<b>ikc</b>]  [<b>prefix</b>=<em>prefix string</em>]  <b>b4</b>=<em>Band 4</em> <b>b5</b>=<em>Band 5</em>  [<b>b10</b>=<em>Band 10</em>]   [<b>b11</b>=<em>Band 11</em>]  <b>t10</b>=<em>Temperature (10)</em> <b>t11</b>=<em>Temperature (11)</em> <b>qab</b>=<em>QA band</em>  [<b>clouds</b>=<em>cloud masking</em>]   [<b>e10</b>=<em>Emissivity B10</em>]   [<b>e11</b>=<em>Emissivity B11</em>]   [<b>landcover</b>=<em>land cover map name</em>]  <b>emissivity_class</b>=<em>emissivity class</em> <b>lst</b>=<em>lst output</em>  [<b>cwv</b>=<em>cwv output</em>]   [--<b>overwrite</b>]  [--<b>help</b>]  [--<b>verbose</b>]  [--<b>quiet</b>]  [--<b>ui</b>] 
+</div>
+
+<div id="flags">
+<h3>Flags:</h3>
+<dl>
+<dt><b>-i</b></dt>
+<dd>Print out model equations</dd>
+
+<dt><b>-k</b></dt>
+<dd>Keep current computational region settings</dd>
+
+<dt><b>-c</b></dt>
+<dd>Apply Celsius colortable to output LST map</dd>
+
+<dt><b>--overwrite</b></dt>
+<dd>Allow output files to overwrite existing files</dd>
+<dt><b>--help</b></dt>
+<dd>Print usage summary</dd>
+<dt><b>--verbose</b></dt>
+<dd>Verbose module output</dd>
+<dt><b>--quiet</b></dt>
+<dd>Quiet module output</dd>
+<dt><b>--ui</b></dt>
+<dd>Force launching GUI dialog</dd>
+</dl>
+</div>
+
+<div id="parameters">
+<h3>Parameters:</h3>
+<dl>
+<dt><b>prefix</b>=<em>prefix string</em></dt>
+<dd>OLI band names prefix</dd>
+<dd>Prefix of Landsat8 OLI band names</dd>
+<dd>Default: <em>B</em></dd>
+
+<dt><b>b4</b>=<em>Band 4</em>&nbsp;<b>[required]</b></dt>
+<dd>Band 4 - Red (0.64 - 0.67 microns)</dd>
+
+<dt><b>b5</b>=<em>Band 5</em>&nbsp;<b>[required]</b></dt>
+<dd>Band 5 - Near Infra-Red (0.85 - 0.88 microns)</dd>
+
+<dt><b>b10</b>=<em>Band 10</em></dt>
+<dd>Band 10 - TIRS (10.60 - 11.19 microns)</dd>
+
+<dt><b>b11</b>=<em>Band 11</em></dt>
+<dd>Band 11 - TIRS (11.50 - 12.51 microns)</dd>
+
+<dt><b>t10</b>=<em>Temperature (10)</em>&nbsp;<b>[required]</b></dt>
+<dd>Brightness temperature (K) from band 10</dd>
+
+<dt><b>t11</b>=<em>Temperature (11)</em>&nbsp;<b>[required]</b></dt>
+<dd>Brightness temperature (K) from band 11</dd>
+
+<dt><b>qab</b>=<em>QA band</em>&nbsp;<b>[required]</b></dt>
+<dd>Landsat 8 quality assessment band</dd>
+
+<dt><b>clouds</b>=<em>cloud masking</em></dt>
+<dd>Confidence level for cloud masking (see...) -- ToDo!</dd>
+<dd>Options: <em>clouds, cirrus, both</em></dd>
+<dd>Default: <em>high</em></dd>
+
+<dt><b>e10</b>=<em>Emissivity B10</em></dt>
+<dd>Emissivity for Landsat 8 band 10</dd>
+
+<dt><b>e11</b>=<em>Emissivity B11</em></dt>
+<dd>Emissivity for Landsat 8 band 11</dd>
+
+<dt><b>landcover</b>=<em>land cover map name</em></dt>
+<dd>Land cover map</dd>
+
+<dt><b>emissivity_class</b>=<em>emissivity class</em>&nbsp;<b>[required]</b></dt>
+<dd>Manual selection of land cover class to retrieve average emissivity from a look-up table (case sensitive)</dd>
+<dd>Options: <em>Cropland,  Forest,  Grasslands,  Shrublands,  Wetlands,  Waterbodies,  Tundra,  Impervious,  Barren,  Snow</em></dd>
+
+<dt><b>lst</b>=<em>lst output</em>&nbsp;<b>[required]</b></dt>
+<dd>Name for output Land Surface Temperature map</dd>
+<dd>Default: <em>lst</em></dd>
+
+<dt><b>cwv</b>=<em>cwv output</em></dt>
+<dd>Name for output Column Water Vapor map [optional]</dd>
+
+</dl>
+</div>
+</body>
+</html>
