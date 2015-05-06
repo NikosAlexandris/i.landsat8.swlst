@@ -14,6 +14,15 @@ DUMMY_Tj_MEAN = 'Mean_Tj'
 DUMMY_Rji = 'Ratio_ji'
 
 
+# helper functions
+def random_adjacent_pixel_values(pixel_modifiers):
+    """
+    """
+    import random
+    return [random.randint(250, 350) for dummy_idx in
+            range(len(pixel_modifiers))]
+
+
 class Column_Water_Vapor():
     """
     Retrieving atmospheric column water vapor from Landsat8 TIRS data based on
@@ -44,17 +53,17 @@ class Column_Water_Vapor():
     - c0, c1 and c2 are coefficients obtained from simulated data;
 
     - τ is the band effective atmospheric transmittance;
-    
+
     - N is the number of adjacent pixels (excluding water and cloud pixels)
     in a spatial window of size n (i.e., N = n × n);
-    
+
     - Ti,k and Tj,k are Top of Atmosphere brightness temperatures (K) of
     bands i and j for the kth pixel;
-    
+
     - mean(Ti) and mean(Tj) are the mean or median brightness temperatures of
     the N pixels for the two bands.
 
-    
+
     The regression coefficients:
 
     - c0 = −9.674
@@ -131,6 +140,58 @@ class Column_Water_Vapor():
         """
         msg = 'Expression for r.mapcalc to determine column water vapor: '
         return msg + str(self.column_water_vapor_expression)
+
+    def compute_column_water_vapor(self, tik, tjk):
+        """
+        """
+        import random
+
+        # feed with N pixel
+        #tik = random_adjacent_pixel_values(self.modifiers_ti)
+        ti_mean = sum(tik) / len(tik)
+#        print "Tik, Ti_mean:", tik, ti_mean
+
+        #tjk = [ti + random.uniform(1,10) for ti in tik]
+        tj_mean = sum(tjk) / len(tjk)
+#        print "Tjk, Tj_mean:", tjk, tj_mean
+
+#        print "Zip'em", zip(tik, tjk)
+#        print
+
+        # numerator_ji = SUM [ ( Tik - Ti_mean ) * ( Tjk - Tj_mean)]
+        numerator_ji_terms = []
+        for ti, tj in zip(tik, tjk):
+            #print '({tik} - {tim}) * ({tjk} - {tjm})'.format(tik=ti,
+            #                                                 tim=ti_mean,
+            #                                                 tjk=tj,
+            #                                                 tjm=tj_mean)
+            #print "Term:", (ti - ti_mean) * (tj - tj_mean)
+            numerator_ji_terms.append((ti - ti_mean) * (tj - tj_mean))
+        #print "Terms for numerator_ji:", numerator_ji_terms
+
+        numerator_ji = sum(numerator_ji_terms) * 1.0
+        #print "Numerator:", numerator_ji
+
+        # denominator_ji = SUM ( Tik - Tj_mean )^2
+        denominator_ji_terms = []
+        for ti in tik:
+            #print '({tik} - {tim})^2'.format(tik=ti, tim=ti_mean)
+            term = (ti - ti_mean)**2
+            #print "Term:", term
+            denominator_ji_terms.append(term)
+        #print "Terms for denominator_ji:", denominator_ji_terms
+
+        denominator_ji = sum(denominator_ji_terms) * 1.0
+        #print "Denominator:", denominator_ji_terms
+
+        ratio_ji = numerator_ji / denominator_ji
+        cwv = self.c0 + self.c1 * ratio_ji + self.c2 * (ratio_ji ** 2)
+        print '{c0} + {c1}*{rji} + {c2}*{rji}^2 = '.format(c0=self.c0,
+                                                        c1=self.c1,
+                                                        rji=ratio_ji,
+                                                        c2=self.c2,
+                                                        cwv=cwv),
+        return cwv
 
     def _derive_adjacent_pixels(self):
         """
