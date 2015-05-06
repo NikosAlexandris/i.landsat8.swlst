@@ -127,10 +127,10 @@ class Column_Water_Vapor():
         self.median_tj_expression = \
             self._median_tirs_expression(self.modifiers_tj)
 
-        # ratio ji
+        # mapcalc expression for ratio ji
         self.ratio_ji_expression = self._ratio_ji_expression()
 
-        # column water vapor
+        # mapcalc expression for column water vapor
         self.column_water_vapor_expression = \
             self._column_water_vapor_expression()
 
@@ -143,49 +143,40 @@ class Column_Water_Vapor():
 
     def compute_column_water_vapor(self, tik, tjk):
         """
+        Compute the column water vapor based on lists of input Ti and Tj
+        values.
         """
-        import random
 
-        # feed with N pixel
+        # feed with N pixels
+
         #tik = random_adjacent_pixel_values(self.modifiers_ti)
         ti_mean = sum(tik) / len(tik)
-#        print "Tik, Ti_mean:", tik, ti_mean
-
+        
+        # import random
         #tjk = [ti + random.uniform(1,10) for ti in tik]
         tj_mean = sum(tjk) / len(tjk)
-#        print "Tjk, Tj_mean:", tjk, tj_mean
 
-#        print "Zip'em", zip(tik, tjk)
-#        print
-
-        # numerator_ji = SUM [ ( Tik - Ti_mean ) * ( Tjk - Tj_mean)]
+        # numerator: sum of all (Tik - Ti_mean) * (Tjk - Tj_mean)
         numerator_ji_terms = []
         for ti, tj in zip(tik, tjk):
-            #print '({tik} - {tim}) * ({tjk} - {tjm})'.format(tik=ti,
-            #                                                 tim=ti_mean,
-            #                                                 tjk=tj,
-            #                                                 tjm=tj_mean)
-            #print "Term:", (ti - ti_mean) * (tj - tj_mean)
             numerator_ji_terms.append((ti - ti_mean) * (tj - tj_mean))
-        #print "Terms for numerator_ji:", numerator_ji_terms
 
         numerator_ji = sum(numerator_ji_terms) * 1.0
-        #print "Numerator:", numerator_ji
 
-        # denominator_ji = SUM ( Tik - Tj_mean )^2
+        # denominator:  sum of all (Tik - Tj_mean)^2
         denominator_ji_terms = []
         for ti in tik:
-            #print '({tik} - {tim})^2'.format(tik=ti, tim=ti_mean)
             term = (ti - ti_mean)**2
-            #print "Term:", term
             denominator_ji_terms.append(term)
-        #print "Terms for denominator_ji:", denominator_ji_terms
-
         denominator_ji = sum(denominator_ji_terms) * 1.0
-        #print "Denominator:", denominator_ji_terms
 
+        # ratio ji
         ratio_ji = numerator_ji / denominator_ji
+
+        # column water vapor
         cwv = self.c0 + self.c1 * ratio_ji + self.c2 * (ratio_ji ** 2)
+
+        # inform?
         print '{c0} + {c1}*{rji} + {c2}*{rji}^2 = '.format(c0=self.c0,
                                                         c1=self.c1,
                                                         rji=ratio_ji,
