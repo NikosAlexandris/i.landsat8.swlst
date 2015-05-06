@@ -39,7 +39,8 @@ def test_column_water_vapor():
     obj = Column_Water_Vapor(3, 'A', 'B')
     print " | Testing the '__str__' method:\n\n ", obj
     print
-    
+   
+
     print " | Adjacent pixels:", obj.adjacent_pixels
     print
 
@@ -62,8 +63,11 @@ def test_column_water_vapor():
     print "   ~ Random N pixel values for Tj:",
     random_tj_values = random_adjacent_pixel_values(obj.modifiers_ti)
     print random_tj_values
-    print
 
+    print "   ~ Testing \"compute_column_water_vapor\" based on the above random values):",
+    print obj.compute_column_water_vapor(random_ti_values, random_tj_values)
+    print
+    
     print " | Expression for Ti mean:", obj.mean_ti_expression
     
     print " | Expression for Tj mean:", obj.mean_tj_expression
