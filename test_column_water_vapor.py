@@ -7,7 +7,7 @@
 
 # required librairies
 import random
-from column_water_vapor import * 
+from column_water_vapor import *
 
 
 # helper functions
@@ -31,7 +31,7 @@ def test_column_water_vapor():
     print ('    where:\n\n   - tj/ti ~ Rji = '
            'SUM [ ( Tik - Ti_mean ) * ( Tjk - Tj_mean ) ] / '
            'SUM [ ( Tik - Tj_mean )^2 ]')
-    
+
     print
     print "Testing the Column_Water_Vapor class"
     print
@@ -39,7 +39,6 @@ def test_column_water_vapor():
     obj = Column_Water_Vapor(3, 'A', 'B')
     print " | Testing the '__str__' method:\n\n ", obj
     print
-   
 
     print " | Adjacent pixels:", obj.adjacent_pixels
     print
@@ -50,10 +49,11 @@ def test_column_water_vapor():
     print
 
     print " | N pixels window modifiers for Ti:", obj.modifiers_ti
-    
+
     print " | N pixels window Modifiers for Tj:", obj.modifiers_tj
-    
-    print " | Zipped modifiers_tij (used in a function for the Ratio ji):", obj.modifiers
+
+    print " | Zipped modifiers_tij (used in a function for the Ratio ji):",
+    print obj.modifiers
     print
 
     print "   ~ Random N pixel values for Ti:",
@@ -64,7 +64,8 @@ def test_column_water_vapor():
     random_tj_values = random_adjacent_pixel_values(obj.modifiers_ti)
     print random_tj_values
 
-    print "   ~ Testing \"compute_column_water_vapor\" based on the above random values):",
+    print ('   ~ Testing "compute_column_water_vapor" '
+           'based on the above random values):'),
     print obj.compute_column_water_vapor(random_ti_values, random_tj_values)
     print
     

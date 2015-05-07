@@ -175,20 +175,6 @@
 #%end
 
 #%option G_OPT_R_INPUT
-#% key: b4
-#% key_desc: Band 4
-#% description: Band 4 - Red (0.64 - 0.67 microns)
-#% required : yes
-#%end
-
-#%option G_OPT_R_INPUT
-#% key: b5
-#% key_desc: Band 5
-#% description: Band 5 - Near Infra-Red (0.85 - 0.88 microns)
-#% required : yes
-#%end
-
-#%option G_OPT_R_INPUT
 #% key: b10
 #% key_desc: Band 10
 #% description: Band 10 - TIRS (10.60 - 11.19 microns)
@@ -232,16 +218,16 @@
 #%end
 
 #%option
-#% key: clouds
-#% key_desc: cloud masking
-#% description: Confidence level for cloud masking (see...) -- ToDo!
-#% options: clouds,cirrus,both
-#% answer: high
-#% required: no
+#% key: qapixel
+#% key_desc: qa pixel value
+#% description: Pixel value in the quality assessment image to use as a mask. Refer to <http://landsat.usgs.gov/L8QualityAssessmentBand.php>.
+#% options: 61440,57344,53248
+#% answer: 61440
+#% required: yes
 #%end
 
 #%rules
-#% excludes: prefix, b4, b5, b10, b11, qab
+#% excludes: prefix, b10, b11, qab
 #%end
 
 #%option G_OPT_R_INPUT
@@ -323,8 +309,86 @@ def save_map(mapname):
     """
     Helper function to save some in-between maps, assisting in debugging
     """
-    run('r.info', map=mapname, flags='r')
+    #run('r.info', map=mapname, flags='r')
     run('g.copy', raster=(mapname, 'DebuggingMap'))
+
+
+def dn_to_radiance(mtl, b10, b11):
+    """
+    Conversion of Digital Numbers to TOA Radiance. OLI and TIRS band data can
+    be converted to TOA spectral radiance using the radiance rescaling factors
+    provided in the metadata file:      Lλ = ML * Qcal + AL
+
+    where:
+
+    - Lλ = TOA spectral radiance (Watts/( m2 * srad * μm))
+
+    - ML = Band-specific multiplicative rescaling factor from the metadata
+      (RADIANCE_MULT_BAND_x, where x is the band number)
+
+    - AL = Band-specific additive rescaling factor from the metadata
+      (RADIANCE_ADD_BAND_x, where x is the band number)
+
+    - Qcal = Quantized and calibrated standard product pixel values (DN)
+
+    Some code borrowed from
+    <https://github.com/micha-silver/grass-landsat8/blob/master/r.in.landsat8.py>
+    """
+    # Get metadata values
+
+    ### check metageta ### 
+
+    multiplicative_factor = '{:f}'.format(mtl['RADIANCE_MULT_BAND_'+str(b)])
+    additive_factor = '{:f}'.format(mtl['RADIANCE_ADD_BAND_'+str(b)])
+
+    # Prepare mapcalc expression
+    radiance_expression = '{ML} * dn + {AL}'.format(ML=multiplicative_factor,
+                                                    AL=additive_factor)
+    radiance_equation = equation.format(result=tmp_radiance,
+                                        expression=radiance_expression)
+    grass.mapcalc(radiance_equation, overwrite=True)
+
+    if info:
+        run('r.info', map=tmp_radiance, flags='r')
+
+    pass
+
+def radiance_to_brightness_temperature(r10, r11):
+    """
+
+    ### Under development... ###
+
+    Conversion to At-Satellite Brightness Temperature
+    TIRS band data can be converted from spectral radiance to brightness
+    temperature using the thermal constants provided in the metadata file:
+
+    T = K2 / ln( (K1/Lλ) + 1 )
+
+    where:
+
+    - T = At-satellite brightness temperature (K)
+
+    - Lλ = TOA spectral radiance (Watts/( m2 * srad * μm))
+
+    - K1 = Band-specific thermal conversion constant from the metadata
+      (K1_CONSTANT_BAND_x, where x is the band number, 10 or 11)
+
+    - K2 = Band-specific thermal conversion constant from the metadata
+      (K2_CONSTANT_BAND_x, where x is the band number, 10 or 11)
+    """
+    btemperature_expression = '{K2} / (math.log({K1}/{Ll}) + 1)'.format(K2=k2,
+                                                                        K1=k1,
+                                                                        Ll=radiance)
+
+    btemperature_equation = equation.format(result=outname,
+                                            epxression=btemperature_expression)
+    
+    grass.mapcalc(btemperature_equation, overwrite=True)
+
+    if info:
+        run('r.info', map=outname, flags='r')
+   
+    pass
 
 
 def random_digital_numbers(count=2):
@@ -343,20 +407,21 @@ def random_digital_numbers(count=2):
     return digital_numbers
 
 
-def mask_clouds(qa_band):
+def mask_clouds(qa_band, qa_pixel):
     """
     Create and apply a cloud mask based on the Quality Assessment Band
     (BQA.) Source: <http://landsat.usgs.gov/L8QualityAssessmentBand.php
 
     See also: http://courses.neteler.org/processing-landsat8-data-in-grass-gis-7/#Applying_the_Landsat_8_Quality_Assessment_%28QA%29_Band
     """
-    msg = ('\n|i Masking clouds (highest confidence) '
-           'based on the Quality Assessment band.')
+    msg = ('\n|i Masking for pixel values <{qap}> '
+           'in the Quality Assessment band.'.format(qap=qa_pixel))
     g.message(msg)
 
     tmp_cloudmask = tmp + '.cloudmask'
 
-    qabits_expression = 'if({qab} == 61440, 1, null() )'.format(qab=qa_band)
+    qabits_expression = 'if({band} == {pixel}, 1, null() )'.format(band=qa_band,
+                                                                pixel=qa_pixel)
 
     cloud_masking_equation = equation.format(result=tmp_cloudmask,
                                              expression=qabits_expression)
@@ -626,13 +691,12 @@ def main():
     equation = "{result} = {expression}"
 
     # user input
-    b4 = options['b4']
-    b5 = options['b5']
     b10 = options['b10']
     b11 = options['b11']
     t10 = options['t10']
     t11 = options['t11']
     qab = options['qab']
+    qapixel = options['qapixel']
     lst_output = options['lst']
 
     global cwv_output
@@ -675,26 +739,20 @@ def main():
         grass.warning(_('Operating on current region'))
 
     #
-    # Mask clouds
+    # Mask clouds based on Quality Assessment band and a given pixel value
     #
 
-    mask_clouds(qab)
+    mask_clouds(qab, qapixel)
 
     #
-    # Part 1: OLI -> NDVI -> FVC -> Emissivities from look-up table
+    # 1. Land Surface Emissivities
     #
 
-    ## derive NDVI, output is tmp_ndvi
-    #ndvi(b4, b5)
-
-    ## compute FVC, output is tmp_fvc
-    #fvc(tmp_ndvi)  # ToDo: where to plug this in?
-
-    # get average emissivities from Land Cover Map  OR  Look-Up table?
+    # get average emissivities based on land cover and a Look-Up table
     emissivity_b10, emissivity_b11 = retrieve_emissivities(emissivity_class)
 
     #
-    # Part 2: TIRS > Brightness Temperatures > MSWVCM > CWV > Coefficients
+    # 2. TIRS > Brightness Temperatures > MSWVCM > Column Water Vapor > Coefficients
     #
 
     # TIRS > Brightness Temperatures
@@ -711,7 +769,7 @@ def main():
     estimate_cwv_big_expression(tmp_cwv, t10, t11, cwv._big_cwv_expression())
 
     #
-    # Estimate LST
+    # Estimate Land Surface Temperature
     #
 
     # SplitWindowLST class, feed with required input values
