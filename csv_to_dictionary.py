@@ -29,7 +29,7 @@ Snow and ice|0.992|0.998'''
 # required librairies
 import sys
 import csv
-import collections
+from collections import namedtuple
 import random
 
 
@@ -139,7 +139,7 @@ def csv_to_dictionary(csv):
             key = replace_dot_comma_space(elements[0])
 
             # namedtuple
-            ect = collections.namedtuple(key, [fields[0], fields[1]])
+            ect = namedtuple(key, [fields[0], fields[1]])
 
             # feed namedtuples
             ect.TIRS10 = is_number(elements[1])
@@ -161,22 +161,21 @@ def csv_to_dictionary(csv):
             # key: 1st column, replace
             key = replace_dot_comma_space(elements[0])
 
-
             # *** small modification for the CWV field ***
             fields[0] = 'cwv'
 
             # named tuples
-            cwv = collections.namedtuple(key,
-                                         [replace_dot_comma_space(fields[0]),
-                                          replace_dot_comma_space(fields[1]),
-                                          replace_dot_comma_space(fields[2]),
-                                          replace_dot_comma_space(fields[3]),
-                                          replace_dot_comma_space(fields[4]),
-                                          replace_dot_comma_space(fields[5]),
-                                          replace_dot_comma_space(fields[6]),
-                                          replace_dot_comma_space(fields[7]),
-                                          replace_dot_comma_space(fields[8]),
-                                          replace_dot_comma_space(fields[9])])
+            cwv = namedtuple(key,
+                             [replace_dot_comma_space(fields[0]),
+                              replace_dot_comma_space(fields[1]),
+                              replace_dot_comma_space(fields[2]),
+                              replace_dot_comma_space(fields[3]),
+                              replace_dot_comma_space(fields[4]),
+                              replace_dot_comma_space(fields[5]),
+                              replace_dot_comma_space(fields[6]),
+                              replace_dot_comma_space(fields[7]),
+                              replace_dot_comma_space(fields[8]),
+                              replace_dot_comma_space(fields[9])])
 
             # feed named tuples
             cwv.subrange = to_tuple(elements[1])
