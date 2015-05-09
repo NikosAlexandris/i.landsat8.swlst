@@ -21,11 +21,6 @@
                  red and near-infrared reflectance of the Operational Land
                  Imager (OLI).
 
-               - The FVC is estimated from the NDVI, calculated from the red
-                 and near-infrared reflectance of Operational Land Imager,
-                 another payload on Landsat8, by using the method proposed by
-                 Carlson (1997) and Sobrino (2001) [34,35].
-
                 The algorithm's flowchart (Figure 3 in the paper [0]) is:
 
                +--------+   +--------------------------+
@@ -313,7 +308,51 @@ def save_map(mapname):
     run('g.copy', raster=(mapname, 'DebuggingMap'))
 
 
-def dn_to_radiance(mtl, b10, b11):
+def get_metadata(mtl_filename):
+    """
+    """
+    # feed MTL file's lines in a list
+    with open(mtl_filename, 'r') as mtl_file:
+            mtl_lines = mtl_file.readlines()
+    mtl_file.close()
+
+    # strings of interest
+    strings = ['RADIANCE_MULT_BAND_' + band_number, 'RADIANCE_ADD_BAND_' + band_number]
+   
+    # retrieve lines of interest
+    mtl = []
+    for string in strings:
+        lines_of_interest = [line.strip() for line in mtl_lines if string in line]
+        mtl += lines_of_interest
+
+    # helper function
+    def get_float_from_mtl_line(string):
+        import re
+        return float(re.findall(r"[+-]? *(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?", string)[-1])
+
+    #
+    for string in strings:
+
+        if 'MULT_BAND_10' in string:
+            multiplicative_factor_10 = get_float_from_mtl_line(string)
+            print "MULT 10", multiplicative_factor_10
+
+        
+        elif 'MULT_BAND_11' in string:
+            multiplicative_factor_11 = get_float_from_mtl_line(string)
+            print "MULT 11", multiplicative_factor_11
+
+
+        elif 'ADD_BAND_10' in string:
+            additive_factor_10 = get_float_from_mtl_line(string)
+            print "ADD 10", additive_factor_10 
+        
+        elif 'ADD_BAND_11' in string:
+            additive_factor_11 = get_float_from_mtl_line(string)
+            print "ADD 11", additive_factor_11
+
+
+def dn_to_radiance(band):
     """
     Conversion of Digital Numbers to TOA Radiance. OLI and TIRS band data can
     be converted to TOA spectral radiance using the radiance rescaling factors
@@ -334,12 +373,6 @@ def dn_to_radiance(mtl, b10, b11):
     Some code borrowed from
     <https://github.com/micha-silver/grass-landsat8/blob/master/r.in.landsat8.py>
     """
-    # Get metadata values
-
-    ### check metageta ### 
-
-    multiplicative_factor = '{:f}'.format(mtl['RADIANCE_MULT_BAND_'+str(b)])
-    additive_factor = '{:f}'.format(mtl['RADIANCE_ADD_BAND_'+str(b)])
 
     # Prepare mapcalc expression
     radiance_expression = '{ML} * dn + {AL}'.format(ML=multiplicative_factor,
@@ -420,8 +453,8 @@ def mask_clouds(qa_band, qa_pixel):
 
     tmp_cloudmask = tmp + '.cloudmask'
 
-    qabits_expression = 'if({band} == {pixel}, 1, null() )'.format(band=qa_band,
-                                                                pixel=qa_pixel)
+    qabits_expression = 'if({band} == {pixel}, 1, null())'.format(band=qa_band,
+                                                                  pixel=qa_pixel)
 
     cloud_masking_equation = equation.format(result=tmp_cloudmask,
                                              expression=qabits_expression)
@@ -674,7 +707,7 @@ def main():
     Main program
     """
 
-    # for Temporary files
+    # prefix for Temporary files
     global tmp
     tmpfile = grass.tempfile()  # replace with os.getpid?
     tmp = "tmp." + grass.basename(tmpfile)  # use its basename
@@ -686,7 +719,7 @@ def main():
     tmp_cwv = tmp + '.cwv'  # column water vapor map
     tmp_lst = "{prefix}.lst".format(prefix=tmp)  # lst
 
-    # mapcalc basic equation
+    # basic equation for mapcalc
     global equation, citation_lst
     equation = "{result} = {expression}"
 
@@ -711,6 +744,7 @@ def main():
     global info
     info = flags['i']
     keep_region = flags['k']
+    colortable = flags['c']
 
     #timestamps = not(flags['t'])
     #zero = flags['z']
@@ -718,13 +752,10 @@ def main():
     #evaluation = flags['e'] -- is there a quick way?
     #shell = flags['g']
 
-    colortable = flags['c']
-
     #
-    # Match region to input image if... ?
+    # Set Region
     #
 
-    # Temporary Region
     if not keep_region:
         grass.use_temp_region()  # safely modify the region
 
@@ -739,20 +770,20 @@ def main():
         grass.warning(_('Operating on current region'))
 
     #
-    # Mask clouds based on Quality Assessment band and a given pixel value
+    # 1. Mask clouds based on Quality Assessment band and a given pixel value
     #
 
     mask_clouds(qab, qapixel)
 
     #
-    # 1. Land Surface Emissivities
+    # 2. Retrieve Land Surface Emissivities
     #
 
     # get average emissivities based on land cover and a Look-Up table
     emissivity_b10, emissivity_b11 = retrieve_emissivities(emissivity_class)
 
     #
-    # 2. TIRS > Brightness Temperatures > MSWVCM > Column Water Vapor > Coefficients
+    # 3. TIRS > Brightness Temperatures > MSWVCM > Column Water Vapor > Coefficients
     #
 
     # TIRS > Brightness Temperatures
@@ -760,16 +791,16 @@ def main():
     # perform internally? see:
     # https://github.com/micha-silver/grass-landsat8/blob/master/r.in.landsat8.py
 
-    # MSWVCM, determine column water vapor
+    # Modified Split-Window Variance-Covariance Matrix to determine CWV
     window_size = 3  # could it be else!?
     cwv = Column_Water_Vapor(window_size, t10, t11)
     citation_cwv = cwv.citation
 
-    # estimate using one big mapcalc expression
+    # estimate column water vapor
     estimate_cwv_big_expression(tmp_cwv, t10, t11, cwv._big_cwv_expression())
 
     #
-    # Estimate Land Surface Temperature
+    # 4. Estimate Land Surface Temperature
     #
 
     # SplitWindowLST class, feed with required input values
@@ -779,6 +810,10 @@ def main():
 
     # remove mask
     r.mask(flags='r', verbose=True)
+
+    #
+    # Metadata
+    #
 
     # Strings for metadata
     history_lst = 'Split-Window model: '
