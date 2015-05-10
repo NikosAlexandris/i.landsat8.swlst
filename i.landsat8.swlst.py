@@ -710,7 +710,7 @@ def main():
     equation = "{result} = {expression}"
 
     # user input
-    mtlfile = options['mtl']
+    mtl_file = options['mtl']
     b10 = options['b10']
     b11 = options['b11']
     t10 = options['t10']
@@ -776,9 +776,9 @@ def main():
     # TIRS > Brightness Temperatures
 
     # Get metadata from MTL file
-    if mtlfile:
-        get_metadata(mtlfile, 10)
-        get_metadata(mtlfile, 11)
+    if mtl_file:
+        get_metadata(mtl_file, 10)
+        #get_metadata(mtl_file, 11)
 
     # perform internally? see:
     # https://github.com/micha-silver/grass-landsat8/blob/master/r.in.landsat8.py
