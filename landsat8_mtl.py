@@ -33,6 +33,7 @@ def get_float_from_mtl_line(string):
 class Landsat8_MTL():
     """
     Retrieve metadata from a Landsat8's MTL file.
+    See <http://landsat.usgs.gov/Landsat8_Using_Product.php>.
     """
 
     def __init__(self, mtl_filename):
@@ -87,25 +88,28 @@ class Landsat8_MTL():
         """
         This function performs the following actions on the given
         'list_of_lines':
-        - exclude lines containing the strings 'GROUP' and 'END'
-        - remove whitespaces and doublequotes from strings
-        - convert list of lines in to a named tuple
+        - excludes lines containing the strings 'GROUP' and 'END'
+        - removes whitespaces and doublequotes from strings
+        - converts list of lines in to a named tuple
         """
         import string
         
         # exclude lines containing 'GROUP', 'END'
         lines = [line.strip() for line in list_of_lines if not any(x in line for x in ('GROUP', 'END'))]
-        
+
         # keep a copy, maybe useful?
         self._mtl_lines = lines
         del(list_of_lines)
-        
+
         # list comprehension below not easy to read!
         # self.mtl_lines = [(self.mtl_lines[idx].split('=')[0].strip(), self.mtl_lines[idx].split('=')[1].strip().translate(string.maketrans("", "", ), '"')) for idx in range(len(self.mtl_lines))]
 
-        # loop over lines, do some cleaning
+        #
         field_names = []
         field_values = []
+        dictionary = {}
+
+        # loop over lines, do some cleaning
         for idx in range(len(lines)):
 
             # split line in '='
@@ -116,8 +120,17 @@ class Landsat8_MTL():
             field_name = line_split[0].strip()
             field_names.append(field_name)
             field_value = line_split[1].strip()
-            field_value = field_value.translate(string.maketrans("", "", ), '"')
+            field_value = field_value.translate(string.maketrans("", "",), '"')
             field_values.append(field_value)
+
+            # dictionary --- To Do: find common substrings!
+            key = field_name
+            value = field_value
+            dictionary[key] = dictionary.get(key, value)
+
+        print
+        print "Dictionary:", dictionary
+        print
 
         # named tuple
         named_tuple = namedtuple(name_for_tuple, field_names)
@@ -138,6 +151,58 @@ class Landsat8_MTL():
         containing 'GROUP' or 'END' are though excluded).
         """
         return self._mtl_lines
+
+    def toar_radiance(self):
+        """
+        """
+        pass
+
+    def toar_reflectance(self):
+        """
+        Conversion to TOA Reflectance OLI band data can also be converted to
+        TOA planetary reflectance using reflectance rescaling coefficients
+        provided in the product metadata file (MTL file).  The following
+        equation is used to convert DN values to TOA reflectance for OLI data
+        as follows:
+
+                ρλ' = MρQcal + Aρ
+
+        where:
+
+        - ρλ' = TOA planetary reflectance, without correction for solar angle.
+          Note that ρλ' does not contain a correction for the sun angle.
+
+        - Mρ  = Band-specific multiplicative rescaling factor from the metadata
+          (REFLECTANCE_MULT_BAND_x, where x is the band number)
+
+        - Aρ  = Band-specific additive rescaling factor from the metadata
+          (REFLECTANCE_ADD_BAND_x, where x is the band number)
+
+        - Qcal = Quantized and calibrated standard product pixel values (DN)
+
+        TOA reflectance with a correction for the sun angle is then:
+
+        ρλ = ρλ' = ρλ'
+        cos(θSZ) sin(θSE)
+
+        where:
+
+        - ρλ = TOA planetary reflectance
+        - θSE = Local sun elevation angle. The scene center sun elevation angle
+          in degrees is provided in the metadata (SUN_ELEVATION).
+        - θSZ = Local solar zenith angle;
+        - θSZ = 90° - θSE
+
+        For more accurate reflectance calculations, per pixel solar angles
+        could be used instead of the scene center solar angle, but per pixel solar
+        zenith angles are not currently provided with the Landsat 8 products.
+        """
+        pass
+
+    def radiance_to_temperature(self):
+        """
+        """
+        pass
 
 
 def main():
