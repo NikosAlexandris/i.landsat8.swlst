@@ -159,6 +159,13 @@
 #% description: Apply Celsius colortable to output LST map
 #%end
 
+#%option
+#% key: mtl
+#% key_desc: mtl file
+#% description: Landsat8 metadata file (MTL)
+#% required: no 
+#%end
+
 #%option G_OPT_R_BASENAME_INPUT
 #% key: prefix
 #% key_desc: prefix string
@@ -282,7 +289,7 @@ from grass.pygrass.modules.shortcuts import raster as r
 #from grass.pygrass.raster.abstract import Info
 
 from split_window_lst import *
-
+from landsat8_mtl import Landsat8_MTL
 
 # helper functions
 def cleanup():
@@ -308,49 +315,28 @@ def save_map(mapname):
     run('g.copy', raster=(mapname, 'DebuggingMap'))
 
 
-def get_metadata(mtl_filename):
+def get_metadata(mtl_filename, band):
     """
+    Retrieve metadata of interest for given band.
     """
-    # feed MTL file's lines in a list
-    with open(mtl_filename, 'r') as mtl_file:
-            mtl_lines = mtl_file.readlines()
-    mtl_file.close()
+    metadata = Landsat8_MTL(mtl_filename)
+    
+    string_for_mult = 'RADIANCE_MULT_BAND_' + str(band)
+    print "String for mult:", string_for_mult
+    print metadata.mtl
+    x = 'metadata.mtl.{string}'.format(string=string_for_mult)
+    print eval(x)
+    print
+    string_for_add = 'RADIANCE_ADD_BAND_' + str(band)
+    print "String for add:", string_for_add
 
-    # strings of interest
-    strings = ['RADIANCE_MULT_BAND_' + band_number, 'RADIANCE_ADD_BAND_' + band_number]
-   
-    # retrieve lines of interest
-    mtl = []
-    for string in strings:
-        lines_of_interest = [line.strip() for line in mtl_lines if string in line]
-        mtl += lines_of_interest
+    msg = "Scene ID is:", metadata.scene_id
+    msg += "Multiplicative factor for band X:", metadata.mtl.string_for_mult
+    msg += "Additive factor for band X:", metadata.mtl.string_for_add
+    print msg
+    #g.message(msg)
 
-    # helper function
-    def get_float_from_mtl_line(string):
-        import re
-        return float(re.findall(r"[+-]? *(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?", string)[-1])
-
-    #
-    for string in strings:
-
-        if 'MULT_BAND_10' in string:
-            multiplicative_factor_10 = get_float_from_mtl_line(string)
-            print "MULT 10", multiplicative_factor_10
-
-        
-        elif 'MULT_BAND_11' in string:
-            multiplicative_factor_11 = get_float_from_mtl_line(string)
-            print "MULT 11", multiplicative_factor_11
-
-
-        elif 'ADD_BAND_10' in string:
-            additive_factor_10 = get_float_from_mtl_line(string)
-            print "ADD 10", additive_factor_10 
-        
-        elif 'ADD_BAND_11' in string:
-            additive_factor_11 = get_float_from_mtl_line(string)
-            print "ADD 11", additive_factor_11
-
+    return metadata 
 
 def dn_to_radiance(band):
     """
@@ -415,12 +401,12 @@ def radiance_to_brightness_temperature(r10, r11):
 
     btemperature_equation = equation.format(result=outname,
                                             epxression=btemperature_expression)
-    
+
     grass.mapcalc(btemperature_equation, overwrite=True)
 
     if info:
         run('r.info', map=outname, flags='r')
-   
+
     pass
 
 
@@ -724,6 +710,7 @@ def main():
     equation = "{result} = {expression}"
 
     # user input
+    mtlfile = options['mtl']
     b10 = options['b10']
     b11 = options['b11']
     t10 = options['t10']
@@ -787,6 +774,11 @@ def main():
     #
 
     # TIRS > Brightness Temperatures
+
+    # Get metadata from MTL file
+    if mtlfile:
+        get_metadata(mtlfile, 10)
+        get_metadata(mtlfile, 11)
 
     # perform internally? see:
     # https://github.com/micha-silver/grass-landsat8/blob/master/r.in.landsat8.py
