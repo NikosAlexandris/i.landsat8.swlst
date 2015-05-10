@@ -130,7 +130,8 @@ def csv_to_dictionary(csv):
 
         def transform(row):
             '''
-            Transform an input row as follows
+            Transform an input row in to a named tuple, then feed it in to a
+            dictionary.
             '''
             # split row in elements
             elements = row.split('|')
@@ -153,7 +154,8 @@ def csv_to_dictionary(csv):
 
         def transform(row):
             '''
-            Transform an input row as follows
+            Transform an input row in to a named tuple, then feed it in to a
+            dictionary.
             '''
             # split row in elements
             elements = row.split('|')
