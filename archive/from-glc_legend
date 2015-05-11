@@ -1,11 +1,11 @@
 Land cover type (Level1)    Level 1 Code    Level 1 Color   R Value     G Value     B Value
-Background          0   0   0
-Cropland    10      163     255     115
-Forest  20      38  115     0
-Grass   30      76  230     0
-Shrub   40      112     168     0
-Water   60      0   92  255
-Impervious  80      197     0   255
-Bareland    90      255     170     0
-Snow/Ice    100         0   255     197
-Cloud   120         255     255     255
+Background                  0               Black           0           0           0
+Cropland                    10              Lighter Green   163         255         115
+Forest                      20              Green           38          115         0
+Grass                       30              Light Green     76          230         0
+Shrub                       40              Olive Green     112         168         0
+Water                       60              Blue            0           92          255
+Impervious                  80              Magenta         197         0           255
+Bareland                    90              Orange          255         170         0
+Snow/Ice                    100             Cyan            0           255         197
+Cloud                       120             White           255         255         255
