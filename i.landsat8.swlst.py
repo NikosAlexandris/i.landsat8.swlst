@@ -33,19 +33,19 @@
                               +-+-+   +--+-+
                                 |        |
                                 |        |
-                             +--v-+   +--v-------------------+          +-------------+
-                             |NDVI|   |Brightness temperature+---------->MSWCVM method|
-              +----------+   +--+-+   +--+-------------------+          +----------+--+
-              |Land cover|      |        |                                         |
-              +----------+      |        |                                         |
-                      |       +-v-+   +--v-------------------+    +----------------v--+
-                      |       |FVC|   |Split Window Algorithm|    |Column Water Vapour|
-+---------------------v--+    +-+-+   +-------------------+--+    +----------------+--+
-|Emissivity look|up table|      |                         |                        |
-+---------------------+--+      |                         |                        |
-                      |      +--v--------------------+    |    +-------------------v--+
-                      +------>Pixel emissivity ei, ej+--> | <--+Algorithm coefficients|
-                             +-----------------------+    |    +----------------------+
+                             +--v-+   +--v-------------------+  +-------------+
+                             |NDVI|   |Brightness temperature+-->MSWCVM method|
+              +----------+   +--+-+   +--+-------------------+  +----------+--+
+              |Land cover|      |        |                               |
+              +----------+      |        |                               |
+                      |       +-v-+   +--v-------------------+    +------v--+
+                      |       |FVC|   |Split Window Algorithm|    |ColWatVap|
++---------------------v--+    +-+-+   +-------------------+--+    +------+--+
+|Emissivity look|up table|      |                         |              |
++---------------------+--+      |                         |              |
+                      |      +--v--------------------+    |    +---------v--+
+                      +------>Pixel emissivity ei, ej+--> | <--+Coefficients|
+                             +-----------------------+    |    +------------+
                                                           |
                                                           |
                                           +---------------v--+
@@ -163,7 +163,7 @@
 #% key: mtl
 #% key_desc: mtl file
 #% description: Landsat8 metadata file (MTL)
-#% required: no 
+#% required: no
 #%end
 
 #%option G_OPT_R_BASENAME_INPUT
@@ -184,7 +184,7 @@
 #%end
 
 #%rules
-#% requires_all: b10, mtl 
+#% requires_all: b10, mtl
 #%end
 
 #%option G_OPT_R_INPUT
@@ -195,7 +195,7 @@
 #%end
 
 #%rules
-#% requires_all: b11, mtl 
+#% requires_all: b11, mtl
 #%end
 
 #%option G_OPT_R_INPUT
@@ -248,7 +248,7 @@
 #% key: qab
 #% key_desc: QA band
 #% description: Landsat 8 quality assessment band
-#% required : yes
+#% required : no
 #%end
 
 #%option
@@ -258,6 +258,7 @@
 #% options: 61440,57344,53248
 #% answer: 61440
 #% required: yes
+#% multiple: yes
 #%end
 
 #%rules
@@ -385,7 +386,7 @@ def digital_numbers_to_radiance(outname, band, radiance_expression):
     Convert Digital Numbers to TOA Radiance. For details, see in Landsat8
     class.
     """
-    msg = "\n|i Rescaling digital numbers to spectral radiance "
+    msg = "\n|i Rescaling {band} digital numbers to spectral radiance ".format(band=band)
     #msg += '| Mapcalc expression: '
     #msg += radiance_expression
     g.message(msg)
@@ -410,7 +411,10 @@ def radiance_to_brightness_temperature(outname, radiance, temperature_expression
                                              instring=DUMMY_MAPCALC_STRING_RADIANCE,
                                              outstring=radiance)
 
-    print "Temperature expression:", temperature_expression
+    msg = "\n|i Converting spectral radiance to at-Satellite Temperature "
+    msg += "| Expression: " + str(temperature_expression)
+    g.message(msg)
+
     temperature_equation = equation.format(result=outname,
                                            expression=temperature_expression)
 
@@ -424,6 +428,19 @@ def tirs_to_at_satellite_temperature(tirs_1x, mtl_file):
     """
     Helper function to convert TIRS bands 10 or 11 in to at-satellite
     temperatures.
+
+    This function uses the pre-defined functions:
+
+    - extract_number_from_string()
+    - digital_numbers_to_radiance()
+    - radiance_to_brightness_temperature()
+
+    The inputs are:
+
+    - a name for the input tirs band (10 or 11)
+    - a Landsat8 MTL file
+
+    The output is a temporary at-Satellite Temperature map.
     """
 
     # which band number and MTL file
@@ -464,23 +481,27 @@ def random_digital_numbers(count=2):
 
 def mask_clouds(qa_band, qa_pixel):
     """
+    ToDo:
+
+    - a better, independent mechanism for QA.
+    - support for multiple qa_pixel values (eg. input as a list of values)
+
     Create and apply a cloud mask based on the Quality Assessment Band
     (BQA.) Source: <http://landsat.usgs.gov/L8QualityAssessmentBand.php
 
-    See also: http://courses.neteler.org/processing-landsat8-data-in-grass-gis-7/#Applying_the_Landsat_8_Quality_Assessment_%28QA%29_Band
+    See also:
+    http://courses.neteler.org/processing-landsat8-data-in-grass-gis-7/#Applying_the_Landsat_8_Quality_Assessment_%28QA%29_Band
     """
     msg = ('\n|i Masking for pixel values <{qap}> '
            'in the Quality Assessment band.'.format(qap=qa_pixel))
     g.message(msg)
 
     tmp_cloudmask = tmp + '.cloudmask'
-
     qabits_expression = 'if({band} == {pixel}, 1, null())'.format(band=qa_band,
                                                                   pixel=qa_pixel)
 
     cloud_masking_equation = equation.format(result=tmp_cloudmask,
                                              expression=qabits_expression)
-
     grass.mapcalc(cloud_masking_equation)
 
     r.mask(raster=tmp_cloudmask, flags='i', overwrite=True)
@@ -510,8 +531,8 @@ def retrieve_emissivities(emissivity_class):
 
 def random_column_water_vapor_subrange():
     """
-    Helper function returning a random column water vapour key
-    to assist in testing the module.
+    Helper function, while coding and testing, returning a random column water
+    vapour key to assist in testing the module.
     """
     cwvkey = random.choice(COLUMN_WATER_VAPOUR.keys())
     # COLUMN_WATER_VAPOUR[cwvkey].subrange
@@ -521,7 +542,8 @@ def random_column_water_vapor_subrange():
 
 def random_column_water_vapor_value():
     """
-    Helper function returning a random value for column water vapor.
+    Helper function, while coding and testing, returning a random value for
+    column water vapor.
     """
     return random.uniform(0.0, 6.3)
 
@@ -597,6 +619,12 @@ def replace_dummies(string, *args, **kwargs):
 
 def get_cwv_window_means(outname, t1x, t1x_mean_expression):
     """
+    
+    ***
+    This function is NOT used.  It wapart of an initial step-by-step approach,
+    while coding and testing.
+    ***
+
     Get window means for T1x
     """
     msg = ('\n |i Deriving window means from {Tx} ')
@@ -614,6 +642,12 @@ def get_cwv_window_means(outname, t1x, t1x_mean_expression):
 
 def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
     """
+    
+    ***
+    This function is NOT used.  It wapart of an initial step-by-step approach,
+    while coding and testing.
+    ***
+
     Estimate Ratio ji for the Column Water Vapor retrieval equation.
     """
     msg = '\n |i Estimating ratio Rji...'
@@ -635,6 +669,12 @@ def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
 
 def estimate_column_water_vapor(outname, ratio, cwv_expression):
     """
+    
+    ***
+    This function is NOT used.  It wapart of an initial step-by-step approach,
+    while coding and testing.
+    ***
+
     """
     msg = "\n|i Estimating atmospheric column water vapor "
     msg += '| Mapcalc expression: '
@@ -762,11 +802,19 @@ def main():
 
     # user input
     mtl_file = options['mtl']
-    b10 = options['b10']
-    b11 = options['b11']
-    t10 = options['t10']
-    t11 = options['t11']
-    qab = options['qab']
+    if not options['prefix']:
+        b10 = options['b10']
+        b11 = options['b11']
+        t10 = options['t10']
+        t11 = options['t11']
+        qab = options['qab']
+    else:
+        prefix = options['prefix']
+
+        b10 = prefix + '10'
+        b11 = prefix + '11'
+        qab = prefix + 'QA'
+
     qapixel = options['qapixel']
     lst_output = options['lst']
 
@@ -796,12 +844,18 @@ def main():
 
     if not keep_region:
         grass.use_temp_region()  # safely modify the region
+        msg = "\n|! Matching region extent to map {name}"
 
         # ToDo: check if extent-B10 == extent-B11? Unnecessary?
+        # Improve below!
 
-        run('g.region', rast=t10)   # ## FixMe?
-        msg = "\n|! Matching region extent to map {name}"
-        msg = msg.format(name=t10)
+        if b10:
+            run('g.region', rast=b10)
+            msg = msg.format(name=b10)
+        elif t10:
+            run('g.region', rast=t10)
+            msg = msg.format(name=t10)
+
         g.message(msg)
 
     elif keep_region:
