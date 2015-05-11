@@ -146,7 +146,7 @@
 
 #%flag
 #%  key: i
-#%  description: Print out model equations
+#%  description: Print out model equations, citation
 #%end
 
 #%flag
@@ -168,18 +168,17 @@
 
 #%option G_OPT_R_BASENAME_INPUT
 #% key: prefix
-#% key_desc: prefix string
+#% key_desc: string
 #% type: string
-#% label: OLI band names prefix
-#% description: Prefix of Landsat8 OLI band names
+#% label: OLI/TIRS band names prefix
+#% description: Prefix of Landsat8 OLI/TIRS band names
 #% required: no
-#% answer: B
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: b10
 #% key_desc: Band 10
-#% description: Band 10 - TIRS (10.60 - 11.19 microns)
+#% description: TIRS 10 (10.60 - 11.19 microns)
 #% required : no
 #%end
 
@@ -190,7 +189,7 @@
 #%option G_OPT_R_INPUT
 #% key: b11
 #% key_desc: Band 11
-#% description: Band 11 - TIRS (11.50 - 12.51 microns)
+#% description: TIRS 11 (11.50 - 12.51 microns)
 #% required : no
 #%end
 
@@ -201,14 +200,14 @@
 #%option G_OPT_R_INPUT
 #% key: t10
 #% key_desc: Temperature (10)
-#% description: Brightness temperature (K) from band 10
+#% description: Brightness temperature (K) from band 10 (use instead of b10 if required)
 #% required : no
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: t11
 #% key_desc: Temperature (11)
-#% description: Brightness temperature (K) from band 11
+#% description: Brightness temperature (K) from band 11 (use instead of b11 if required)
 #% required : no
 #%end
 
@@ -268,28 +267,28 @@
 #%option G_OPT_R_INPUT
 #% key: e10
 #% key_desc: Emissivity B10
-#% description: Emissivity for Landsat 8 band 10
+#% description: Emissivity for Landsat 8 band 10 -- NOT IMPLEMENTED YET!
 #% required : no
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: e11
 #% key_desc: Emissivity B11
-#% description: Emissivity for Landsat 8 band 11
+#% description: Emissivity for Landsat 8 band 11 -- NOT IMPLEMENTED YET!
 #% required : no
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: landcover
-#% key_desc: land cover map name
-#% description: Land cover map
+#% key_desc: land cover map name 
+#% description: Land cover map -- NOT IMPLEMENTED YET!
 #% required : no
 #%end
 
 #%option
 #% key: emissivity_class
 #% key_desc: emissivity class
-#% description: Manual selection of land cover class to retrieve average emissivity from a look-up table (case sensitive)
+#% description: Manual selection of land cover class to retrieve average emissivity from a look-up table (case sensitive). Not recommended, unless truely operating inside a single land cover class!
 #% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow
 #% required : yes
 #%end
@@ -408,6 +407,9 @@ def digital_numbers_to_radiance(outname, band, radiance_expression):
     if info:
         run('r.info', map=outname, flags='r')
 
+    del(radiance_expression)
+    del(radiance_equation)
+
 
 def radiance_to_brightness_temperature(outname, radiance, temperature_expression):
     """
@@ -429,6 +431,9 @@ def radiance_to_brightness_temperature(outname, radiance, temperature_expression
 
     if info:
         run('r.info', map=outname, flags='r')
+    
+    del(temperature_expression)
+    del(temperature_equation)
 
 
 def tirs_to_at_satellite_temperature(tirs_1x, mtl_file):
@@ -466,8 +471,11 @@ def tirs_to_at_satellite_temperature(tirs_1x, mtl_file):
                                        tmp_radiance,
                                        temperature_expression)
 
-    return tmp_brightness_temperature
+    del(radiance_expression)
+    del(temperature_expression)
 
+    return tmp_brightness_temperature
+    
 
 def random_digital_numbers(count=2):
     """
@@ -514,6 +522,9 @@ def mask_clouds(qa_band, qa_pixel):
 
     # for testing...
     save_map(tmp_cloudmask)
+    
+    del(qabits_expression)
+    del(cloud_masking_equation)
 
 
 def retrieve_emissivities(emissivity_class):
@@ -537,12 +548,12 @@ def retrieve_emissivities(emissivity_class):
 
 def from_glc_landcover():
     """
-    Read land cover map and extract class name, see following r.mapcalc example:
-
-    r.mapcalc "test = if( from_glc_184032 >= 10 && from_glc_184032 < 20, 10, if( from_glc_184032 >= 20 && from_glc_184032 < 30, 20, if( from_glc_184032 == 72 || from_glc_184032 >= 30 && from_glc_184032 < 40, 30, if( from_glc_184032 >= 40 && from_glc_184032 < 50, 40, if( from_glc_184032 >= 50 && from_glc_184032 < 52, 60, if( from_glc_184032 >= 60 && from_glc_184032 < 70, 60, if( from_glc_184032 >= 70 && from_glc_184032 < 72, 40, if( from_glc_184032 >= 80 && from_glc_184032 < 90, 80, if( from_glc_184032 == 52 || from_glc_184032 >= 90 && from_glc_184032 < 100, 90, if( from_glc_184032 >= 100 && from_glc_184032 < 120, 100, null() ))))))))))" --o
+    Read land cover map and extract class name, see following r.mapcalc
+    example:
 
     """
     pass
+
 
 def random_column_water_vapor_subrange():
     """
@@ -654,6 +665,9 @@ def get_cwv_window_means(outname, t1x, t1x_mean_expression):
     if info:
         run('r.info', map=outname, flags='r')
 
+    del(t1x_mean_expression)
+    del(tx_mean_equation)
+
 
 def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
     """
@@ -762,6 +776,9 @@ def estimate_cwv_big_expression(outname, t10, t11, cwv_expression):
     ### uncomment below to save while debugging ###
     # save_map(outname)
 
+    del(cwv_expression)
+    del(cwv_equation)
+
 
 def estimate_lst(outname, t10, t11, cwv_map, lst_expression):
     """
@@ -792,6 +809,9 @@ def estimate_lst(outname, t10, t11, cwv_map, lst_expression):
 
     if info:
         run('r.info', map=outname, flags='r')
+
+    del(split_window_expression)
+    del(split_window_equation)
 
 
 def main():
@@ -883,7 +903,7 @@ def main():
 
     #
     # 3. TIRS > Brightness Temperatures
-
+    
     # if MTL file given
     if mtl_file:
 
@@ -899,6 +919,7 @@ def main():
 
     #
     # 4. MSWVCM > Column Water Vapor > Coefficients
+   
     # (Modified Split-Window Variance-Covariance Matrix to determine CWV)
     window_size = 3  # could it be else!?
     cwv = Column_Water_Vapor(window_size, t10, t11)
