@@ -20,6 +20,20 @@ DUMMY_MAPCALC_STRING_T10 = 'Input_T10'
 DUMMY_MAPCALC_STRING_T11 = 'Input_T11'
 DUMMY_MAPCALC_STRING_CWV = 'Input_CWV'
 
+# Remove from here, improve and use named tuples!
+FROM_GLC_LEGEND = {'Cropland': (10, 11, 12, 13),
+                   'Forest': (20, 21, 22, 23, 24),
+                   'Grasslands': (30, 31, 32, 51, 72),
+                   'Shrublands': (40, 71),
+                   'Water': (60, 61, 62, 63),
+                   'Tundra': (70,),
+                   'Impervious': (80, 81, 82),
+                   'Barren Land': (90, 52, 91, 92, 93, 94, 95, 96),
+                   'Snow and Ice': (100, 101, 102),
+                   'Cloud': (120,)}
+# ----------------------------------------------!
+
+
 # helper functions
 def check_t1x_range(number):
     """
@@ -375,6 +389,22 @@ class SplitWindowLST():
                    '({b5})*((1-{ae})/{ae}) + '
                    '({b6})*({de}/{ae}^2))*(({DUMMY_T10} - {DUMMY_T11})/2) + '
                    '({b7})*({DUMMY_T10} - {DUMMY_T11})^2')
+
+        # some landcover
+#        if not landcover:
+        landcover = random.choice([10, 11, 12, 13, 20, 21, 22, 23, 24, 30, 31,
+            32, 51, 72, 40, 71, 60, 61, 62, 63, 80, 81, 82, 90, 52, 91, 92, 93,
+            94, 95, 96, 100, 101, 102])
+        print "Landcover:", landcover
+
+        
+        # build dynamic retrieval of emissivities from landcover
+        classname = [key for key in FROM_GLC_LEGEND
+                     if landcover in FROM_GLC_LEGEND[key]][0]
+
+        print "Class name:", classname
+       
+        # <---------------------------------------------------- Fix Me -----
 
         # for now, use fixed emissivities! <--------------------------------
         emissivity_t10 = float(self.emissivity_t10)
