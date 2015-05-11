@@ -331,6 +331,9 @@ DUMMY_MAPCALC_STRING_DN = 'DigitalNumber'
 DUMMY_MAPCALC_STRING_T10 = 'Input_T10'
 DUMMY_MAPCALC_STRING_T11 = 'Input_T11'
 DUMMY_MAPCALC_STRING_CWV = 'Input_CWV'
+DUMMY_Ti_MEAN = 'Mean_Ti'
+DUMMY_Tj_MEAN = 'Mean_Tj'
+DUMMY_Rji = 'Ratio_ji'
 
 
 # helper functions
@@ -369,7 +372,9 @@ def extract_number_from_string(string):
     10
     """
     import re
-    return str(re.findall(r"[+-]? *(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?", string)[-1])
+    return str(re.findall(r"[+-]? *(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?",
+               string)[-1])
+
 
 def get_metadata(mtl_filename, bandnumber):
     """
@@ -381,12 +386,14 @@ def get_metadata(mtl_filename, bandnumber):
 
     return metadata
 
+
 def digital_numbers_to_radiance(outname, band, radiance_expression):
     """
     Convert Digital Numbers to TOA Radiance. For details, see in Landsat8
     class.
     """
-    msg = "\n|i Rescaling {band} digital numbers to spectral radiance ".format(band=band)
+    msg = "\n|i Rescaling {band} digital numbers to spectral radiance "
+    msg = msg.format(band=band)
     #msg += '| Mapcalc expression: '
     #msg += radiance_expression
     g.message(msg)
@@ -442,12 +449,11 @@ def tirs_to_at_satellite_temperature(tirs_1x, mtl_file):
 
     The output is a temporary at-Satellite Temperature map.
     """
-
     # which band number and MTL file
     band_number = extract_number_from_string(tirs_1x)
     tmp_radiance = tmp + '.radiance' + '.' + band_number
-    tmp_brightness_temperature = tmp + '.brightness_temperature' + '.' + band_number
-
+    tmp_brightness_temperature = tmp + '.brightness_temperature' + '.' + \
+        band_number
     landsat8 = Landsat8_MTL(mtl_file)
 
     # rescale DNs to spectral radiance
@@ -528,6 +534,15 @@ def retrieve_emissivities(emissivity_class):
 
     return (emissivity_b10, emissivity_b11)
 
+
+def from_glc_landcover():
+    """
+    Read land cover map and extract class name, see following r.mapcalc example:
+
+    r.mapcalc "test = if( from_glc_184032 >= 10 && from_glc_184032 < 20, 10, if( from_glc_184032 >= 20 && from_glc_184032 < 30, 20, if( from_glc_184032 == 72 || from_glc_184032 >= 30 && from_glc_184032 < 40, 30, if( from_glc_184032 >= 40 && from_glc_184032 < 50, 40, if( from_glc_184032 >= 50 && from_glc_184032 < 52, 60, if( from_glc_184032 >= 60 && from_glc_184032 < 70, 60, if( from_glc_184032 >= 70 && from_glc_184032 < 72, 40, if( from_glc_184032 >= 80 && from_glc_184032 < 90, 80, if( from_glc_184032 == 52 || from_glc_184032 >= 90 && from_glc_184032 < 100, 90, if( from_glc_184032 >= 100 && from_glc_184032 < 120, 100, null() ))))))))))" --o
+
+    """
+    pass
 
 def random_column_water_vapor_subrange():
     """
@@ -619,7 +634,7 @@ def replace_dummies(string, *args, **kwargs):
 
 def get_cwv_window_means(outname, t1x, t1x_mean_expression):
     """
-    
+
     ***
     This function is NOT used.  It wapart of an initial step-by-step approach,
     while coding and testing.
@@ -642,7 +657,7 @@ def get_cwv_window_means(outname, t1x, t1x_mean_expression):
 
 def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
     """
-    
+
     ***
     This function is NOT used.  It wapart of an initial step-by-step approach,
     while coding and testing.
@@ -669,7 +684,7 @@ def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
 
 def estimate_column_water_vapor(outname, ratio, cwv_expression):
     """
-    
+
     ***
     This function is NOT used.  It wapart of an initial step-by-step approach,
     while coding and testing.
@@ -821,8 +836,8 @@ def main():
     global cwv_output
     cwv_output = options['cwv']
 
-    #emissivity_b10 = options['emissivity_b10']
-    #emissivity_b11 = options['emissivity_b11']
+    emissivity_b10 = options['e10']
+    emissivity_b11 = options['e11']
     landcover = options['landcover']
     emissivity_class = options['emissivity_class']
 
@@ -835,13 +850,10 @@ def main():
     #timestamps = not(flags['t'])
     #zero = flags['z']
     #null = flags['n']  ### either zero or null, not both
-    #evaluation = flags['e'] -- is there a quick way?
     #shell = flags['g']
 
     #
     # Set Region
-    #
-
     if not keep_region:
         grass.use_temp_region()  # safely modify the region
         msg = "\n|! Matching region extent to map {name}"
@@ -863,15 +875,10 @@ def main():
 
     #
     # 1. Mask clouds using the Quality Assessment band and a pixel value
-    #
-
     mask_clouds(qab, qapixel)
 
     #
-    # 2. Retrieve Land Surface Emissivities
-    #
-
-    # get average emissivities based on land cover and a Look-Up table
+    # 2. Retrieve Land Surface Emissivities based on land cover and a Look-Up table  <<< ToDo ###
     emissivity_b10, emissivity_b11 = retrieve_emissivities(emissivity_class)
 
     #
@@ -892,9 +899,7 @@ def main():
 
     #
     # 4. MSWVCM > Column Water Vapor > Coefficients
-    #
-
-    # Modified Split-Window Variance-Covariance Matrix to determine CWV
+    # (Modified Split-Window Variance-Covariance Matrix to determine CWV)
     window_size = 3  # could it be else!?
     cwv = Column_Water_Vapor(window_size, t10, t11)
     citation_cwv = cwv.citation
@@ -903,10 +908,7 @@ def main():
     estimate_cwv_big_expression(tmp_cwv, t10, t11, cwv._big_cwv_expression())
 
     #
-    # 5. Estimate Land Surface Temperature
-    #
-
-    # SplitWindowLST class, feed with required input values
+    # 5. Estimate Land Surface Temperature, SplitWindowLST class
     split_window_lst = SplitWindowLST(emissivity_b10, emissivity_b11)
     citation_lst = split_window_lst.citation
     estimate_lst(tmp_lst, t10, t11, tmp_cwv, split_window_lst.sw_lst_mapcalc)
