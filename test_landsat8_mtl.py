@@ -8,7 +8,7 @@
 from landsat8_mtl import Landsat8_MTL
 
 
-MTLFILE='test_mtl.txt'
+MTLFILE = 'test_mtl.txt'
 
 
 def test(mtlfile):
@@ -25,7 +25,7 @@ def test(mtlfile):
     print
 
     print "| Basic metadata:"
-    print "  > id:", mtl.scene_id
+    print "  > id (original field name is 'LANDSAT_SCENE_ID'):", mtl.scene_id
     print "  > WRS path:", mtl.wrs_path
     print "  > WRS row:", mtl.wrs_row
     print "  > Acquisition date:", mtl.date_acquired
@@ -35,6 +35,7 @@ def test(mtlfile):
     print "  > Upper left (projected):", mtl.corner_ul_projection
     print "  > Lower right (projected):", mtl.corner_lr_projection
     print "  > Cloud cover:", mtl.cloud_cover
+
 
 def main():
     """
