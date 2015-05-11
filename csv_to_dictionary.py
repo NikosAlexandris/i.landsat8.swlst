@@ -2,7 +2,7 @@
 Convert csv data to a dictionary with namedtuples as values
 
 ToDo:
-* Add usage examplesi!
+* Add usage examples!
 * Clean up which test to use for which csv file!
 * Clean up which transform function to use according to csv file!
 * Clean again...
@@ -59,6 +59,7 @@ def is_number(value):
 
 def to_tuple(string):
     """
+    Convert string to tuple.
     """
     return tuple(map(float, string[1:-1].split(',')))
 
