@@ -11,7 +11,7 @@ ToDo:
   single big mapcalc expression? See column_water_vapor? See
   column_water_vapor.py (function: _build_cwv_mapcalc()).~~ Fixed
 
-- Implement direct conversion of B10, B11 to brightness temperature values
+- ~~Implement direct conversion of B10, B11 to brightness temperature values.~~  Done
 
 - ~~Get the FROM-GLC map,~~ Found
 - implement mechanism to read land cover classes from it
@@ -24,7 +24,7 @@ ToDo:
 
 - Use existing i.emissivity?
 
-- Raster Row I/O -- Maybe this is not an option: see discussion with Peter
+- Raster Row I/O -- Maybe this is *not* an option: see discussion with Peter
   Zambelli
 
 [Low]
