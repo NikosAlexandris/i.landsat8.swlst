@@ -9,13 +9,16 @@ import sys
 from collections import namedtuple
 
 
+# globals
 MTLFILE = ''
+DUMMY_MAPCALC_STRING_RADIANCE = 'Radiance'
+DUMMY_MAPCALC_STRING_DN = 'DigitalNumber'
 
 
 # helper functions
 def set_mtlfile():
     """
-    Set user defined csvfile, if any
+    Set user defined MTL file, if any
     """
     if len(sys.argv) > 1:
         return sys.argv[1]
@@ -128,12 +131,19 @@ class Landsat8_MTL():
             value = field_value
             dictionary[key] = dictionary.get(key, value)
 
-        print
-        print "Dictionary:", dictionary
-        print
-
         # named tuple
         named_tuple = namedtuple(name_for_tuple, field_names)
+
+        ### testing below... remove!
+        # query = 'RADIANCE_MULT_BAND_'
+        # band = '10'
+        # requested_field = query + band
+        # some_value = getattr(named_tuple, requested_field)
+        # print "Some example:", some_value
+        ### testing above... remove!
+
+#        print "Named tuple as a dictionary:", named_tuple._asdict()
+        print
 
         # return named tuple
         return named_tuple(*field_values)
@@ -152,13 +162,50 @@ class Landsat8_MTL():
         """
         return self._mtl_lines
 
-    def toar_radiance(self):
+    def toar_radiance(self, bandnumber):
         """
-        """
-        pass
+        Note, this function returns a valid expression for GRASS GIS' r.mapcalc
+        raster processing module.
 
-    def toar_reflectance(self):
+        Conversion of Digital Numbers to TOA Radiance. OLI and TIRS band data
+        can be converted to TOA spectral radiance using the radiance rescaling
+        factors provided in the metadata file:
+
+        Lλ = ML * Qcal + AL
+
+        where:
+
+        - Lλ = TOA spectral radiance (Watts/( m2 * srad * μm))
+
+        - ML = Band-specific multiplicative rescaling factor from the metadata
+        (RADIANCE_MULT_BAND_x, where x is the band number)
+
+        - AL = Band-specific additive rescaling factor from the metadata
+        (RADIANCE_ADD_BAND_x, where x is the band number)
+
+        - Qcal = Quantized and calibrated standard product pixel values (DN)
+
+        Some code borrowed from
+        <https://github.com/micha-silver/grass-landsat8/blob/master/r.in.landsat8.py>
         """
+        multiplicative_factor = getattr(self.mtl, ('RADIANCE_MULT_BAND_' + str(bandnumber)))
+        # print "ML:", multiplicative_factor
+
+        additive_factor = getattr(self.mtl, 'RADIANCE_ADD_BAND_' + str(bandnumber))
+        # print "AL:", additive_factor
+
+        formula = '{ML}*{DUMMY_DN} + {AL}'
+        mapcalc = formula.format(ML=multiplicative_factor,
+                                 DUMMY_DN=DUMMY_MAPCALC_STRING_DN,
+                                 AL=additive_factor)
+
+        return mapcalc
+
+    def toar_reflectance(self, bandnumber):
+        """
+        Note, this function returns a valid expression for GRASS GIS' r.mapcalc
+        raster processing module.
+
         Conversion to TOA Reflectance OLI band data can also be converted to
         TOA planetary reflectance using reflectance rescaling coefficients
         provided in the product metadata file (MTL file).  The following
@@ -182,8 +229,8 @@ class Landsat8_MTL():
 
         TOA reflectance with a correction for the sun angle is then:
 
-        ρλ = ρλ' = ρλ'
-        cos(θSZ) sin(θSE)
+        ρλ = ρλ' = ρλ'  ### Fix This!
+        cos(θSZ) sin(θSE) ### Fix This!
 
         where:
 
@@ -194,15 +241,45 @@ class Landsat8_MTL():
         - θSZ = 90° - θSE
 
         For more accurate reflectance calculations, per pixel solar angles
-        could be used instead of the scene center solar angle, but per pixel solar
-        zenith angles are not currently provided with the Landsat 8 products.
+        could be used instead of the scene center solar angle, but per pixel
+        solar zenith angles are not currently provided with the Landsat 8
+        products.
         """
         pass
 
-    def radiance_to_temperature(self):
+    def radiance_to_temperature(self, bandnumber):
         """
+        Note, this function returns a valid expression for GRASS GIS' r.mapcalc
+        raster processing module.
+
+        Conversion to At-Satellite Brightness Temperature
+        TIRS band data can be converted from spectral radiance to brightness
+        temperature using the thermal constants provided in the metadata file:
+
+        T = K2 / ln( (K1/Lλ) + 1 )
+
+        where:
+
+        - T = At-satellite brightness temperature (K)
+
+        - Lλ = TOA spectral radiance (Watts/( m2 * srad * μm)), below
+          'DUMMY_RADIANCE'
+
+        - K1 = Band-specific thermal conversion constant from the metadata
+          (K1_CONSTANT_BAND_x, where x is the band number, 10 or 11)
+
+        - K2 = Band-specific thermal conversion constant from the metadata
+          (K2_CONSTANT_BAND_x, where x is the band number, 10 or 11)
         """
-        pass
+        k2 = getattr(self.mtl, ('K2_CONSTANT_BAND_' + str(bandnumber)))
+        k1 = getattr(self.mtl, ('K1_CONSTANT_BAND_' + str(bandnumber)))
+
+        formula = '{K2} / ( log({K1} / {DUMMY_RADIANCE} + 1))'
+        mapcalc = formula.format(K2=k2,
+                                 K1=k1,
+                                 DUMMY_RADIANCE=DUMMY_MAPCALC_STRING_RADIANCE)
+
+        return mapcalc
 
 
 def main():
@@ -214,8 +291,7 @@ def main():
         print "| Reading metadata from:", MTLFILE
     else:
         MTLFILE = ''
-    
+
 
 if __name__ == "__main__":
     main()
-
