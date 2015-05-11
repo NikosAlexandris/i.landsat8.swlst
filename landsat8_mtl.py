@@ -26,13 +26,6 @@ def set_mtlfile():
         return False
 
 
-# where to use this?
-def get_float_from_mtl_line(string):
-    import re
-    return float(re.findall(r"[+-]? *(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?",
-                 string)[-1])
-
-
 class Landsat8_MTL():
     """
     Retrieve metadata from a Landsat8's MTL file.
@@ -55,9 +48,10 @@ class Landsat8_MTL():
         self.mtl = self._to_namedtuple(mtl_lines, 'metadata')
         self._set_attributes()
 
-        # shorten LANDSAT_SCENE_ID
+        # shorten LANDSAT_SCENE_ID, SENSOR_ID
         self.scene_id = self.mtl.LANDSAT_SCENE_ID
-       
+        self.sensor = self.mtl.SENSOR_ID
+
         # bounding box related
         self.corner_ul = (self.mtl.CORNER_UL_LAT_PRODUCT,
                           self.mtl.CORNER_UL_LON_PRODUCT)
@@ -78,9 +72,10 @@ class Landsat8_MTL():
         - converts list of lines in to a named tuple
         """
         import string
-        
+
         # exclude lines containing 'GROUP', 'END'
-        lines = [line.strip() for line in list_of_lines if not any(x in line for x in ('GROUP', 'END'))]
+        lines = [line.strip() for line in list_of_lines
+                 if not any(x in line for x in ('GROUP', 'END'))]
 
         # keep a copy, maybe useful?
         self._mtl_lines = lines
@@ -89,7 +84,6 @@ class Landsat8_MTL():
         # empty variables to hold values
         field_names = []
         field_values = []
-        dictionary = {}
 
         # loop over lines, do some cleaning
         for idx in range(len(lines)):
@@ -104,11 +98,6 @@ class Landsat8_MTL():
             field_value = line_split[1].strip()
             field_value = field_value.translate(string.maketrans("", "",), '"')
             field_values.append(field_value)
-
-            # dictionary --- To Do: find common substrings!
-            key = field_name
-            value = field_value
-            dictionary[key] = dictionary.get(key, value)
 
         # named tuple
         named_tuple = namedtuple(name_for_tuple, field_names)
@@ -125,7 +114,7 @@ class Landsat8_MTL():
             field_lowercase = field.lower()
             field_value = getattr(self.mtl, field)
             setattr(self, field_lowercase, field_value)
-    
+
     def __str__(self):
         """
         Return a string representation of the scene's id.
@@ -166,10 +155,12 @@ class Landsat8_MTL():
         Some code borrowed from
         <https://github.com/micha-silver/grass-landsat8/blob/master/r.in.landsat8.py>
         """
-        multiplicative_factor = getattr(self.mtl, ('RADIANCE_MULT_BAND_' + str(bandnumber)))
+        multiplicative_factor = getattr(self.mtl, ('RADIANCE_MULT_BAND_' +
+                                        str(bandnumber)))
         # print "ML:", multiplicative_factor
 
-        additive_factor = getattr(self.mtl, 'RADIANCE_ADD_BAND_' + str(bandnumber))
+        additive_factor = getattr(self.mtl, 'RADIANCE_ADD_BAND_' +
+                                  str(bandnumber))
         # print "AL:", additive_factor
 
         formula = '{ML}*{DUMMY_DN} + {AL}'
