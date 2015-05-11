@@ -174,10 +174,10 @@ class Column_Water_Vapor():
         ratio_ji = numerator_ji / denominator_ji
 
         # column water vapor
-        cwv = self.c0 + self.c1 * ratio_ji + self.c2 * (ratio_ji ** 2)
+        cwv = self.c0 + self.c1 * (ratio_ji) + self.c2 * ((ratio_ji) ** 2)
 
         # inform?
-        print '{c0} + {c1}*{rji} + {c2}*{rji}^2 = '.format(c0=self.c0,
+        print '{c0} + {c1}*({rji}) + {c2}*({rji})^2 = '.format(c0=self.c0,
                                                         c1=self.c1,
                                                         rji=ratio_ji,
                                                         c2=self.c2,
@@ -377,7 +377,7 @@ class Column_Water_Vapor():
                '\ \n'
                '\ \n  rji = numerator / denominator,'
                '\ \n'
-               '\ \n  {c0} + {c1} * rji + {c2} * rji^2)')
+               '\ \n  {c0} + {c1} * (rji) + {c2} * (rji)^2)')
 
         cwv_expression = cwv.format(tim=ti_mean, tjm=tj_mean,
                                     numerator=numerator,
