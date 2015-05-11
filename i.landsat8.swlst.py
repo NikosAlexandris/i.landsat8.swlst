@@ -183,6 +183,10 @@
 #% required : no
 #%end
 
+#%rules
+#% requires_all: b10, mtl 
+#%end
+
 #%option G_OPT_R_INPUT
 #% key: b11
 #% key_desc: Band 11
@@ -190,18 +194,38 @@
 #% required : no
 #%end
 
+#%rules
+#% requires_all: b11, mtl 
+#%end
+
 #%option G_OPT_R_INPUT
 #% key: t10
 #% key_desc: Temperature (10)
 #% description: Brightness temperature (K) from band 10
-#% required : yes
+#% required : no
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: t11
 #% key_desc: Temperature (11)
 #% description: Brightness temperature (K) from band 11
-#% required : yes
+#% required : no
+#%end
+
+#%rules
+#% requires: b10, b11, t11
+#%end
+
+#%rules
+#% requires: b11, b10, t10
+#%end
+
+#%rules
+#% requires: t10, t11, b11
+#%end
+
+#%rules
+#% requires: t11, t10, b10
 #%end
 
 #%rules
@@ -210,6 +234,14 @@
 
 #%rules
 #% excludes: b11, t11
+#%end
+
+#%rules
+#% excludes: t10, b10
+#%end
+
+#%rules
+#% excludes: t11, b11
 #%end
 
 #%option G_OPT_R_INPUT
@@ -283,13 +315,22 @@ sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]),
 
 import atexit
 import grass.script as grass
-#from grass.exceptions import CalledModuleError
+# from grass.exceptions import CalledModuleError
 from grass.pygrass.modules.shortcuts import general as g
 from grass.pygrass.modules.shortcuts import raster as r
-#from grass.pygrass.raster.abstract import Info
+# from grass.pygrass.raster.abstract import Info
 
 from split_window_lst import *
 from landsat8_mtl import Landsat8_MTL
+
+
+# globals
+DUMMY_MAPCALC_STRING_RADIANCE = 'Radiance'
+DUMMY_MAPCALC_STRING_DN = 'DigitalNumber'
+DUMMY_MAPCALC_STRING_T10 = 'Input_T10'
+DUMMY_MAPCALC_STRING_T11 = 'Input_T11'
+DUMMY_MAPCALC_STRING_CWV = 'Input_CWV'
+
 
 # helper functions
 def cleanup():
@@ -315,99 +356,94 @@ def save_map(mapname):
     run('g.copy', raster=(mapname, 'DebuggingMap'))
 
 
-def get_metadata(mtl_filename, band):
+def extract_number_from_string(string):
+    """
+    Extract the (integer) number from a string. Meand to be used with band
+    names. For example:
+
+    print extract_number_from_string('B10')
+
+    will return
+
+    10
+    """
+    import re
+    return str(re.findall(r"[+-]? *(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?", string)[-1])
+
+def get_metadata(mtl_filename, bandnumber):
     """
     Retrieve metadata of interest for given band.
     """
     metadata = Landsat8_MTL(mtl_filename)
-    
-    string_for_mult = 'RADIANCE_MULT_BAND_' + str(band)
-    print "String for mult:", string_for_mult
-    print metadata.mtl
-    x = 'metadata.mtl.{string}'.format(string=string_for_mult)
-    print eval(x)
-    print
-    string_for_add = 'RADIANCE_ADD_BAND_' + str(band)
-    print "String for add:", string_for_add
+    msg = "Scene ID is:" + str(metadata.scene_id)
+    grass.verbose(msg)
 
-    msg = "Scene ID is:", metadata.scene_id
-    msg += "Multiplicative factor for band X:", metadata.mtl.string_for_mult
-    msg += "Additive factor for band X:", metadata.mtl.string_for_add
-    print msg
-    #g.message(msg)
+    return metadata
 
-    return metadata 
-
-def dn_to_radiance(band):
+def digital_numbers_to_radiance(outname, band, radiance_expression):
     """
-    Conversion of Digital Numbers to TOA Radiance. OLI and TIRS band data can
-    be converted to TOA spectral radiance using the radiance rescaling factors
-    provided in the metadata file:      Lλ = ML * Qcal + AL
-
-    where:
-
-    - Lλ = TOA spectral radiance (Watts/( m2 * srad * μm))
-
-    - ML = Band-specific multiplicative rescaling factor from the metadata
-      (RADIANCE_MULT_BAND_x, where x is the band number)
-
-    - AL = Band-specific additive rescaling factor from the metadata
-      (RADIANCE_ADD_BAND_x, where x is the band number)
-
-    - Qcal = Quantized and calibrated standard product pixel values (DN)
-
-    Some code borrowed from
-    <https://github.com/micha-silver/grass-landsat8/blob/master/r.in.landsat8.py>
+    Convert Digital Numbers to TOA Radiance. For details, see in Landsat8
+    class.
     """
-
-    # Prepare mapcalc expression
-    radiance_expression = '{ML} * dn + {AL}'.format(ML=multiplicative_factor,
-                                                    AL=additive_factor)
-    radiance_equation = equation.format(result=tmp_radiance,
+    msg = "\n|i Rescaling digital numbers to spectral radiance "
+    #msg += '| Mapcalc expression: '
+    #msg += radiance_expression
+    g.message(msg)
+    radiance_expression = replace_dummies(radiance_expression,
+                                          instring=DUMMY_MAPCALC_STRING_DN,
+                                          outstring=band)
+    radiance_equation = equation.format(result=outname,
                                         expression=radiance_expression)
+
     grass.mapcalc(radiance_equation, overwrite=True)
-
-    if info:
-        run('r.info', map=tmp_radiance, flags='r')
-
-    pass
-
-def radiance_to_brightness_temperature(r10, r11):
-    """
-
-    ### Under development... ###
-
-    Conversion to At-Satellite Brightness Temperature
-    TIRS band data can be converted from spectral radiance to brightness
-    temperature using the thermal constants provided in the metadata file:
-
-    T = K2 / ln( (K1/Lλ) + 1 )
-
-    where:
-
-    - T = At-satellite brightness temperature (K)
-
-    - Lλ = TOA spectral radiance (Watts/( m2 * srad * μm))
-
-    - K1 = Band-specific thermal conversion constant from the metadata
-      (K1_CONSTANT_BAND_x, where x is the band number, 10 or 11)
-
-    - K2 = Band-specific thermal conversion constant from the metadata
-      (K2_CONSTANT_BAND_x, where x is the band number, 10 or 11)
-    """
-    btemperature_expression = '{K2} / (math.log({K1}/{Ll}) + 1)'.format(K2=k2,
-                                                                        K1=k1,
-                                                                        Ll=radiance)
-
-    btemperature_equation = equation.format(result=outname,
-                                            epxression=btemperature_expression)
-
-    grass.mapcalc(btemperature_equation, overwrite=True)
 
     if info:
         run('r.info', map=outname, flags='r')
 
-    pass
+
+def radiance_to_brightness_temperature(outname, radiance, temperature_expression):
+    """
+    Convert Spectral Radiance to At-Satellite Brightness Temperature. For
+    details see Landsat8 class.
+    """
+    temperature_expression = replace_dummies(temperature_expression,
+                                             instring=DUMMY_MAPCALC_STRING_RADIANCE,
+                                             outstring=radiance)
+
+    print "Temperature expression:", temperature_expression
+    temperature_equation = equation.format(result=outname,
+                                           expression=temperature_expression)
+
+    grass.mapcalc(temperature_equation, overwrite=True)
+
+    if info:
+        run('r.info', map=outname, flags='r')
+
+
+def tirs_to_at_satellite_temperature(tirs_1x, mtl_file):
+    """
+    Helper function to convert TIRS bands 10 or 11 in to at-satellite
+    temperatures.
+    """
+
+    # which band number and MTL file
+    band_number = extract_number_from_string(tirs_1x)
+    tmp_radiance = tmp + '.radiance' + '.' + band_number
+    tmp_brightness_temperature = tmp + '.brightness_temperature' + '.' + band_number
+
+    landsat8 = Landsat8_MTL(mtl_file)
+
+    # rescale DNs to spectral radiance
+    radiance_expression = landsat8.toar_radiance(band_number)
+    digital_numbers_to_radiance(tmp_radiance, tirs_1x, radiance_expression)
+
+    # convert spectral radiance to at-satellite temperature
+    temperature_expression = landsat8.radiance_to_temperature(band_number)
+    radiance_to_brightness_temperature(tmp_brightness_temperature,
+                                       tmp_radiance,
+                                       temperature_expression)
+
+    return tmp_brightness_temperature
 
 
 def random_digital_numbers(count=2):
@@ -643,7 +679,6 @@ def estimate_cwv_big_expression(outname, t10, t11, cwv_expression):
                                      in_tj='TIRS11', out_tj=t11)
 
     cwv_equation = equation.format(result=outname, expression=cwv_expression)
-
     grass.mapcalc(cwv_equation, overwrite=True)
 
     if info:
@@ -651,10 +686,26 @@ def estimate_cwv_big_expression(outname, t10, t11, cwv_expression):
 
     # save Column Water Vapor map?
     if cwv_output:
+
+        # strings for metadata
+        history_cwv = 'Column Water Vapor model: '
+        history_cwv += 'Add info here'
+        title_cwv = 'Column Water Vapor (?)'
+        description_cwv = ('Split-Window LST')
+        units_cwv = 'FixMe'
+        source1_cwv = 'Add here'
+        source2_cwv = 'Add here'
+
+        # history entry
+        run("r.support", map=outname, title=title_cwv,
+            units=units_cwv, description=description_cwv,
+            source1=source1_cwv, source2=source2_cwv,
+            history=history_cwv)
+
         run('g.copy', raster=(outname, cwv_output))
 
-    # uncomment below to save for testing!
-    #save_map(outname)
+    ### uncomment below to save while debugging ###
+    # save_map(outname)
 
 
 def estimate_lst(outname, t10, t11, cwv_map, lst_expression):
@@ -757,7 +808,7 @@ def main():
         grass.warning(_('Operating on current region'))
 
     #
-    # 1. Mask clouds based on Quality Assessment band and a given pixel value
+    # 1. Mask clouds using the Quality Assessment band and a pixel value
     #
 
     mask_clouds(qab, qapixel)
@@ -770,18 +821,24 @@ def main():
     emissivity_b10, emissivity_b11 = retrieve_emissivities(emissivity_class)
 
     #
-    # 3. TIRS > Brightness Temperatures > MSWVCM > Column Water Vapor > Coefficients
-    #
+    # 3. TIRS > Brightness Temperatures
 
-    # TIRS > Brightness Temperatures
-
-    # Get metadata from MTL file
+    # if MTL file given
     if mtl_file:
-        get_metadata(mtl_file, 10)
-        #get_metadata(mtl_file, 11)
 
-    # perform internally? see:
-    # https://github.com/micha-silver/grass-landsat8/blob/master/r.in.landsat8.py
+        # and b10, use it to compute at-satellite temperature t10
+        if b10:
+            # convert DNs to at-satellite temperatures
+            t10 = tirs_to_at_satellite_temperature(b10, mtl_file)
+
+        # and b11, use it to compute at-satellite temperature t11
+        if b11:
+            # convert DNs to at-satellite temperatures
+            t11 = tirs_to_at_satellite_temperature(b11, mtl_file)
+
+    #
+    # 4. MSWVCM > Column Water Vapor > Coefficients
+    #
 
     # Modified Split-Window Variance-Covariance Matrix to determine CWV
     window_size = 3  # could it be else!?
@@ -792,7 +849,7 @@ def main():
     estimate_cwv_big_expression(tmp_cwv, t10, t11, cwv._big_cwv_expression())
 
     #
-    # 4. Estimate Land Surface Temperature
+    # 5. Estimate Land Surface Temperature
     #
 
     # SplitWindowLST class, feed with required input values
@@ -800,14 +857,11 @@ def main():
     citation_lst = split_window_lst.citation
     estimate_lst(tmp_lst, t10, t11, tmp_cwv, split_window_lst.sw_lst_mapcalc)
 
+    #
     # remove mask
     r.mask(flags='r', verbose=True)
 
-    #
-    # Metadata
-    #
-
-    # Strings for metadata
+    # strings for metadata
     history_lst = 'Split-Window model: '
     history_lst += split_window_lst.sw_lst_mapcalc
     title_lst = 'Land Surface Temperature (C)'
@@ -830,11 +884,12 @@ def main():
     # (re)name end product
     run("g.rename", rast=(tmp_lst, lst_output))
 
-    # Restore region
+    # restore region
     if not keep_region:
         grass.del_temp_region()  # restoring previous region settings
         g.message("|! Original Region restored")
 
+    # print citation
     if info:
         print '\nSource: ' + citation_lst
 
