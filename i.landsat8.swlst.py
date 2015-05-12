@@ -1018,18 +1018,22 @@ def main():
             # convert DNs to at-satellite temperatures
             t11 = tirs_to_at_satellite_temperature(b11, mtl_file)
 
+    #
+    # Initialise a SplitWindowLST object
+    #
 
-    #
-    # ?. Land Surface Emissivities
-    #
     split_window_lst = SplitWindowLST(emissivity_class)
     citation_lst = split_window_lst.citation
 
+    #
+    # 3. Land Surface Emissivities
+    #
+
     if landcover_map:
-       
+
         if average_emissivity_map:
             tmp_avg_lse = average_emissivity_map
-        
+
         if not average_emissivity_map:
             determine_average_emissivity(tmp_avg_lse, landcover_map,
                                          split_window_lst.average_lse_mapcalc)
@@ -1042,8 +1046,9 @@ def main():
     if emissivity_class:
         pass
         # don't use average and delta emissivity maps, use given fixed class!
+
     #
-    # 3. Modified Split-Window Variance-Covariance Matrix > Column Water Vapor
+    # 4. Modified Split-Window Variance-Covariance Matrix > Column Water Vapor
     #
 
     if info and cwv_window_size != 3:
@@ -1056,27 +1061,16 @@ def main():
     estimate_cwv_big_expression(tmp_cwv, t10, t11, cwv._big_cwv_expression())
 
     #
-    # 4. Estimate Land Surface Temperature
+    # 5. Estimate Land Surface Temperature
     #
 
     if info and emissivity_class == 'random':
         msg = '\n|* Will pick a random emissivity class!'
         grass.verbose(msg)
    
-    estimate_lst(tmp_lst,
-                 t10, t11,
+    estimate_lst(tmp_lst, t10, t11,
                  tmp_avg_lse, tmp_delta_lse, tmp_cwv,
                  split_window_lst.sw_lst_mapcalc)
-    #if landcover_map:
-    #    estimate_lst(tmp_lst,
-    #                t10, t11,
-    #                 tmp_avg_lse, tmp_delta_lse, tmp_cwv,
-    #                 split_window_lst.sw_lst_mapcalc)
-
-    #elif emissivity_class:
-    #    estimate_lst(tmp_lst, t10, t11,
-    #                 tmp_cwv,
-    #                 split_window_lst.sw_lst_mapcalc_fixed_class)
 
     #
     # Post-production actions
