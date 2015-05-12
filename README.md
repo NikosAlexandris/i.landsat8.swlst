@@ -6,6 +6,7 @@ ToDo:
 
   - Expression for Column Water Vapor
   - Expression for Land Surface Temperature
+  - Why is the LST out of range when using a fixed land cover class?
 
 - ~~Why does the multi-step approach on deriving the CWV map differ from the
   single big mapcalc expression? See column_water_vapor? See
@@ -14,8 +15,8 @@ ToDo:
 - ~~Implement direct conversion of B10, B11 to brightness temperature values.~~  Done
 
 - ~~Get the FROM-GLC map,~~ Found
-- implement mechanism to read land cover classes from it
-  and use'm to retrieve emissivities
+- ~~implement mechanism to read land cover classes from it
+  and use'm to retrieve emissivities~~
 
 - ~~How to use the FVC?~~ Don't. Just use the Look-up table (see [\*] for details).
 
@@ -28,6 +29,8 @@ ToDo:
   Zambelli
 
 [Low]
+
+- Profiling
 
 - Implement a complete cloud masking function using the BQA image. Support for
   user requested confidence or types of clouds (?). Eg: optios=
