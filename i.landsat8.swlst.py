@@ -6,6 +6,7 @@
 
  AUTHOR(S):    Nikos Alexandris <nik@nikosalexandris.net>
                Created on Wed Mar 18 10:00:53 2015
+               First all-through execution: Tue May 12 21:50:42 EEST 2015
 
  PURPOSE:      A robust and practical Slit-Window (SW) algorithm estimating
                land surface temperature, from the Thermal Infra-Red Sensor
@@ -199,14 +200,14 @@
 
 #%option G_OPT_R_INPUT
 #% key: t10
-#% key_desc: Temperature (10)
+#% key_desc: Brightness Temperature 10
 #% description: Brightness temperature (K) from band 10 (use instead of b10 if required)
 #% required : no
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: t11
-#% key_desc: Temperature (11)
+#% key_desc: Brightness Temperature 11
 #% description: Brightness temperature (K) from band 11 (use instead of b11 if required)
 #% required : no
 #%end
@@ -228,19 +229,11 @@
 #%end
 
 #%rules
-#% excludes: b10, t10
+#% exclusive: b10, t10
 #%end
 
 #%rules
-#% excludes: b11, t11
-#%end
-
-#%rules
-#% excludes: t10, b10
-#%end
-
-#%rules
-#% excludes: t11, b11
+#% exclusive: b11, t11
 #%end
 
 #%option G_OPT_R_INPUT
@@ -253,7 +246,7 @@
 #%option
 #% key: qapixel
 #% key_desc: qa pixel value
-#% description: Pixel value in the quality assessment image to use as a mask. Refer to <http://landsat.usgs.gov/L8QualityAssessmentBand.php>.
+#% description: Pixel value in the quality assessment image for which to build a mask. Refer to <http://landsat.usgs.gov/L8QualityAssessmentBand.php>.
 #% options: 61440,57344,53248
 #% answer: 61440
 #% required: yes
@@ -281,16 +274,20 @@
 #%option G_OPT_R_INPUT
 #% key: landcover
 #% key_desc: land cover map name 
-#% description: Land cover map -- NOT IMPLEMENTED YET!
+#% description: Land cover map --- CURRENTLY, WILL LIKELY FAIL IF LANDCOVER DOES NOT OVERLAP LANDSAT SCENE!
 #% required : no
 #%end
 
 #%option
 #% key: emissivity_class
 #% key_desc: emissivity class
-#% description: Manual selection of land cover class to retrieve average emissivity from a look-up table (case sensitive). Not recommended, unless truely operating inside a single land cover class!
+#% description: Manual selection of land cover class to retrieve average emissivity from a look-up table (case sensitive). Not recommended, unless truely operating inside a single land cover class!  --- CURRENTLY NOT WORKING PROPERLY!
 #% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow
-#% required : yes
+#% required : no 
+#%end
+
+#%rules
+#% exclusive: landcover, emissivity_class
 #%end
 
 #%option G_OPT_R_OUTPUT
@@ -299,6 +296,15 @@
 #% description: Name for output Land Surface Temperature map
 #% required: yes
 #% answer: lst
+#%end
+
+#%option
+#% key: window
+#% key_desc: cwv window size
+#% description: Window size for Column Water Vapor estimation -- WINDOWS SIZES OTHER THAN 3 NOT TESTED!
+#% options: 3,5,7
+#% answer: 3
+#% required: yes
 #%end
 
 #%option G_OPT_R_OUTPUT
@@ -329,6 +335,9 @@ DUMMY_MAPCALC_STRING_RADIANCE = 'Radiance'
 DUMMY_MAPCALC_STRING_DN = 'DigitalNumber'
 DUMMY_MAPCALC_STRING_T10 = 'Input_T10'
 DUMMY_MAPCALC_STRING_T11 = 'Input_T11'
+DUMMY_MAPCALC_STRING_AVG_LSE = 'Input_AVG_LSE'
+DUMMY_MAPCALC_STRING_DELTA_LSE = 'Input_DELTA_LSE'
+DUMMY_MAPCALC_STRING_FROM_GLC = 'Input_FROMGLC'
 DUMMY_MAPCALC_STRING_CWV = 'Input_CWV'
 DUMMY_Ti_MEAN = 'Mean_Ti'
 DUMMY_Tj_MEAN = 'Mean_Tj'
@@ -393,8 +402,10 @@ def digital_numbers_to_radiance(outname, band, radiance_expression):
     """
     msg = "\n|i Rescaling {band} digital numbers to spectral radiance "
     msg = msg.format(band=band)
-    #msg += '| Mapcalc expression: '
-    #msg += radiance_expression
+    
+    if info:
+        msg += '| Expression: '
+        msg += radiance_expression
     g.message(msg)
     radiance_expression = replace_dummies(radiance_expression,
                                           instring=DUMMY_MAPCALC_STRING_DN,
@@ -421,7 +432,8 @@ def radiance_to_brightness_temperature(outname, radiance, temperature_expression
                                              outstring=radiance)
 
     msg = "\n|i Converting spectral radiance to at-Satellite Temperature "
-    msg += "| Expression: " + str(temperature_expression)
+    if info:
+        msg += "| Expression: " + str(temperature_expression)
     g.message(msg)
 
     temperature_equation = equation.format(result=outname,
@@ -520,37 +532,17 @@ def mask_clouds(qa_band, qa_pixel):
 
     r.mask(raster=tmp_cloudmask, flags='i', overwrite=True)
 
-    # for testing...
-    save_map(tmp_cloudmask)
-    
+    # save for debuging
+    #save_map(tmp_cloudmask)
+
     del(qabits_expression)
     del(cloud_masking_equation)
-
-
-def retrieve_emissivities(emissivity_class):
-    """
-    Get average emissivities from an emissivity look-up table.
-    This helper function returns a tuple.
-    """
-    EMISSIVITIES = coefficients.get_average_emissivities()
-
-    # how to select land cover class?
-    if emissivity_class == 'random':
-        emissivity_class = random.choice(EMISSIVITIES.keys())
-        print " * Some random emissivity class (key):", emissivity_class
-
-    # fields = EMISSIVITIES[emissivity_class]._fields
-    emissivity_b10 = EMISSIVITIES[emissivity_class].TIRS10
-    emissivity_b11 = EMISSIVITIES[emissivity_class].TIRS11
-
-    return (emissivity_b10, emissivity_b11)
 
 
 def from_glc_landcover():
     """
     Read land cover map and extract class name, see following r.mapcalc
     example:
-
     """
     pass
 
@@ -602,6 +594,7 @@ def replace_dummies(string, *args, **kwargs):
         replacements = (str(instring), str(outstring)),
 
     in_tij_out = set(['in_ti', 'out_ti', 'in_tj', 'out_tj'])
+    
     if in_tij_out == set(kwargs):
         in_ti = kwargs.get('in_ti', 'None')
         out_ti = kwargs.get('out_ti', 'None')
@@ -628,6 +621,7 @@ def replace_dummies(string, *args, **kwargs):
 
     in_cwv_out = set(['in_ti', 'out_ti', 'in_tj', 'out_tj', 'in_cwv',
                       'out_cwv'])
+
     if in_cwv_out == set(kwargs):
         in_cwv = kwargs.get('in_cwv', 'None')
         out_cwv = kwargs.get('out_cwv', 'None')
@@ -638,16 +632,96 @@ def replace_dummies(string, *args, **kwargs):
 
         replacements = (in_ti, str(out_ti)), (in_tj, str(out_tj)), \
                        (in_cwv, str(out_cwv))
+    
+    in_lst_out = set(['in_ti', 'out_ti', 'in_tj', 'out_tj', 'in_cwv',
+                      'out_cwv', 'in_avg_lse', 'out_avg_lse', 'in_delta_lse',
+                      'out_delta_lse'])
+
+    if in_lst_out == set(kwargs):
+        in_cwv = kwargs.get('in_cwv', 'None')
+        out_cwv = kwargs.get('out_cwv', 'None')
+        in_ti = kwargs.get('in_ti', 'None')
+        out_ti = kwargs.get('out_ti', 'None')
+        in_tj = kwargs.get('in_tj', 'None')
+        out_tj = kwargs.get('out_tj', 'None')
+        in_avg_lse = kwargs.get('in_avg_lse', 'None')
+        out_avg_lse = kwargs.get('out_avg_lse', 'None')
+        in_delta_lse = kwargs.get('in_delta_lse', 'None')
+        out_delta_lse = kwargs.get('out_delta_lse', 'None')
+
+        replacements = (in_ti, str(out_ti)), \
+                       (in_tj, str(out_tj)), \
+                       (in_cwv, str(out_cwv)), \
+                       (in_avg_lse, str(out_avg_lse)), \
+                       (in_delta_lse, str(out_delta_lse))
 
     return reduce(lambda alpha, omega: alpha.replace(*omega),
                   replacements, string)
+
+
+def determine_average_emissivity(outname, landcover_map, avg_lse_expression):
+    """
+    """
+    msg = ('\n|i Determining average land surface emissivity based on a '
+           'look-up table ')
+    if info:
+        msg += ('| Expression:\n\n {exp}')
+        msg = msg.format(exp=avg_lse_expression)
+    g.message(msg)
+
+    avg_lse_expression = replace_dummies(avg_lse_expression,
+                                         instring=DUMMY_MAPCALC_STRING_FROM_GLC,
+                                         outstring=landcover_map)
+
+    avg_lse_equation = equation.format(result=outname,
+                                       expression=avg_lse_expression)
+
+    grass.mapcalc(avg_lse_equation, overwrite=True)
+
+    if info:
+        run('r.info', map=outname, flags='r')
+
+    # uncomment below to save for testing!
+    #save_map(outname)
+
+    del(avg_lse_expression)
+    del(avg_lse_equation)
+
+
+def determine_delta_emissivity(outname, landcover_map, delta_lse_expression):
+    """
+    """
+    msg = ('\n|i Determining delta land surface emissivity based on a '
+           'look-up table ')
+    if info:
+        msg += ('| Expression:\n\n {exp}')
+        msg = msg.format(exp=delta_lse_expression)
+    g.message(msg)
+
+    delta_lse_expression = replace_dummies(delta_lse_expression,
+                                           instring=DUMMY_MAPCALC_STRING_FROM_GLC,
+                                           outstring=landcover_map)
+
+    delta_lse_equation = equation.format(result=outname,
+                                         expression=delta_lse_expression)
+
+    grass.mapcalc(delta_lse_equation, overwrite=True)
+
+    if info:
+        run('r.info', map=outname, flags='r')
+
+    # uncomment below to save for testing!
+    save_map(outname)
+
+    del(delta_lse_expression)
+    del(delta_lse_equation)
 
 
 def get_cwv_window_means(outname, t1x, t1x_mean_expression):
     """
 
     ***
-    This function is NOT used.  It wapart of an initial step-by-step approach,
+    This function is NOT used.  It was part of an initial step-by-step approach,
     while coding and testing.
     ***
 
@@ -673,7 +747,7 @@ def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
     """
 
     ***
-    This function is NOT used.  It wapart of an initial step-by-step approach,
+    This function is NOT used.  It was part of an initial step-by-step approach,
     while coding and testing.
     ***
 
@@ -684,8 +758,8 @@ def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
     g.message(msg)
 
     ratio_expression = replace_dummies(ratio_expression,
-                                       in_ti='Mean_Ti', out_ti=tmp_ti_mean,
-                                       in_tj='Mean_Tj', out_tj=tmp_tj_mean)
+                                       in_ti=DUMMY_Ti_MEAN, out_ti=tmp_ti_mean,
+                                       in_tj=DUMMY_Tj_MEAN, out_tj=tmp_tj_mean)
 
     ratio_equation = equation.format(result=outname,
                                      expression=ratio_expression)
@@ -700,7 +774,7 @@ def estimate_column_water_vapor(outname, ratio, cwv_expression):
     """
 
     ***
-    This function is NOT used.  It wapart of an initial step-by-step approach,
+    This function is NOT used.  It was part of an initial step-by-step approach,
     while coding and testing.
     ***
 
@@ -711,7 +785,7 @@ def estimate_column_water_vapor(outname, ratio, cwv_expression):
     g.message(msg)
 
     cwv_expression = replace_dummies(cwv_expression,
-                                     instring='Ratio_ji',
+                                     instring=DUMMY_Rji,
                                      outstring=ratio)
 
     cwv_equation = equation.format(result=outname, expression=cwv_expression)
@@ -737,15 +811,16 @@ def estimate_cwv_big_expression(outname, t10, t11, cwv_expression):
             *** To Do: evaluate -- does it work correctly? *** !
     """
     msg = "\n|i Estimating atmospheric column water vapor "
-    #msg += '| One big mapcalc expression: '
-    # print '| One big mapcalc expression: '
-    #msg += cwv_expression
-    # print cwv_expression
+    if info:
+        msg += '| Expression:\n'
     g.message(msg)
 
-    cwv_expression = replace_dummies(cwv_expression,
-                                     in_ti='TIRS10', out_ti=t10,
-                                     in_tj='TIRS11', out_tj=t11)
+    if info:
+        msg = replace_dummies(cwv_expression,
+                              in_ti=t10, out_ti='T10',
+                              in_tj=t11, out_tj='T11')
+        msg += '\n'
+        print msg
 
     cwv_equation = equation.format(result=outname, expression=cwv_expression)
     grass.mapcalc(cwv_equation, overwrite=True)
@@ -773,14 +848,11 @@ def estimate_cwv_big_expression(outname, t10, t11, cwv_expression):
 
         run('g.copy', raster=(outname, cwv_output))
 
-    ### uncomment below to save while debugging ###
-    # save_map(outname)
-
     del(cwv_expression)
     del(cwv_equation)
 
 
-def estimate_lst(outname, t10, t11, cwv_map, lst_expression):
+def estimate_lst(outname, t10, t11, avg_lse_map, delta_lse_map, cwv_map, lst_expression):
     """
     Produce a Land Surface Temperature map based on a mapcalc expression
     returned from a SplitWindowLST object.
@@ -792,18 +864,40 @@ def estimate_lst(outname, t10, t11, cwv_map, lst_expression):
     - a temporary filename
     - a valid mapcalc expression
     """
+    msg = '\n|i Estimating land surface temperature '
+    if info:
+        msg += "| Expression:\n"
+    g.message(msg)
+
+    if info:
+        msg = lst_expression
+        msg += '\n'
+        print msg
+
     # replace the "dummy" string...
-    split_window_expression = replace_dummies(lst_expression,
-                                              in_cwv='Input_CWV',
-                                              out_cwv=cwv_map,
-                                              in_ti='Input_T10', out_ti=t10,
-                                              in_tj='Input_T11', out_tj=t11)
+    if landcover_map:
+        split_window_expression = replace_dummies(lst_expression,
+                                                  in_avg_lse=DUMMY_MAPCALC_STRING_AVG_LSE,
+                                                  out_avg_lse=avg_lse_map,
+                                                  in_delta_lse=DUMMY_MAPCALC_STRING_DELTA_LSE,
+                                                  out_delta_lse=delta_lse_map,
+                                                  in_cwv=DUMMY_MAPCALC_STRING_CWV,
+                                                  out_cwv=cwv_map,
+                                                  in_ti=DUMMY_MAPCALC_STRING_T10,
+                                                  out_ti=t10,
+                                                  in_tj=DUMMY_MAPCALC_STRING_T11,
+                                                  out_tj=t11)
+    elif emissivity_class:
+        split_window_expression = replace_dummies(lst_expression,
+                                                  in_cwv=DUMMY_MAPCALC_STRING_CWV,
+                                                  out_cwv=cwv_map,
+                                                  in_ti=DUMMY_MAPCALC_STRING_T10,
+                                                  out_ti=t10,
+                                                  in_tj=DUMMY_MAPCALC_STRING_T11,
+                                                  out_tj=t11)
 
     split_window_equation = equation.format(result=outname,
                                             expression=split_window_expression)
-
-    msg = '\n|i Estimating land surface temperature'
-    g.message(msg)
 
     grass.mapcalc(split_window_equation, overwrite=True)
 
@@ -825,9 +919,11 @@ def main():
     tmp = "tmp." + grass.basename(tmpfile)  # use its basename
 
     # Temporary filenames
-    tmp_ti_mean = tmp + '.ti_mean'  # for cwv
-    tmp_tj_mean = tmp + '.tj_mean'  # for cwv
-    tmp_ratio = tmp + '.ratio'  # for cwv
+    # tmp_ti_mean = tmp + '.ti_mean'  # for cwv
+    # tmp_tj_mean = tmp + '.tj_mean'  # for cwv
+    # tmp_ratio = tmp + '.ratio'  # for cwv
+    tmp_avg_lse = tmp + '.avg_lse'
+    tmp_delta_lse = tmp + '.delta_lse'
     tmp_cwv = tmp + '.cwv'  # column water vapor map
     tmp_lst = "{prefix}.lst".format(prefix=tmp)  # lst
 
@@ -854,11 +950,14 @@ def main():
     lst_output = options['lst']
 
     global cwv_output
+    cwv_window_size = int(options['window'])
     cwv_output = options['cwv']
 
     emissivity_b10 = options['e10']
     emissivity_b11 = options['e11']
-    landcover = options['landcover']
+
+    global landcover_map, emissivity_class
+    landcover_map = options['landcover']
     emissivity_class = options['emissivity_class']
 
     # flags
@@ -873,6 +972,9 @@ def main():
     #shell = flags['g']
 
     #
+    # Pre-production actions
+    #
+
     # Set Region
     if not keep_region:
         grass.use_temp_region()  # safely modify the region
@@ -884,6 +986,7 @@ def main():
         if b10:
             run('g.region', rast=b10)
             msg = msg.format(name=b10)
+
         elif t10:
             run('g.region', rast=t10)
             msg = msg.format(name=t10)
@@ -892,49 +995,85 @@ def main():
 
     elif keep_region:
         grass.warning(_('Operating on current region'))
-
+    
     #
     # 1. Mask clouds using the Quality Assessment band and a pixel value
+    #
+
     mask_clouds(qab, qapixel)
 
     #
-    # 2. Retrieve Land Surface Emissivities based on land cover and a Look-Up table  <<< ToDo ###
-    emissivity_b10, emissivity_b11 = retrieve_emissivities(emissivity_class)
-
+    # 2. TIRS > Brightness Temperatures
     #
-    # 3. TIRS > Brightness Temperatures
-    
-    # if MTL file given
+
     if mtl_file:
 
-        # and b10, use it to compute at-satellite temperature t10
+        # if MTL and b10 given, use it to compute at-satellite temperature t10
         if b10:
             # convert DNs to at-satellite temperatures
             t10 = tirs_to_at_satellite_temperature(b10, mtl_file)
 
-        # and b11, use it to compute at-satellite temperature t11
+        # likewise for b11 -> t11
         if b11:
             # convert DNs to at-satellite temperatures
             t11 = tirs_to_at_satellite_temperature(b11, mtl_file)
 
-    #
-    # 4. MSWVCM > Column Water Vapor > Coefficients
-   
-    # (Modified Split-Window Variance-Covariance Matrix to determine CWV)
-    window_size = 3  # could it be else!?
-    cwv = Column_Water_Vapor(window_size, t10, t11)
-    citation_cwv = cwv.citation
 
-    # estimate column water vapor
+    #
+    # ?. Land Surface Emissivities
+    #
+    split_window_lst = SplitWindowLST(emissivity_class)
+    citation_lst = split_window_lst.citation
+
+    if landcover_map:
+        determine_average_emissivity(tmp_avg_lse, landcover_map,
+                                     split_window_lst.average_lse_mapcalc)
+
+        determine_delta_emissivity(tmp_delta_lse, landcover_map,
+                                   split_window_lst.delta_lse_mapcalc)
+    if emissivity_class:
+        pass
+        # don't use average and delta emissivity maps, use given fixed class!
+    #
+    # 3. Modified Split-Window Variance-Covariance Matrix > Column Water Vapor
+    #
+
+    if info and cwv_window_size != 3:
+        msg = '\n|i Window size for Column Water Vapor estimation: '
+        msg += str(cwv_window_size)
+        g.message(msg)
+
+    cwv = Column_Water_Vapor(cwv_window_size, t10, t11)
+    citation_cwv = cwv.citation
     estimate_cwv_big_expression(tmp_cwv, t10, t11, cwv._big_cwv_expression())
 
     #
-    # 5. Estimate Land Surface Temperature, SplitWindowLST class
-    split_window_lst = SplitWindowLST(emissivity_b10, emissivity_b11)
-    citation_lst = split_window_lst.citation
-    estimate_lst(tmp_lst, t10, t11, tmp_cwv, split_window_lst.sw_lst_mapcalc)
+    # 4. Estimate Land Surface Temperature
+    #
+
+    if info and emissivity_class == 'random':
+        msg = '\n|* Will pick a random emissivity class!'
+        grass.verbose(msg)
+   
+    estimate_lst(tmp_lst,
+                 t10, t11,
+                 tmp_avg_lse, tmp_delta_lse, tmp_cwv,
+                 split_window_lst.sw_lst_mapcalc)
+    #if landcover_map:
+    #    estimate_lst(tmp_lst,
+    #                t10, t11,
+    #                 tmp_avg_lse, tmp_delta_lse, tmp_cwv,
+    #                 split_window_lst.sw_lst_mapcalc)
+
+    #elif emissivity_class:
+    #    estimate_lst(tmp_lst, t10, t11,
+    #                 tmp_cwv,
+    #                 split_window_lst.sw_lst_mapcalc_fixed_class)
 
     #
+    # Post-production actions
+    #
+
     # remove mask
     r.mask(flags='r', verbose=True)
 
