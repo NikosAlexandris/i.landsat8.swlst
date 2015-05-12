@@ -17,7 +17,7 @@
                - the brightness temperatures (Ti and Tj) of the two adjacent
                  TIRS channels,
 
-               - FROM-GLC land cover products and emissivity lookup table,
+               - FROM-GLC land cover products and an emissivity look-up table,
                  which are a fraction of the FVC that can be estimated from the
                  red and near-infrared reflectance of the Operational Land
                  Imager (OLI).
@@ -258,16 +258,16 @@
 #%end
 
 #%option G_OPT_R_INPUT
-#% key: e10
-#% key_desc: Emissivity B10
-#% description: Emissivity for Landsat 8 band 10 -- NOT IMPLEMENTED YET!
+#% key: average_emissivity
+#% key_desc: Average emissivity
+#% description: Average emissivity map for Landsat8 TIRS channels 10 and 11 (optional, expert use)
 #% required : no
 #%end
 
 #%option G_OPT_R_INPUT
-#% key: e11
-#% key_desc: Emissivity B11
-#% description: Emissivity for Landsat 8 band 11 -- NOT IMPLEMENTED YET!
+#% key: delta_emissivity
+#% key_desc: Delta Emissivity
+#% description: Emissivity difference map for Landsat8 TIRS channels 10 and 11 (optional, expert use)
 #% required : no
 #%end
 
@@ -282,7 +282,7 @@
 #% key: emissivity_class
 #% key_desc: emissivity class
 #% description: Manual selection of land cover class to retrieve average emissivity from a look-up table (case sensitive). Not recommended, unless truely operating inside a single land cover class!  --- CURRENTLY NOT WORKING PROPERLY!
-#% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow
+#% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow, random
 #% required : no 
 #%end
 
@@ -711,7 +711,7 @@ def determine_delta_emissivity(outname, landcover_map, delta_lse_expression):
         run('r.info', map=outname, flags='r')
 
     # uncomment below to save for testing!
-    save_map(outname)
+    #save_map(outname)
 
     del(delta_lse_expression)
     del(delta_lse_equation)
@@ -953,8 +953,8 @@ def main():
     cwv_window_size = int(options['window'])
     cwv_output = options['cwv']
 
-    emissivity_b10 = options['e10']
-    emissivity_b11 = options['e11']
+    average_emissivity_map = options['average_emissivity']
+    delta_emissivity_map = options['delta_emissivity']
 
     global landcover_map, emissivity_class
     landcover_map = options['landcover']
@@ -1026,11 +1026,19 @@ def main():
     citation_lst = split_window_lst.citation
 
     if landcover_map:
-        determine_average_emissivity(tmp_avg_lse, landcover_map,
-                                     split_window_lst.average_lse_mapcalc)
+       
+        if average_emissivity_map:
+            tmp_avg_lse = average_emissivity_map
+        
+        if not average_emissivity_map:
+            determine_average_emissivity(tmp_avg_lse, landcover_map,
+                                         split_window_lst.average_lse_mapcalc)
+        if delta_emissivity_map:
+            tmp_delta_lse = delta_emissivity_map
 
-        determine_delta_emissivity(tmp_delta_lse, landcover_map,
-                                   split_window_lst.delta_lse_mapcalc)
+        if not delta_emissivity_map:
+            determine_delta_emissivity(tmp_delta_lse, landcover_map,
+                                       split_window_lst.delta_lse_mapcalc)
     if emissivity_class:
         pass
         # don't use average and delta emissivity maps, use given fixed class!
