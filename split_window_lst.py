@@ -79,13 +79,22 @@ class SplitWindowLST():
 
     Inputs:
 
-    - Brightness temperatures for T10 and T11
-    - An estimation of the column water vapor
+    - The class itself requires only a string for 'landcover' which is:
+      
+      1) a fixed land cover class string (one from the classes defined in the
+         FROM-GLC legend)
+      
+      2) a land cover class code (integer) one from the classes defined in the
+         FROM-GLC classification scheme.
+      
+    - Inputs for individual functions vary, look at their definitions.
 
     Outputs:
 
     - Valid expressions for GRASS GIS' r.mapcalc raster processing module
-    -
+    - Direct computation for...  though not necessary, nor useful for GRASS GIS
+      modules directly?
+
 
     Details
 
@@ -151,15 +160,17 @@ class SplitWindowLST():
                        '{b6}*({de}/{ae}^2))*(({t10} - {t11})/2) + '
                        '{b7}*({t10} - {t11})^2]')
         
-        # retrieve average emissivities based on land cover
-        
+        # retrieve average emissivities 
         if landcover in EMISSIVITIES.keys() or landcover == 'random':
-            
+           
+            # a fixed land cover class requested
             self.landcover_class = landcover
 
+            # retrieve average emissivities for this class
             emissivity_b10, emissivity_b11 = \
                 self._retrieve_average_emissivities(landcover)
             
+            # split avg emissivities of/for channels t10, t11
             self.emissivity_t10 = float(emissivity_b10)
             self.emissivity_t11 = float(emissivity_b11)
    
@@ -174,7 +185,12 @@ class SplitWindowLST():
                                                self.emissivity_t11)
 
         else:
+
+            # if no fixed land cover class requested
             self.landcover_class = False
+
+            # use mapcalc expressions instead, containing DUMMY strings for map
+            # names
             self.average_lse_mapcalc = self._build_average_emissivity_mapcalc()
             self.delta_lse_mapcalc = self._build_delta_emissivity_mapcalc()
 
@@ -420,11 +436,9 @@ class SplitWindowLST():
         # average emissivities
         e10_t10, e10_t11 = self._retrieve_average_emissivities('Cropland')
         avg_e10 = self._compute_average_emissivity(e10_t10, e10_t11)
-        delta_e10 = self._compute_delta_emissivity(e10_t10, e10_t11)
 
         e20_t10, e20_t11 = self._retrieve_average_emissivities('Forest')
         avg_e20 = self._compute_average_emissivity(e20_t10, e20_t11)
-        delta_e20 = self._compute_delta_emissivity(e20_t10, e20_t11)
         
         e30_t10, e30_t11 = self._retrieve_average_emissivities('Grasslands')
         avg_e30 = self._compute_average_emissivity(e30_t10, e30_t11)
@@ -562,7 +576,10 @@ class SplitWindowLST():
 
     def _build_custom_mapcalc(self, subrange):
         """
-        Build formula for GRASS GIS' mapcalc for the given cwv subrange
+        Build formula for GRASS GIS' mapcalc for the given cwv subrange.
+
+        ToDo: Improve the mechanism which selects emissivities from either a fixed
+        land cover class  or  a land cover map.
         """
         # formula = '{c0} + {c1}*{dummy} + {c2}*{dummy}^2'
         formula = ('{b0} + '
@@ -578,7 +595,7 @@ class SplitWindowLST():
 
         try:
             if self.landcover_class:
-                print "Fixed land cover class"
+                # print "Fixed land cover class"
                 emissivity_t10 = float(self.emissivity_t10)
                 emissivity_t11 = float(self.emissivity_t11)
                 avg_lse = self._compute_delta_emissivity(emissivity_t10,
@@ -590,13 +607,14 @@ class SplitWindowLST():
             pass
         
         if not self.landcover_class:
-            print "Using the FROM-GLC map"
-            avg_lse=DUMMY_MAPCALC_STRING_AVG_LSE
-            delta_lse=DUMMY_MAPCALC_STRING_DELTA_LSE
-
+           
             # This is required for when a fixed emissivity_class is used, instead
             # of a FROM-GLC (landcover) map.
-        
+
+            # print "Using the FROM-GLC map"
+            avg_lse = DUMMY_MAPCALC_STRING_AVG_LSE
+            delta_lse = DUMMY_MAPCALC_STRING_DELTA_LSE
+       
         coefficients = self._retrieve_cwv_coefficients(subrange)
         b0, b1, b2, b3, b4, b5, b6, b7 = coefficients
 
@@ -709,7 +727,8 @@ class SplitWindowLST():
 
     def _build_mapcalc_average(self):
         """
-        Build formula for GRASS GIS' mapcalc -- to do!
+        Build formula for GRASS GIS' mapcalc --- NOT COMPLTE, still ToDo!  Is
+        it required at all?
         """
         # formula = '{c0} + {c1}*{dummy} + {c2}*{dummy}^2'
         formula = ('{b0} + '
@@ -722,22 +741,22 @@ class SplitWindowLST():
                    '({b7})*({DUMMY_T10} - {DUMMY_T11})^2')
 
         mapcalc = formula.format(b0=self.b0,
-                                      b1=self.b1,
-                                      b2=self.b2,
-                                      ae=self.average_emissivity,
-                                      de=self.delta_emissivity,
-                                      b3=self.b3,
-                                      b4=self.b4,
-                                      b5=self.b5,
-                                      b6=self.b6,
-                                      b7=self.b7,
-                                      DUMMY_T10=DUMMY_MAPCALC_STRING_T10,
-                                      DUMMY_T11=DUMMY_MAPCALC_STRING_T11)
+                                 b1=self.b1,
+                                 b2=self.b2,
+                                 ae=self.average_emissivity,
+                                 de=self.delta_emissivity,
+                                 b3=self.b3,
+                                 b4=self.b4,
+                                 b5=self.b5,
+                                 b6=self.b6,
+                                 b7=self.b7,
+                                 DUMMY_T10=DUMMY_MAPCALC_STRING_T10,
+                                 DUMMY_T11=DUMMY_MAPCALC_STRING_T11)
 
         mapcalc_one = ''
         mapcalc_two = ''
         mapcalc_avg = ((mapcalc_one + mapcalc_two) / 2)
-        return mapcalc
+        return mapcalc_avg
 
     # def _build_mapcalc_direct(self):
     #     """
