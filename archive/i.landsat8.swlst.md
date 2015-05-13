@@ -42,7 +42,7 @@ In the above equations,
 -   and fk (k = 0 and 1) is related to the influence of the atmospheric
     transmittance and emissivity, i.e., `fk = f(ei, ej, ti, tji)`.
 
-Note that the algorithm (Equation (6a)) proposed by Jiménez-Muñoz et al.
+Note that the algorithm (Equation (6a)) proposed by Jimenez-Munoz et al.
 added CWV directly to estimate LST.
 
 Rozenstein et al. used CWV to estimate the atmospheric transmittance
@@ -83,11 +83,11 @@ Conversion of Digital Numbers to TOA Radiance. OLI and TIRS band data
 can be converted to TOA spectral radiance using the radiance rescaling
 factors provided in the metadata file:
 
-`Lλ = ML * Qcal + AL`
+`Ll = ML * Qcal + AL`
 
 where:
 
--   Lλ = TOA spectral radiance (Watts/( m2 \* srad \* μm))
+-   Ll = TOA spectral radiance (Watts/( m2 \* srad \* μm))
 -   ML = Band-specific multiplicative rescaling factor from the metadata
     (RADIANCE\_MULT\_BAND\_x, where x is the band number)
 -   AL = Band-specific additive rescaling factor from the metadata
@@ -100,11 +100,11 @@ Conversion to At-Satellite Brightness Temperature TIRS band data can be
 converted from spectral radiance to brightness temperature using the
 thermal constants provided in the metadata file:
 
-`T = K2 / ln((K1/Lλ) + 1)`
+`T = K2 / ln((K1/Ll) + 1)`
 
 where:
 
--   T = At-satellite brightness temperature (K) - Lλ = TOA spectral
+-   T = At-satellite brightness temperature (K) - Ll = TOA spectral
     radiance (Watts/( m2 \* srad \* μm)), below 'DUMMY\_RADIANCE'
 -   K1 = Band-specific thermal conversion constant from the metadata
     (K1\_CONSTANT\_BAND\_x, where x is the band number, 10 or 11)
@@ -137,10 +137,7 @@ An overview of "Section 3.2: Determination of LSEs":
 Retrieving atmospheric column water vapor from Landsat8 TIRS data based
 on the modified split-window covariance and variance ratio (MSWCVR).
 
-  ---------------------------------------------------------------------------------
-  \*Note,\* this class produces valid expressions for GRASS GIS' mapcalc raster
-  processing module and does not directly compute column water vapor estimations.
-  ---------------------------------------------------------------------------------
+#### Modified Split-Window Covariance-Variance Method
 
 With a vital assumption that the atmosphere is unchanged over the
 neighboring pixels, the MSWCVR method relates the atmospheric CWV to the
@@ -150,34 +147,36 @@ brightness temperatures of the two bands. Considering N adjacent pixels,
 the CWV in the MSWCVR method is estimated as:
 
 -   `cwv = c0 + c1*(tj/ti) + c2*(tj/ti)^2`
--   `tj/ti` \~
-    `Rji = SUM [(Tik-Ti\_mean) \* (Tjk-Tj\_mean)] / SUM[(Tik-Tj\_mean)\^2]`
+-   `tj/ti` \~ `Rji = SUM [(Tik-Ti\_mean) \* (Tjk-Tj\_mean)] / SUM[(Tik-Tj\_mean)\^2]`
 
-In Equation (3a): - c0, c1 and c2 are coefficients obtained from
-simulated data; - t is the band effective atmospheric transmittance; - N
-is the number of adjacent pixels (excluding water and cloud pixels) in a
-spatial window of size n (i.e., N = n × n); - Ti,k and Tj,k are Top of
-Atmosphere brightness temperatures (K) of bands i and j for the kth
-pixel; - mean(Ti) and mean(Tj) are the mean or median brightness
-temperatures of the N pixels for the two bands.
+In Equation (3a):
 
-The regression coefficients: - c0 = -9.674 - c1 = 0.653 - c2 = 9.087
+- `c0`, `c1` and `c2` are coefficients obtained from simulated data;
+- `t` is the band effective atmospheric transmittance;
+- `N` is the number of adjacent pixels (excluding water and cloud pixels) in a spatial window of size `n` (i.e., `N = n × n`);
+- `Ti,k` and `Tj,k` are top of atmosphere brightness temperatures (K) of bands `i` and `j` for the `k`th pixel;
+- `mean(Ti)` and `mean(Tj)` are the mean (or median -- not implemented yet) brightness temperatures of the `N` pixels for the two bands.
 
-where obtained by: - 946 cloud-free TIGR atmospheric profiles, - the new
-high accurate atmospheric radiative transfer model MODTRAN 5.2 -
-simulating the band effective atmospheric transmittance Model analysis
-indicated that this method will obtain a CWV RMSE of about 0.5 g/cm2.
+The regression coefficients:
 
-Details about the CWV retrieval can be found in:
+- `c0` = -9.674
+- `c1` = 0.653
+- `c2` = 9.087
+
+where obtained by:
+
+- 946 cloud-free TIGR atmospheric profiles,
+- the new high accurate atmospheric radiative transfer model MODTRAN 5.2
+- simulating the band effective atmospheric transmittance Model analysis
+  indicated that this method will obtain a CWV RMSE of about 0.5 g/cm2.
+
+Details about the columnw water vapor retrieval can be found in:
 
 Ren, H.; Du, C.; Qin, Q.; Liu, R.; Meng, J.; Li, J. Atmospheric water
 vapor retrieval from landsat 8 and its validation. In Proceedings of the
 IEEE International Geosciene and Remote Sensing Symposium (IGARSS),
 Quebec, QC, Canada, July 2014; pp. 3045--3048.
 
-#### Modified Split-Window Covariance-Variance Method
-
-...
 
 ### Land Surface Temperature
 
@@ -189,11 +188,9 @@ A class implementing the split-window algorithm for Landsat8 imagery
 Inputs:
 
 -   The class itself requires only a string for 'landcover' which is:
-
-1.  a fixed land cover class string (one from the classes defined in the
+    1.  a fixed land cover class string (one from the classes defined in the
     FROM-GLC legend)
-
-2.  a land cover class code (integer) one from the classes defined in
+    2.  a land cover class code (integer) one from the classes defined in
     the FROM-GLC classification scheme.
 
 -   Inputs for individual functions vary, look at their definitions.
@@ -212,9 +209,7 @@ centered at about 11 and 12 μm. The linear or non-linear combination of
 the brightness temperatures is finally applied for LST estimation based
 on the equation:
 
-LST = b0 + + (b1 + b2 \* ((1-ae)/ae)) + + b3 \* (de/ae) \* ((t10 +
-t11)/2) + + (b4 + b5 \* ((1-ae)/ae) + b6 \* (de/ae\^2)) \* ((t10 -
-t11)/2) + + b7 \* (t10 - t11)\^2
+`LST = b0 + + (b1 + b2 \* ((1-ae)/ae)) + + b3 \* (de/ae) \* ((t10 + t11)/2) + + (b4 + b5 \* ((1-ae)/ae) + b6 \* (de/ae\^2)) \* ((t10 - t11)/2) + + b7 \* (t10 - t11)\^2`
 
 To reduce the influence of the CWV error on the LST, for a CWV within
 the overlap of two adjacent CWV sub-ranges, we first use the
@@ -224,7 +219,7 @@ temperatures as the pixel LST.
 
 For example, the LST pixel with a CWV of 2.1 g/cm2 is estimated by using
 the coefficients of [0.0, 2.5] and [2.0, 3.5]. This process initially
-reduces the δLSTinc and improves the spatial continuity of the LST
+reduces the delta-LSTinc and improves the spatial continuity of the LST
 product.
 
 EXAMPLE
@@ -237,8 +232,10 @@ surface temperature map:
 
 2.  Bands 10, 11 and QA
 
-3.  The FROM-GLC product for the same Path and Row The shorted call for
-    processing a complete Landsat8 scene normally is:
+3.  A FROM-GLC product for the same Path and Row as the Landsat scene to be
+    processed
+
+The shortest call for processing a complete Landsat8 scene normally is:
 
 <div class="code">
 
@@ -246,10 +243,12 @@ surface temperature map:
 
 </div>
 
-where: - mtl= the name of the MTL metadata file (normally with a ".txt"
-extension) - prefix= the prefix of the band names imported in GRASS GIS'
-data base - landcover= the name of the FROM-GLC map that covers the
-extent of the Landsat8 scene under processing
+where:
+
+- mtl= the name of the MTL metadata file (normally with a ".txt" extension)
+- prefix= the prefix of the band names imported in GRASS GIS' data base
+- landcover= the name of the FROM-GLC map that covers the extent of the
+  Landsat8 scene under processing
 
 The pixel value 61440 is selected to automatically to build a cloud
 mask. At the moment, only one pixel value may be requested from the
