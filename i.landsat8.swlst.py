@@ -314,6 +314,7 @@
 #% required: no
 #%end
 
+# required librairies
 import os
 import sys
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]),
@@ -329,7 +330,10 @@ from grass.pygrass.modules.shortcuts import raster as r
 from split_window_lst import *
 from landsat8_mtl import Landsat8_MTL
 
-
+if "GISBASE" not in os.environ:
+    print "You must be in GRASS GIS to run this program."
+    sys.exit(1)
+  
 # globals
 DUMMY_MAPCALC_STRING_RADIANCE = 'Radiance'
 DUMMY_MAPCALC_STRING_DN = 'DigitalNumber'
@@ -1043,9 +1047,12 @@ def main():
         if not delta_emissivity_map:
             determine_delta_emissivity(tmp_delta_lse, landcover_map,
                                        split_window_lst.delta_lse_mapcalc)
+    
+    # don't use average and delta emissivity maps, use given fixed class!
     if emissivity_class:
+        if info:
+            g.warning('\n|! Using a fixed land cover class.')
         pass
-        # don't use average and delta emissivity maps, use given fixed class!
 
     #
     # 4. Modified Split-Window Variance-Covariance Matrix > Column Water Vapor
