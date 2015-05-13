@@ -80,13 +80,13 @@ class SplitWindowLST():
     Inputs:
 
     - The class itself requires only a string for 'landcover' which is:
-      
+
       1) a fixed land cover class string (one from the classes defined in the
          FROM-GLC legend)
-      
+
       2) a land cover class code (integer) one from the classes defined in the
          FROM-GLC classification scheme.
-      
+
     - Inputs for individual functions vary, look at their definitions.
 
     Outputs:
@@ -115,7 +115,7 @@ class SplitWindowLST():
     overlap of two adjacent CWV sub-ranges, we first use the coefficients from
     the two adjacent CWV sub-ranges to calculate the two initial temperatures
     and then use the average of the initial temperatures as the pixel LST.
-    
+
     For example, the LST pixel with a CWV of 2.1 g/cm2 is estimated by using
     the coefficients of [0.0, 2.5] and [2.0, 3.5]. This process initially
     reduces the δLSTinc and improves the spatial continuity of the LST product.
@@ -150,7 +150,7 @@ class SplitWindowLST():
                           'b6*(de/ae^2))*((t10 - t11)/2) + '
                           'b7*(t10 - t11)^2]')
 
-        # basic model (for... ) 
+        # basic model (for... )
         self._model = ('[{b0} + '
                        '({b1} + '
                        '{b2}*((1-{ae})/{ae})) + '
@@ -159,21 +159,20 @@ class SplitWindowLST():
                        '{b5}*((1-{ae})/{ae}) + '
                        '{b6}*({de}/{ae}^2))*(({t10} - {t11})/2) + '
                        '{b7}*({t10} - {t11})^2]')
-        
-        # retrieve average emissivities 
+
         if landcover in EMISSIVITIES.keys() or landcover == 'random':
-           
+
             # a fixed land cover class requested
             self.landcover_class = landcover
 
             # retrieve average emissivities for this class
             emissivity_b10, emissivity_b11 = \
                 self._retrieve_average_emissivities(landcover)
-            
+
             # split avg emissivities of/for channels t10, t11
             self.emissivity_t10 = float(emissivity_b10)
             self.emissivity_t11 = float(emissivity_b11)
-   
+
             # average emissivity
             self.average_emissivity = \
                 self._compute_average_emissivity(self.emissivity_t10,
@@ -211,6 +210,19 @@ class SplitWindowLST():
 
         return equation #+ '\n' + model
 
+    def _landcover_string_validity(self, string):
+        """
+        Check whether the given string belongs to the list (keys) of known land
+        cover class names (to the FROM-GLC classification scheme) or is identical
+        to 'random' and return, accordingly, True or False.
+        """
+        if string in FROM_GLC_LEGEND.keys():
+            return True
+        elif string == 'random':
+            return True
+        else:
+            return False
+
     def _retrieve_average_emissivities(self, emissivity_class):
         """
         Get land surface average emissivities from an emissivity look-up table.
@@ -219,32 +231,32 @@ class SplitWindowLST():
         Input is either one of the standard FROM-GLC land cover classes (...),
         or one of its corresponding land cover class codes (...).
 
-        For testing purposes, the string "random" is accepted to select a random land
-        surface emissivity class.
+        For testing purposes, the string "random" is accepted to select a
+        random land surface emissivity class.
         """
-       
-        # Improve the following -- use assert for example!
+
         # land cover class code (integer)
-        try:
-            
+        if self.landcover_class and type(emissivity_class) == int:
+
+            assert self._landcover_string_validity(self.landcover_class), \
+                "Unknown land cover class name!"
+
             if int(emissivity_class) in FROM_GLC_CODES:
                 landcover_code = int(emissivity_class)
-        
+
                 # retrieving emissivity based on land cover class code
                 emissivity_class = [key for key in FROM_GLC_LEGEND
-                                    if landcover_code in FROM_GLC_LEGEND[key]][0]
+                                    if landcover_code
+                                    in FROM_GLC_LEGEND[key]][0]
+
             elif not int(emissivity_class) in FROM_GLC_LEGEND:
-                print
                 print ('The given land cover class code is not present in '
                        'FROM-GLC map\'s legend!')
-                print
-        except:
-            pass
-        
+
         # random?
         if type(emissivity_class) == str and emissivity_class == 'random':
             emissivity_class = random.choice(EMISSIVITIES.keys())
-            print " * Random emissivity class selected:", emissivity_class
+            self.landcover_class = emissivity_class
 
         # fields = EMISSIVITIES[emissivity_class]._fields
         emissivity_b10 = EMISSIVITIES[emissivity_class].TIRS10
@@ -265,7 +277,7 @@ class SplitWindowLST():
         """
         delta = float(emissivity_t10 - emissivity_t11)
         return delta
-    
+
     def _retrieve_adjacent_cwv_subranges(self, column_water_vapor):
         """
         Select and return adjacent subranges (string to be used as a dictionary
@@ -276,7 +288,7 @@ class SplitWindowLST():
         """
         cwv = column_water_vapor
         check_cwv(cwv)  # check if float?
- 
+
         # a "subrange" generator
         key_subrange_generator = ((key, COLUMN_WATER_VAPOR[key].subrange)
                                   for key in COLUMN_WATER_VAPOR.keys())
@@ -439,22 +451,22 @@ class SplitWindowLST():
 
         e20_t10, e20_t11 = self._retrieve_average_emissivities('Forest')
         avg_e20 = self._compute_average_emissivity(e20_t10, e20_t11)
-        
+
         e30_t10, e30_t11 = self._retrieve_average_emissivities('Grasslands')
         avg_e30 = self._compute_average_emissivity(e30_t10, e30_t11)
-        
+
         e40_t10, e40_t11 = self._retrieve_average_emissivities('Shrublands')
         avg_e40 = self._compute_average_emissivity(e40_t10, e40_t11)
-        
+
         e60_t10, e60_t11 = self._retrieve_average_emissivities('Waterbodies')
         avg_e60 = self._compute_average_emissivity(e60_t10, e60_t11)
-        
+
         e80_t10, e80_t11 = self._retrieve_average_emissivities('Impervious')
         avg_e80 = self._compute_average_emissivity(e80_t10, e80_t11)
-       
+
         e90_t10, e90_t11 = self._retrieve_average_emissivities('Barren_Land')
         avg_e90 = self._compute_average_emissivity(e90_t10, e90_t11)
-        
+
         e100_t10, e100_t11 = self._retrieve_average_emissivities('Cropland')
         avg_e100 = self._compute_average_emissivity(e100_t10, e100_t11)
 
@@ -605,16 +617,16 @@ class SplitWindowLST():
                                                    emissivity_t11)
         except:
             pass
-        
+
         if not self.landcover_class:
-           
+
             # This is required for when a fixed emissivity_class is used, instead
             # of a FROM-GLC (landcover) map.
 
             # print "Using the FROM-GLC map"
             avg_lse = DUMMY_MAPCALC_STRING_AVG_LSE
             delta_lse = DUMMY_MAPCALC_STRING_DELTA_LSE
-       
+
         coefficients = self._retrieve_cwv_coefficients(subrange)
         b0, b1, b2, b3, b4, b5, b6, b7 = coefficients
 
@@ -662,7 +674,7 @@ class SplitWindowLST():
                              '\ \n sw_lst_23 = (sw_lst_2 + sw_lst_3) / 2,'
                              '\ \n sw_lst_4 = {exp_4},'
                              '\ \n sw_lst_34 = (sw_lst_3 + sw_lst_4) / 2,'
-                             '\ \n sw_lst_5 = {exp_5},' 
+                             '\ \n sw_lst_5 = {exp_5},'
                              '\ \n sw_lst_45 = (sw_lst_5 + sw_lst_5) / 2,'
                              '\ \n in_range_1 = {low_1} < {DUMMY_CWV} < {high_1},'
                              '\ \n in_range_2 = {low_2} < {DUMMY_CWV} < {high_2},'
@@ -682,7 +694,7 @@ class SplitWindowLST():
 
         # replace keywords appropriately
         swlst_expression = sw_lst_expression.format(exp_1=expression_range_1,
-                                                    low_1=low_1, 
+                                                    low_1=low_1,
                                                     DUMMY_CWV=DUMMY_MAPCALC_STRING_CWV,
                                                     high_1=high_1,
                                                     exp_2=expression_range_2,
