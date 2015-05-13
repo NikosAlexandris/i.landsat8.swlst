@@ -313,9 +313,9 @@
 #%option
 #% key: window
 #% key_desc: cwv window size
-#% description: Window size for Column Water Vapor estimation -- WINDOWS SIZES OTHER THAN 3 NOT TESTED!
+#% description: Window size for Column Water Vapor estimation. Accuracy increases with larger windows up to a certain level. Performance (speed) is inversely analogous to window sizing.
 #% options: 3,5,7
-#% answer: 3
+#% answer: 5
 #% required: yes
 #%end
 
