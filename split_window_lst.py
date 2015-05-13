@@ -789,3 +789,4 @@ if __name__ == "__main__":
     print ('Split-Window Algorithm for Estimating Land Surface Temperature '
            'from Landsat8 OLI/TIRS imagery.'
            ' (Running as stand-alone tool?)\n')
+
