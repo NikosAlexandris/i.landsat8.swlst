@@ -264,7 +264,7 @@
 #%option G_OPT_R_INPUT
 #% key: clouds
 #% key_desc: Clouds MASK
-#% description: A cloud map which will be appliead as a MASK
+#% description: A cloud map which will be applied as a MASK
 #% required : no
 #%end
 
@@ -292,7 +292,7 @@
 #%option
 #% key: emissivity_class
 #% key_desc: emissivity class
-#% description: Manual selection of land cover class to retrieve average emissivity from a look-up table (case sensitive). Not recommended, unless truely operating inside a single land cover class!  --- CURRENTLY NOT WORKING PROPERLY!
+#% description: Retriece average emissivities only for a single land cover class (case sensitive). For expert use or testing purposes, otherwise not recommended.
 #% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow, Random
 #% required : no
 #%end
