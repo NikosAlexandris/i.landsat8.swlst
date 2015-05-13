@@ -22,7 +22,7 @@
                  red and near-infrared reflectance of the Operational Land
                  Imager (OLI).
 
-                The algorithm's flowchart (Figure 3 in the paper [0]) is:
+               The algorithm's flowchart (Figure 3 in the paper [0]) is:
 
                +--------+   +--------------------------+
                |Landsat8+--->Cloud screen & calibration|
@@ -176,6 +176,10 @@
 #% required: no
 #%end
 
+#%rules
+#% collective: prefix, mtl
+#%end
+
 #%option G_OPT_R_INPUT
 #% key: b10
 #% key_desc: Band 10
@@ -249,12 +253,19 @@
 #% description: Pixel value in the quality assessment image for which to build a mask. Refer to <http://landsat.usgs.gov/L8QualityAssessmentBand.php>.
 #% options: 61440,57344,53248
 #% answer: 61440
-#% required: yes
+#% required: no
 #% multiple: yes
 #%end
 
 #%rules
 #% excludes: prefix, b10, b11, qab
+#%end
+
+#%option G_OPT_R_INPUT
+#% key: clouds
+#% key_desc: Clouds MASK
+#% description: A cloud map which will be appliead as a MASK
+#% required : no
 #%end
 
 #%option G_OPT_R_INPUT
@@ -273,7 +284,7 @@
 
 #%option G_OPT_R_INPUT
 #% key: landcover
-#% key_desc: land cover map name 
+#% key_desc: land cover map name
 #% description: Land cover map --- CURRENTLY, WILL LIKELY FAIL IF LANDCOVER DOES NOT OVERLAP LANDSAT SCENE!
 #% required : no
 #%end
@@ -283,10 +294,11 @@
 #% key_desc: emissivity class
 #% description: Manual selection of land cover class to retrieve average emissivity from a look-up table (case sensitive). Not recommended, unless truely operating inside a single land cover class!  --- CURRENTLY NOT WORKING PROPERLY!
 #% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow, random
-#% required : no 
+#% required : no
 #%end
 
 #%rules
+#% required: landcover, emissivity_class
 #% exclusive: landcover, emissivity_class
 #%end
 
@@ -314,6 +326,11 @@
 #% required: no
 #%end
 
+#%rules
+#% required: qab, clouds
+#% exclusive: qab, clouds
+#%end
+
 # required librairies
 import os
 import sys
@@ -333,7 +350,7 @@ from landsat8_mtl import Landsat8_MTL
 if "GISBASE" not in os.environ:
     print "You must be in GRASS GIS to run this program."
     sys.exit(1)
-  
+
 # globals
 DUMMY_MAPCALC_STRING_RADIANCE = 'Radiance'
 DUMMY_MAPCALC_STRING_DN = 'DigitalNumber'
@@ -406,7 +423,7 @@ def digital_numbers_to_radiance(outname, band, radiance_expression):
     """
     msg = "\n|i Rescaling {band} digital numbers to spectral radiance "
     msg = msg.format(band=band)
-    
+
     if info:
         msg += '| Expression: '
         msg += radiance_expression
@@ -447,7 +464,7 @@ def radiance_to_brightness_temperature(outname, radiance, temperature_expression
 
     if info:
         run('r.info', map=outname, flags='r')
-    
+
     del(temperature_expression)
     del(temperature_equation)
 
@@ -491,7 +508,7 @@ def tirs_to_at_satellite_temperature(tirs_1x, mtl_file):
     del(temperature_expression)
 
     return tmp_brightness_temperature
-    
+
 
 def random_digital_numbers(count=2):
     """
@@ -543,14 +560,6 @@ def mask_clouds(qa_band, qa_pixel):
     del(cloud_masking_equation)
 
 
-def from_glc_landcover():
-    """
-    Read land cover map and extract class name, see following r.mapcalc
-    example:
-    """
-    pass
-
-
 def random_column_water_vapor_subrange():
     """
     Helper function, while coding and testing, returning a random column water
@@ -598,7 +607,7 @@ def replace_dummies(string, *args, **kwargs):
         replacements = (str(instring), str(outstring)),
 
     in_tij_out = set(['in_ti', 'out_ti', 'in_tj', 'out_tj'])
-    
+
     if in_tij_out == set(kwargs):
         in_ti = kwargs.get('in_ti', 'None')
         out_ti = kwargs.get('out_ti', 'None')
@@ -636,7 +645,7 @@ def replace_dummies(string, *args, **kwargs):
 
         replacements = (in_ti, str(out_ti)), (in_tj, str(out_tj)), \
                        (in_cwv, str(out_cwv))
-    
+
     in_lst_out = set(['in_ti', 'out_ti', 'in_tj', 'out_tj', 'in_cwv',
                       'out_cwv', 'in_avg_lse', 'out_avg_lse', 'in_delta_lse',
                       'out_delta_lse'])
@@ -937,18 +946,32 @@ def main():
 
     # user input
     mtl_file = options['mtl']
+
     if not options['prefix']:
         b10 = options['b10']
         b11 = options['b11']
         t10 = options['t10']
         t11 = options['t11']
-        qab = options['qab']
+
+        if not options['clouds']:
+            qab = options['qab']
+            cloud_map = False
+        
+        else:
+            qab = False
+            cloud_map = options['clouds']
+
     else:
         prefix = options['prefix']
-
         b10 = prefix + '10'
         b11 = prefix + '11'
-        qab = prefix + 'QA'
+
+        if not options['clouds']:
+            qab = prefix + 'QA'
+        
+        else:
+            cloud_map = options['clouds']
+            qab = False
 
     qapixel = options['qapixel']
     lst_output = options['lst']
@@ -957,6 +980,7 @@ def main():
     cwv_window_size = int(options['window'])
     cwv_output = options['cwv']
 
+    # optional maps
     average_emissivity_map = options['average_emissivity']
     delta_emissivity_map = options['delta_emissivity']
 
@@ -971,8 +995,6 @@ def main():
     colortable = flags['c']
 
     #timestamps = not(flags['t'])
-    #zero = flags['z']
-    #null = flags['n']  ### either zero or null, not both
     #shell = flags['g']
 
     #
@@ -999,12 +1021,20 @@ def main():
 
     elif keep_region:
         grass.warning(_('Operating on current region'))
-    
+
     #
-    # 1. Mask clouds using the Quality Assessment band and a pixel value
+    # 1. Mask clouds
     #
 
-    mask_clouds(qab, qapixel)
+    if cloud_map:
+        # user-fed cloud map?
+        msg = '\n|i Using {cmap} as a MASK'.format(cmap=cloud_map)
+        g.message(msg)
+        r.mask(raster=cloud_map, flags='i', overwrite=True)
+
+    else:
+        # using the quality assessment band and a "QA" pixel value
+        mask_clouds(qab, qapixel)
 
     #
     # 2. TIRS > Brightness Temperatures
@@ -1033,7 +1063,29 @@ def main():
     # 3. Land Surface Emissivities
     #
 
-    if landcover_map:
+    # use given fixed class?
+    if emissivity_class:
+
+        if split_window_lst.landcover_class is False:
+            # replace with meaningful error
+            g.warning('Unknown land cover class string')
+
+        if emissivity_class == 'random':
+            msg = "\n|! Random emissivity class selected > " + \
+                split_window_lst.landcover_class + ' '
+
+        else:
+            msg = '\n|! Retrieving average emissivities *only* for {eclass} '
+
+        if info:
+            msg += '| Average emissivities (channels 10, 11): '
+            msg += str(split_window_lst.emissivity_t10) + ', ' + \
+                str(split_window_lst.emissivity_t11)
+
+        msg = msg.format(eclass=split_window_lst.landcover_class)
+        g.message(msg)
+
+    elif landcover_map:
 
         if average_emissivity_map:
             tmp_avg_lse = average_emissivity_map
@@ -1047,12 +1099,6 @@ def main():
         if not delta_emissivity_map:
             determine_delta_emissivity(tmp_delta_lse, landcover_map,
                                        split_window_lst.delta_lse_mapcalc)
-    
-    # don't use average and delta emissivity maps, use given fixed class!
-    if emissivity_class:
-        if info:
-            g.warning('\n|! Using a fixed land cover class.')
-        pass
 
     #
     # 4. Modified Split-Window Variance-Covariance Matrix > Column Water Vapor
@@ -1074,7 +1120,7 @@ def main():
     if info and emissivity_class == 'random':
         msg = '\n|* Will pick a random emissivity class!'
         grass.verbose(msg)
-   
+
     estimate_lst(tmp_lst, t10, t11,
                  tmp_avg_lse, tmp_delta_lse, tmp_cwv,
                  split_window_lst.sw_lst_mapcalc)
@@ -1083,7 +1129,7 @@ def main():
     # Post-production actions
     #
 
-    # remove mask
+    # remove MASK
     r.mask(flags='r', verbose=True)
 
     # strings for metadata
@@ -1101,12 +1147,12 @@ def main():
         source1=source1_lst, source2=source2_lst,
         history=history_lst)
 
-    # colors to celsius
+    # Celsius color table
     if colortable:
         g.message('\n|i Assigning the "celsius" color table to the LST map')
         run('r.colors', map=tmp_lst, color='celsius')
 
-    # (re)name end product
+    # (re)name the LST product
     run("g.rename", rast=(tmp_lst, lst_output))
 
     # restore region
