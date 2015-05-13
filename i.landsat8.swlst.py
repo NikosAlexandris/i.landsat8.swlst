@@ -384,8 +384,43 @@ def save_map(mapname):
     """
     Helper function to save some in-between maps, assisting in debugging
     """
-    #run('r.info', map=mapname, flags='r')
+    # run('r.info', map=mapname, flags='r')
     run('g.copy', raster=(mapname, 'DebuggingMap'))
+
+
+def random_digital_numbers(count=2):
+    """
+    Return a user-requested amount of random Digital Number values for testing
+    purposes ranging in 12-bit
+    """
+    digital_numbers = []
+
+    for dn in range(0, count):
+        digital_numbers.append(random.randint(1, 2**12))
+
+    if count == 1:
+        return digital_numbers[0]
+
+    return digital_numbers
+
+
+def random_column_water_vapor_subrange():
+    """
+    Helper function, while coding and testing, returning a random column water
+    vapour key to assist in testing the module.
+    """
+    cwvkey = random.choice(COLUMN_WATER_VAPOUR.keys())
+    # COLUMN_WATER_VAPOUR[cwvkey].subrange
+    # COLUMN_WATER_VAPOUR[cwvkey].rmse
+    return cwvkey
+
+
+def random_column_water_vapor_value():
+    """
+    Helper function, while coding and testing, returning a random value for
+    column water vapor.
+    """
+    return random.uniform(0.0, 6.3)
 
 
 def extract_number_from_string(string):
@@ -509,22 +544,6 @@ def tirs_to_at_satellite_temperature(tirs_1x, mtl_file):
     return tmp_brightness_temperature
 
 
-def random_digital_numbers(count=2):
-    """
-    Return a user-requested amount of random Digital Number values for testing
-    purposes ranging in 12-bit
-    """
-    digital_numbers = []
-
-    for dn in range(0, count):
-        digital_numbers.append(random.randint(1, 2**12))
-
-    if count == 1:
-        return digital_numbers[0]
-
-    return digital_numbers
-
-
 def mask_clouds(qa_band, qa_pixel):
     """
     ToDo:
@@ -557,25 +576,6 @@ def mask_clouds(qa_band, qa_pixel):
 
     del(qabits_expression)
     del(cloud_masking_equation)
-
-
-def random_column_water_vapor_subrange():
-    """
-    Helper function, while coding and testing, returning a random column water
-    vapour key to assist in testing the module.
-    """
-    cwvkey = random.choice(COLUMN_WATER_VAPOUR.keys())
-    # COLUMN_WATER_VAPOUR[cwvkey].subrange
-    # COLUMN_WATER_VAPOUR[cwvkey].rmse
-    return cwvkey
-
-
-def random_column_water_vapor_value():
-    """
-    Helper function, while coding and testing, returning a random value for
-    column water vapor.
-    """
-    return random.uniform(0.0, 6.3)
 
 
 def replace_dummies(string, *args, **kwargs):
@@ -734,7 +734,7 @@ def get_cwv_window_means(outname, t1x, t1x_mean_expression):
 
     ***
     This function is NOT used.  It was part of an initial step-by-step approach,
-    while coding and testing.
+    while coding and testing.  Kept for future plans!?
     ***
 
     Get window means for T1x
@@ -760,7 +760,7 @@ def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
 
     ***
     This function is NOT used.  It was part of an initial step-by-step approach,
-    while coding and testing.
+    while coding and testing.  Kept for future plans!?
     ***
 
     Estimate Ratio ji for the Column Water Vapor retrieval equation.
@@ -787,7 +787,7 @@ def estimate_column_water_vapor(outname, ratio, cwv_expression):
 
     ***
     This function is NOT used.  It was part of an initial step-by-step approach,
-    while coding and testing.
+    while coding and testing.  Kept for future plans!?
     ***
 
     """
@@ -955,7 +955,7 @@ def main():
         if not options['clouds']:
             qab = options['qab']
             cloud_map = False
-        
+
         else:
             qab = False
             cloud_map = options['clouds']
@@ -968,7 +968,7 @@ def main():
         if not options['clouds']:
             qab = prefix + 'QA'
             cloud_map = False
-        
+
         else:
             cloud_map = options['clouds']
             qab = False
@@ -994,8 +994,9 @@ def main():
     keep_region = flags['k']
     colortable = flags['c']
 
-    #timestamps = not(flags['t'])
-    #shell = flags['g']
+    # ToDo:
+    # timestamps = not(flags['t'])
+    # shell = flags['g']
 
     #
     # Pre-production actions
@@ -1085,6 +1086,7 @@ def main():
         msg = msg.format(eclass=split_window_lst.landcover_class)
         g.message(msg)
 
+    # use the FROM-GLC map
     elif landcover_map:
 
         if average_emissivity_map:
