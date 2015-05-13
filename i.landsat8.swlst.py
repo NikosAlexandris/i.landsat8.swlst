@@ -318,7 +318,7 @@
 import os
 import sys
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]),
-                                'etc', 'i.landsat.swlst'))
+                                'etc', 'i.landsat8.swlst'))
 
 import atexit
 import grass.script as grass
