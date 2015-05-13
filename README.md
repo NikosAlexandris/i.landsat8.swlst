@@ -24,6 +24,7 @@ ToDo:
 
 [Low]
 
+- Implement a median window filter, an another option in addition to mean.
 - Profiling
 - Implement a complete cloud masking function using the BQA image. Support for
   user requested confidence or types of clouds (?). Eg: optios=
