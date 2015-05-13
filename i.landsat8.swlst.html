@@ -1,106 +1,264 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-<title>GRASS GIS manual: i.landsat8.swlst.py</title>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<link rel="stylesheet" href="grassdocs.css" type="text/css">
-</head>
-<body bgcolor="white">
-<div id="container">
+<h2>DESCRIPTION</h2>
+A robust and practical Slit-Window (SW) algorithm estimating land surface
+temperature, from the Thermal Infra-Red Sensor (TIRS) aboard Landsat 8 with an
+accuracy of better than 1.0 K.
 
-<a href="index.html"><img src="grass_logo.png" alt="GRASS logo"></a>
-<hr class="header">
 
-<h2>NAME</h2>
-<em><b>i.landsat8.swlst.py</b></em>  - Practical split-window algorithm estimating Land Surface Temperature from Landsat 8 OLI/TIRS imagery (Du, Chen; Ren, Huazhong; Qin, Qiming; Meng, Jinjie; Zhao, Shaohua. 2015)
-<h2>KEYWORDS</h2>
-<a href="imagery.html">imagery</a>, <a href="topic_split_window.html">split window</a>, <a href="keywords.html#land surface temperature">land surface temperature</a>, <a href="keywords.html#lst">lst</a>, <a href="keywords.html#landsat8">landsat8</a>
-<h2>SYNOPSIS</h2>
-<div id="name"><b>i.landsat8.swlst.py</b><br></div>
-<b>i.landsat8.swlst.py --help</b><br>
-<div id="synopsis"><b>i.landsat8.swlst.py</b> [-<b>ikc</b>]  [<b>prefix</b>=<em>prefix string</em>]  <b>b4</b>=<em>Band 4</em> <b>b5</b>=<em>Band 5</em>  [<b>b10</b>=<em>Band 10</em>]   [<b>b11</b>=<em>Band 11</em>]  <b>t10</b>=<em>Temperature (10)</em> <b>t11</b>=<em>Temperature (11)</em> <b>qab</b>=<em>QA band</em>  [<b>clouds</b>=<em>cloud masking</em>]   [<b>e10</b>=<em>Emissivity B10</em>]   [<b>e11</b>=<em>Emissivity B11</em>]   [<b>landcover</b>=<em>land cover map name</em>]  <b>emissivity_class</b>=<em>emissivity class</em> <b>lst</b>=<em>lst output</em>  [<b>cwv</b>=<em>cwv output</em>]   [--<b>overwrite</b>]  [--<b>help</b>]  [--<b>verbose</b>]  [--<b>quiet</b>]  [--<b>ui</b>] 
-</div>
+<em>i.landsat8.swlst</em>
 
-<div id="flags">
-<h3>Flags:</h3>
-<dl>
-<dt><b>-i</b></dt>
-<dd>Print out model equations</dd>
+<h3>Details</h3>
+A new refinement of the generalized split-window algorithm
+proposed by Wan (2014) [19] is added with a quadratic term of
+the difference amongst the brightness temperatures (Ti, Tj) of
+the adjacent thermal infrared channels, which can be expressed
+as (equation 2 in the paper [0])
+<p>
+LST = b0 +
+    [b1 + b2 * (1−ε)/ε + b3 * (Δε/ε2)] * (Ti+T)/j2 +
+    [b4 + b5 * (1−ε)/ε + b6 * (Δε/ε2)] * (Ti−Tj)/2 +
+        b7 * (Ti−Tj)^2
+<p>
+where:
 
-<dt><b>-k</b></dt>
-<dd>Keep current computational region settings</dd>
+- Ti and Tj are Top of Atmosphere brightness temperatures
+measured in channels i (~11.0 μm) and j (~12.0 µm),
+respectively;
+    - from
+http://landsat.usgs.gov/band_designations_landsat_satellites.php:
+    - Band 10, Thermal Infrared (TIRS) 1, 10.60-11.19, 100*(30)
+    - Band 11, Thermal Infrared (TIRS) 2, 11.50-12.51, 100*(30)
 
-<dt><b>-c</b></dt>
-<dd>Apply Celsius colortable to output LST map</dd>
+- ε is the average emissivity of the two channels (i.e., ε = 0.5
+[εi + εj]),
 
-<dt><b>--overwrite</b></dt>
-<dd>Allow output files to overwrite existing files</dd>
-<dt><b>--help</b></dt>
-<dd>Print usage summary</dd>
-<dt><b>--verbose</b></dt>
-<dd>Verbose module output</dd>
-<dt><b>--quiet</b></dt>
-<dd>Quiet module output</dd>
-<dt><b>--ui</b></dt>
-<dd>Force launching GUI dialog</dd>
-</dl>
-</div>
+- Δε is the channel emissivity difference (i.e., Δε = εi − εj);
 
-<div id="parameters">
-<h3>Parameters:</h3>
-<dl>
-<dt><b>prefix</b>=<em>prefix string</em></dt>
-<dd>OLI band names prefix</dd>
-<dd>Prefix of Landsat8 OLI band names</dd>
-<dd>Default: <em>B</em></dd>
+- bk (k = 0,1,...7) are the algorithm coefficients derived in
+the following simulated dataset.
+<p>
+[...]
+<p>
+In the above equations,
 
-<dt><b>b4</b>=<em>Band 4</em>&nbsp;<b>[required]</b></dt>
-<dd>Band 4 - Red (0.64 - 0.67 microns)</dd>
+    - dk (k = 0, 1...6) and ek (k = 1, 2, 3, 4) are the
+    algorithm coefficients;
 
-<dt><b>b5</b>=<em>Band 5</em>&nbsp;<b>[required]</b></dt>
-<dd>Band 5 - Near Infra-Red (0.85 - 0.88 microns)</dd>
+    - w is the CWV;
 
-<dt><b>b10</b>=<em>Band 10</em></dt>
-<dd>Band 10 - TIRS (10.60 - 11.19 microns)</dd>
+    - ε and ∆ε are the average emissivity and emissivity
+    difference of two adjacent thermal channels, respectively,
+    which are similar to Equation (2);
 
-<dt><b>b11</b>=<em>Band 11</em></dt>
-<dd>Band 11 - TIRS (11.50 - 12.51 microns)</dd>
+    - and fk (k = 0 and 1) is related to the influence of the
+    atmospheric transmittance and emissivity, i.e., f k =
+    f(εi,εj,τ i ,τj).
+<p>
+Note that the algorithm (Equation (6a)) proposed by
+Jiménez-Muñoz et al. added CWV directly to estimate LST.
+<p>
+Rozenstein et al. used CWV to estimate the atmospheric
+transmittance (τi, τj) and optimize retrieval accuracy
+explicitly.
+<p>
+Therefore, if the atmospheric CWV is unknown or cannot be
+obtained successfully, neither of the two algorithms in
+Equations (6a) and (6b) will work. By contrast, although our
+algorithm also needs CWV to determine the coefficients, this
+algorithm still works for unknown CWVs because the coefficients
+are obtained regardless of the CWV, as shown in Table 1.
 
-<dt><b>t10</b>=<em>Temperature (10)</em>&nbsp;<b>[required]</b></dt>
-<dd>Brightness temperature (K) from band 10</dd>
+<h2>NOTES</h2>
 
-<dt><b>t11</b>=<em>Temperature (11)</em>&nbsp;<b>[required]</b></dt>
-<dd>Brightness temperature (K) from band 11</dd>
+The algorithm's flowchart (Figure 3 in the paper [0]) is:
 
-<dt><b>qab</b>=<em>QA band</em>&nbsp;<b>[required]</b></dt>
-<dd>Landsat 8 quality assessment band</dd>
+<center>
+<img src="Figure_3_Flowchart_of_retrieving LST_from_Landsat8.png">
+</center>
 
-<dt><b>clouds</b>=<em>cloud masking</em></dt>
-<dd>Confidence level for cloud masking (see...) -- ToDo!</dd>
-<dd>Options: <em>clouds, cirrus, both</em></dd>
-<dd>Default: <em>high</em></dd>
+<h3>Cloud Masking</h3>
+...
+...
+...
 
-<dt><b>e10</b>=<em>Emissivity B10</em></dt>
-<dd>Emissivity for Landsat 8 band 10</dd>
+<h3>Calibration of TIRS channels 10, 11</h3>
+...
+<p>
+...
+<p>
+...<b>bold text</b> 
 
-<dt><b>e11</b>=<em>Emissivity B11</em></dt>
-<dd>Emissivity for Landsat 8 band 11</dd>
+<h4>Calibration Formulas</h4>
 
-<dt><b>landcover</b>=<em>land cover map name</em></dt>
-<dd>Land cover map</dd>
+<tt>(1-radioweight) * {smoothness * smoothness weight + compactness * (1-smoothness weight)}</tt>,
 
-<dt><b>emissivity_class</b>=<em>emissivity class</em>&nbsp;<b>[required]</b></dt>
-<dd>Manual selection of land cover class to retrieve average emissivity from a look-up table (case sensitive)</dd>
-<dd>Options: <em>Cropland,  Forest,  Grasslands,  Shrublands,  Wetlands,  Waterbodies,  Tundra,  Impervious,  Barren,  Snow</em></dd>
+<h3>Land Surface Emissivity</h3>
+An overview of "Section 3.2: Determination of LSEs":
 
-<dt><b>lst</b>=<em>lst output</em>&nbsp;<b>[required]</b></dt>
-<dd>Name for output Land Surface Temperature map</dd>
-<dd>Default: <em>lst</em></dd>
+1) The FROM-GLC (30m) contains 10 types of land covers (cropland,
+forest, grassland, shrubland, wetland, waterbody, tundra, impervious, barren
+land and snow-ice).
 
-<dt><b>cwv</b>=<em>cwv output</em></dt>
-<dd>Name for output Column Water Vapor map [optional]</dd>
+2) Deriving emissivities for each land cover class by using different
+combinations of three BRDF kernel models (geometrical, volumetric and specular
+models)
 
-</dl>
-</div>
-</body>
-</html>
+3) Vegetation and ground emissivity spectra for the BRDF models selected
+from the MODIS University of California, Santa Barbara (UCSB) Emissivity
+Library
+
+4) Estimating FVC (to obtain emissivity of land cover with temporal variation))
+from NDVI based on Carlson (1997) and Sobrino (2001)
+
+5) Finally, establishing the average emissivity Look-Up table
+...
+
+<h3>Column Water Vapor</h3>
+...
+...
+...
+
+<h4>Modified Split-Window Covariance-Variance Method</h4>
+...
+...
+
+<h3>Land Surface Temperature</h3>
+...
+...
+...
+
+<h4>Split-Window Algorithm</h4>
+...
+...
+
+
+<h2>EXAMPLE</h2>
+
+At minimum, the module requires the following in order to derive a land surface temperature map:
+
+1. The Landsat8 scene's acquisition metadata (MTL file) 
+2. Bands 10, 11 and QA
+3. The FROM-GLC product for the same Path and Row
+
+The shorted call for processing a complete Landsat8 scene normally is:
+<div class="code"><pre>
+i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC
+</pre></div>
+
+where:
+<ul>
+<li>mtl= the name of the MTL metadata file (normally with a ".txt" extension)</li>
+<li>prefix= the prefix of the band names imported in GRASS GIS' data base</li>
+<li>landcover= the name of the FROM-GLC map that covers the extent of the Landsat8 scene under processing</li>
+</ul>
+
+<p>The pixel value 61440 is selected to automatically to build a cloud mask. At
+the moment, only one pixel value may be requested from the Quality Assessment
+band. For details, refer to
+http://landsat.usgs.gov/L8QualityAssessmentBand.php.
+
+<p>In order to restrict the processing in to the currently set computational region, the "-k" flag can be used:
+<div class="code"><pre>
+i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -k 
+</pre></div>
+
+<p>The Celsius color table may be applied for the output land surface temperature map via the "-c" flag:
+<div class="code"><pre>
+i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -c 
+</pre></div>
+
+<p>The user can use existing at-satellite temperature maps via the "t10" and "t11" options, selectively. For example:
+<div class="code"><pre>
+i.landsat8.swlst mtl=MTL b10=B10 t11=AtSatellite_Temperature_11 landcover=FROM_GLC -c 
+</pre></div>
+
+or
+
+<div class="code"><pre>
+i.landsat8.swlst mtl=MTL t10=AtSatellite_Temperature_10 t11=AtSatellite_Temperature_11 landcover=FROM_GLC -c 
+</pre></div>
+
+<p>Expert users may need to request for a "fixed" average surface emissivity to
+perform the algorithm for a single land cover class (one from the classes
+defined in the FROM-GLC classification scheme) via the "emissivity_class"
+option. Consequently, the emissivity_class cannot be used at the same time with
+the "landover" option.
+<div class="code"><pre>
+i.landsat8.swlst mtl=MTL b10=B10 t11=AtSatellite_Temperature_11 qab=BQA emissivity_class='Croplands' -c 
+</pre></div>
+
+A complete "transparent" run-through of what and how the module performs computations, may be requested via the use of both the "--v" and "-i" flags:
+<div class="code"><pre>
+i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -i --v 
+</pre></div>
+
+<p>This will print out a description of each individual processing step, as well as the actual mathematical epxressions applied via GRASS GIS' r.mapcalc module.
+
+<div class="code"><pre>
+i.landsat8.swlst
+</pre></div>
+
+<center>
+<img src=".jpg">
+</center>
+
+<p>
+...
+<div class="code"><pre>
+i.landsat8.swlst
+</pre></div>
+
+<center>
+<img src=".jpg">
+</center>
+
+<p>
+... <tt>code</tt> with <b>bold text</b>
+...
+...
+
+<p>
+
+<div class="code"><pre>
+i.segment group=ortho_group output=ortho_segs_final threshold=0.25 min=10
+</pre></div>
+
+<center>
+<img src="ortho_segs_final.jpg">
+</center>
+
+<p>
+Processing the entire ortho image with nearly 10 million pixels took
+about 450 times more then for the final run.
+
+<h2>TODO</h2>
+<ul>
+    <li> Go through <a
+        href="http://trac.osgeo.org/grass/wiki/Submitting/Python">Submitting
+        Python</a></li>
+    <li> </li>
+    <li> </li>
+    <li> Proper command history tracking.</li>
+    <li> Add timestamps (r.timestamp, temporal framework)</li>
+    <li> Deduplicate code where applicable</li>
+    <li> Test if it compiles in other systems</li>
+    <li> Improve documentation</li>
+</ul>
+
+<h2>REFERENCES</h2>
+[0] Du, Chen; Ren, Huazhong; Qin, Qiming; Meng, Jinjie;
+Zhao, Shaohua. 2015. "A Practical Split-Window Algorithm
+for Estimating Land Surface Temperature from Landsat 8 Data."
+Remote Sens. 7, no. 1: 647-665.
+http://www.mdpi.com/2072-4292/7/1/647/htm#sthash.ba1pt9hj.dpuf
+
+[1] Huazhong Ren, Chen Du, Qiming Qin, Rongyuan Liu,
+Jinjie Meng, and Jing Li. "Atmospheric Water Vapor Retrieval
+from Landsat 8 and Its Validation." 3045–3048. IEEE, 2014.
+
+<h2>SEE ALSO</h2>
+<em>
+<a href="i.emissivity.html">i.emissivity</a>,
+</em>
+
+<h2>AUTHORS</h2>
+Nikos Alexandris<br>
