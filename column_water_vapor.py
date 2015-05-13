@@ -145,15 +145,12 @@ class Column_Water_Vapor():
         """
         Compute the column water vapor based on lists of input Ti and Tj
         values.
+
+        This is a single value production function. It does not read or return
+        a map.
         """
-
         # feed with N pixels
-
-        #tik = random_adjacent_pixel_values(self.modifiers_ti)
         ti_mean = sum(tik) / len(tik)
-        
-        # import random
-        #tjk = [ti + random.uniform(1,10) for ti in tik]
         tj_mean = sum(tjk) / len(tjk)
 
         # numerator: sum of all (Tik - Ti_mean) * (Tjk - Tj_mean)
@@ -177,11 +174,11 @@ class Column_Water_Vapor():
         cwv = self.c0 + self.c1 * (ratio_ji) + self.c2 * ((ratio_ji) ** 2)
 
         # inform?
-        print '{c0} + {c1}*({rji}) + {c2}*({rji})^2 = '.format(c0=self.c0,
-                                                        c1=self.c1,
-                                                        rji=ratio_ji,
-                                                        c2=self.c2,
-                                                        cwv=cwv),
+        # print '{c0} + {c1}*({rji}) + {c2}*({rji})^2 = '.format(c0=self.c0,
+        #                                                        c1=self.c1,
+        #                                                        rji=ratio_ji,
+        #                                                        c2=self.c2,
+        #                                                        cwv=cwv),
         return cwv
 
     def _derive_adjacent_pixels(self):
@@ -217,6 +214,9 @@ class Column_Water_Vapor():
         """
         Return mapcalc expression for window means based on the given mapcalc
         pixel modifiers.
+
+        ** ToDo **
+
         """
         pass
 
@@ -264,9 +264,9 @@ class Column_Water_Vapor():
 
     def _denominator_for_ratio(self, mean_ti):
         """
-        Denominator for Ratio ji. Use this function for the step-by-step approach
-        to estimate the column water vapor from within the main code (main
-        function) of the module i.landsat8.swlst
+        Denominator for Ratio ji. Use this function for the step-by-step
+        approach to estimate the column water vapor from within the main code
+        (main function) of the module i.landsat8.swlst
         """
         if not mean_ti:
             mean_ti = 'Ti_mean'
@@ -281,12 +281,11 @@ class Column_Water_Vapor():
         """
         Denominator for Ratio ji. Use this function for the big mapcalc
         expression.
-        
+
         Example:
                 _denominator_for_ratio_big(mean_ti='Some_String')
         """
         mean_ti = kwargs.get('mean_ti', 'ti_mean')
-        
         terms = '({Ti} - {Tim})^2'
         terms = ' + '.join([terms.format(Ti=mod,
                                          Tim=mean_ti)
@@ -306,7 +305,7 @@ class Column_Water_Vapor():
 
         rji = '( {numerator} )  /  ( {denominator} )'
         rji = rji.format(numerator=rji_numerator, denominator=rji_denominator)
-        
+
         return rji
 
     def _column_water_vapor_expression(self):
@@ -316,7 +315,7 @@ class Column_Water_Vapor():
         i.landsat8.swlst
         """
         cwv_expression = '({c0}) + ({c1}) * ({Rji}) + ({c2}) * ({Rji})^2'
-        
+
         return cwv_expression.format(c0=self.c0, c1=self.c1,
                                      Rji=DUMMY_Rji, c2=self.c2)
 
@@ -330,19 +329,9 @@ class Column_Water_Vapor():
             implemented in _column_water_vapor_expression() ? ***
         """
         modifiers_ti = self._derive_modifiers(self.ti)
-        # print "   > Modifiers (Ti):", modifiers_ti
-
         ti_sum = '(' + ' + '.join(modifiers_ti) + ')'
-        # print "   > Sum (Ti):", ti_sum
-
         ti_length = len(modifiers_ti)
-        # print "   > Length (Ti):", ti_length
-
         ti_mean = '{sum} / {length}'.format(sum=ti_sum, length=ti_length)
-        # print "   > Mean (Ti):", ti_mean
-
-        # print "   > Repeating same for Tj... (hidden)"
-        # print
 
         modifiers_tj = self._derive_modifiers(self.tj)
         tj_sum = '(' + ' + '.join(modifiers_tj) + ')'
@@ -354,17 +343,9 @@ class Column_Water_Vapor():
 
         numerator = self._numerator_for_ratio_big(mean_ti=string_for_mean_ti,
                                                   mean_tj=string_for_mean_tj)
+
         denominator = \
             self._denominator_for_ratio_big(mean_ti=string_for_mean_ti)
-
-        # print "   > Numerator:", numerator
-        # print
-
-        # print "   > Denominator:", denominator
-        # print
-
-        # print "   Ratio ji expression:", self._ratio_ji_expression()
-        # print
 
         cwv = ('eval('
                '\ \n  ti_mean = {tim},'
@@ -391,4 +372,3 @@ if __name__ == "__main__":
     print ('Atmpspheric column water vapor retrieval '
            'from Landsat 8 TIRS data.'
            ' (Running as stand-alone tool?)')
-
