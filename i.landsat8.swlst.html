@@ -23,14 +23,16 @@
 <li>e and De are the average emissivity and emissivity difference of two adjacent thermal channels, respectively, which are similar to Equation (2);</li>
 <li>and fk (k = 0 and 1) is related to the influence of the atmospheric transmittance and emissivity, i.e., <code>fk = f(ei, ej, ti, tji)</code>.</li>
 </ul>
-<p>Note that the algorithm (Equation (6a)) proposed by Jiménez-Muñoz et al. added CWV directly to estimate LST.</p>
+<p>Note that the algorithm (Equation (6a)) proposed by Jimenez-Munoz et al. added CWV directly to estimate LST.</p>
 <p>Rozenstein et al. used CWV to estimate the atmospheric transmittance (ti, tj) and optimize retrieval accuracy explicitly.</p>
 <p>Therefore, if the atmospheric CWV is unknown or cannot be obtained successfully, neither of the two algorithms in Equations (6a) and (6b) will work. By contrast, although our algorithm also needs CWV to determine the coefficients, this algorithm still works for unknown CWVs because the coefficients are obtained regardless of the CWV, as shown in Table 1.</p>
 <h2 id="notes">NOTES</h2>
 <p>The algorithm's flowchart (Figure 3 in the paper [0]) is:</p>
 <div class="figure">
+<div class="figure">
 <img src="Figure_3_Flowchart_of_retrieving_LST_from_Landsat8.jpg">
 
+</div>
 </div>
 <h3 id="cloud-masking">Cloud Masking</h3>
 <p>The first important step of the algorithm is cloud screening. The module offers two ways to achieve this:</p>
@@ -41,20 +43,20 @@
 <h3 id="calibration-of-tirs-channels-10-11">Calibration of TIRS channels 10, 11</h3>
 <h4 id="conversion-to-spectral-radiance">Conversion to Spectral Radiance</h4>
 <p>Conversion of Digital Numbers to TOA Radiance. OLI and TIRS band data can be converted to TOA spectral radiance using the radiance rescaling factors provided in the metadata file:</p>
-<p><code>Lλ = ML * Qcal + AL</code></p>
+<p><code>Ll = ML * Qcal + AL</code></p>
 <p>where:</p>
 <ul>
-<li>Lλ = TOA spectral radiance (Watts/( m2 * srad * μm))</li>
+<li>Ll = TOA spectral radiance (Watts/( m2 * srad * μm))</li>
 <li>ML = Band-specific multiplicative rescaling factor from the metadata (RADIANCE_MULT_BAND_x, where x is the band number)</li>
 <li>AL = Band-specific additive rescaling factor from the metadata (RADIANCE_ADD_BAND_x, where x is the band number)</li>
 <li>Qcal = Quantized and calibrated standard product pixel values (DN)</li>
 </ul>
 <h4 id="conversion-to-at-satellite-temperature">Conversion to at-Satellite Temperature</h4>
 <p>Conversion to At-Satellite Brightness Temperature TIRS band data can be converted from spectral radiance to brightness temperature using the thermal constants provided in the metadata file:</p>
-<p><code>T = K2 / ln((K1/Lλ) + 1)</code></p>
+<p><code>T = K2 / ln((K1/Ll) + 1)</code></p>
 <p>where:</p>
 <ul>
-<li>T = At-satellite brightness temperature (K) - Lλ = TOA spectral radiance (Watts/( m2 * srad * μm)), below 'DUMMY_RADIANCE'</li>
+<li>T = At-satellite brightness temperature (K) - Ll = TOA spectral radiance (Watts/( m2 * srad * μm)), below 'DUMMY_RADIANCE'</li>
 <li>K1 = Band-specific thermal conversion constant from the metadata (K1_CONSTANT_BAND_x, where x is the band number, 10 or 11)</li>
 <li>K2 = Band-specific thermal conversion constant from the metadata (K2_CONSTANT_BAND_x, where x is the band number, 10 or 11) ...</li>
 </ul>
@@ -69,40 +71,44 @@
 </ol>
 <h3 id="column-water-vapor">Column Water Vapor</h3>
 <p>Retrieving atmospheric column water vapor from Landsat8 TIRS data based on the modified split-window covariance and variance ratio (MSWCVR).</p>
-<table>
-<tbody>
-<tr class="odd">
-<td align="left">*Note,* this class produces valid expressions for GRASS GIS' mapcalc raster</td>
-</tr>
-<tr class="even">
-<td align="left">processing module and does not directly compute column water vapor estimations.</td>
-</tr>
-</tbody>
-</table>
+<h4 id="modified-split-window-covariance-variance-method">Modified Split-Window Covariance-Variance Method</h4>
 <p>With a vital assumption that the atmosphere is unchanged over the neighboring pixels, the MSWCVR method relates the atmospheric CWV to the ratio of the upward transmittances in two thermal infrared bands, whereas the transmittance ratio can be calculated based on the TOA brightness temperatures of the two bands. Considering N adjacent pixels, the CWV in the MSWCVR method is estimated as:</p>
 <ul>
 <li><code>cwv = c0 + c1*(tj/ti) + c2*(tj/ti)^2</code></li>
 <li><code>tj/ti</code> ~ <code>Rji = SUM [(Tik-Ti\_mean) \* (Tjk-Tj\_mean)] / SUM[(Tik-Tj\_mean)\^2]</code></li>
 </ul>
-<p>In Equation (3a): - c0, c1 and c2 are coefficients obtained from simulated data; - t is the band effective atmospheric transmittance; - N is the number of adjacent pixels (excluding water and cloud pixels) in a spatial window of size n (i.e., N = n × n); - Ti,k and Tj,k are Top of Atmosphere brightness temperatures (K) of bands i and j for the kth pixel; - mean(Ti) and mean(Tj) are the mean or median brightness temperatures of the N pixels for the two bands.</p>
-<p>The regression coefficients: - c0 = -9.674 - c1 = 0.653 - c2 = 9.087</p>
-<p>where obtained by: - 946 cloud-free TIGR atmospheric profiles, - the new high accurate atmospheric radiative transfer model MODTRAN 5.2 - simulating the band effective atmospheric transmittance Model analysis indicated that this method will obtain a CWV RMSE of about 0.5 g/cm2.</p>
-<p>Details about the CWV retrieval can be found in:</p>
+<p>In Equation (3a):</p>
+<ul>
+<li><code>c0</code>, <code>c1</code> and <code>c2</code> are coefficients obtained from simulated data;</li>
+<li><code>t</code> is the band effective atmospheric transmittance;</li>
+<li><code>N</code> is the number of adjacent pixels (excluding water and cloud pixels) in a spatial window of size <code>n</code> (i.e., <code>N = n × n</code>);</li>
+<li><code>Ti,k</code> and <code>Tj,k</code> are top of atmosphere brightness temperatures (K) of bands <code>i</code> and <code>j</code> for the <code>k</code>th pixel;</li>
+<li><code>mean(Ti)</code> and <code>mean(Tj)</code> are the mean (or median -- not implemented yet) brightness temperatures of the <code>N</code> pixels for the two bands.</li>
+</ul>
+<p>The regression coefficients:</p>
+<ul>
+<li><code>c0</code> = -9.674</li>
+<li><code>c1</code> = 0.653</li>
+<li><code>c2</code> = 9.087</li>
+</ul>
+<p>where obtained by:</p>
+<ul>
+<li>946 cloud-free TIGR atmospheric profiles,</li>
+<li>the new high accurate atmospheric radiative transfer model MODTRAN 5.2</li>
+<li>simulating the band effective atmospheric transmittance Model analysis indicated that this method will obtain a CWV RMSE of about 0.5 g/cm2.</li>
+</ul>
+<p>Details about the columnw water vapor retrieval can be found in:</p>
 <p>Ren, H.; Du, C.; Qin, Q.; Liu, R.; Meng, J.; Li, J. Atmospheric water vapor retrieval from landsat 8 and its validation. In Proceedings of the IEEE International Geosciene and Remote Sensing Symposium (IGARSS), Quebec, QC, Canada, July 2014; pp. 3045--3048.</p>
-<h4 id="modified-split-window-covariance-variance-method">Modified Split-Window Covariance-Variance Method</h4>
-<p>...</p>
 <h3 id="land-surface-temperature">Land Surface Temperature</h3>
 <p>...</p>
 <h4 id="split-window-algorithm">Split-Window Algorithm</h4>
 <p>A class implementing the split-window algorithm for Landsat8 imagery Inputs:</p>
 <ul>
-<li>The class itself requires only a string for 'landcover' which is:</li>
-</ul>
+<li>The class itself requires only a string for 'landcover' which is:
 <ol style="list-style-type: decimal">
-<li><p>a fixed land cover class string (one from the classes defined in the FROM-GLC legend)</p></li>
-<li><p>a land cover class code (integer) one from the classes defined in the FROM-GLC classification scheme.</p></li>
-</ol>
-<ul>
+<li>a fixed land cover class string (one from the classes defined in the FROM-GLC legend)</li>
+<li>a land cover class code (integer) one from the classes defined in the FROM-GLC classification scheme.</li>
+</ol></li>
 <li>Inputs for individual functions vary, look at their definitions.</li>
 </ul>
 <p>Outputs:</p>
@@ -112,20 +118,26 @@
 </ul>
 <h5 id="details-1">Details</h5>
 <p>The algorithm removes the atmospheric effect through differential atmospheric absorption in the two adjacent thermal infrared channels centered at about 11 and 12 μm. The linear or non-linear combination of the brightness temperatures is finally applied for LST estimation based on the equation:</p>
-<p>LST = b0 + + (b1 + b2 * ((1-ae)/ae)) + + b3 * (de/ae) * ((t10 + t11)/2) + + (b4 + b5 * ((1-ae)/ae) + b6 * (de/ae^2)) * ((t10 - t11)/2) + + b7 * (t10 - t11)^2</p>
+<p><code>LST = b0 + + (b1 + b2 \* ((1-ae)/ae)) + + b3 \* (de/ae) \* ((t10 + t11)/2) + + (b4 + b5 \* ((1-ae)/ae) + b6 \* (de/ae\^2)) \* ((t10 - t11)/2) + + b7 \* (t10 - t11)\^2</code></p>
 <p>To reduce the influence of the CWV error on the LST, for a CWV within the overlap of two adjacent CWV sub-ranges, we first use the coefficients from the two adjacent CWV sub-ranges to calculate the two initial temperatures and then use the average of the initial temperatures as the pixel LST.</p>
-<p>For example, the LST pixel with a CWV of 2.1 g/cm2 is estimated by using the coefficients of [0.0, 2.5] and [2.0, 3.5]. This process initially reduces the δLSTinc and improves the spatial continuity of the LST product.</p>
+<p>For example, the LST pixel with a CWV of 2.1 g/cm2 is estimated by using the coefficients of [0.0, 2.5] and [2.0, 3.5]. This process initially reduces the delta-LSTinc and improves the spatial continuity of the LST product.</p>
 <h2 id="example">EXAMPLE</h2>
 <p>At minimum, the module requires the following in order to derive a land surface temperature map:</p>
 <ol style="list-style-type: decimal">
 <li><p>The Landsat8 scene's acquisition metadata (MTL file)</p></li>
 <li><p>Bands 10, 11 and QA</p></li>
-<li><p>The FROM-GLC product for the same Path and Row The shorted call for processing a complete Landsat8 scene normally is:</p></li>
+<li><p>A FROM-GLC product for the same Path and Row as the Landsat scene to be processed</p></li>
 </ol>
+<p>The shortest call for processing a complete Landsat8 scene normally is:</p>
 <div class="code">
 <pre><code>i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC</code></pre>
 </div>
-<p>where: - mtl= the name of the MTL metadata file (normally with a &quot;.txt&quot; extension) - prefix= the prefix of the band names imported in GRASS GIS' data base - landcover= the name of the FROM-GLC map that covers the extent of the Landsat8 scene under processing</p>
+<p>where:</p>
+<ul>
+<li>mtl= the name of the MTL metadata file (normally with a &quot;.txt&quot; extension)</li>
+<li>prefix= the prefix of the band names imported in GRASS GIS' data base</li>
+<li>landcover= the name of the FROM-GLC map that covers the extent of the Landsat8 scene under processing</li>
+</ul>
 <p>The pixel value 61440 is selected to automatically to build a cloud mask. At the moment, only one pixel value may be requested from the Quality Assessment band. For details, refer to [http://landsat.usgs.gov/L8QualityAssessmentBand.php USGS' webpage for Landsat8 Quality Assessment Band]</p>
 <p>In order to restrict the processing in to the currently set computational region, the <em>-k</em> flag can be used:</p>
 <div class="code">
@@ -160,16 +172,20 @@
 <pre><code>i.landsat8.swlst</code></pre>
 </div>
 <div class="figure">
+<div class="figure">
 <img src=".jpg">
 
+</div>
 </div>
 <p>...</p>
 <div class="code">
 <pre><code>i.landsat8.swlst</code></pre>
 </div>
 <div class="figure">
+<div class="figure">
 <img src=".jpg">
 
+</div>
 </div>
 <h2 id="todo">TODO</h2>
 <ul>
@@ -179,7 +195,6 @@
 <li>Deduplicate code where applicable</li>
 <li>Test if it compiles in other systems</li>
 <li>Improve documentation</li>
-<li>Implement a median window filter based on given mapcalc pixel modifiers, in addition to the mean</li>
 </ul>
 <h2 id="references">REFERENCES</h2>
 <ul>
