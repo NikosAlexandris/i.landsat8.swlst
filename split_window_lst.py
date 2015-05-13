@@ -160,7 +160,7 @@ class SplitWindowLST():
                        '{b6}*({de}/{ae}^2))*(({t10} - {t11})/2) + '
                        '{b7}*({t10} - {t11})^2]')
 
-        if landcover in EMISSIVITIES.keys() or landcover == 'random':
+        if landcover in EMISSIVITIES.keys() or landcover == 'Random':
 
             # a fixed land cover class requested
             self.landcover_class = landcover
@@ -214,11 +214,11 @@ class SplitWindowLST():
         """
         Check whether the given string belongs to the list (keys) of known land
         cover class names (to the FROM-GLC classification scheme) or is identical
-        to 'random' and return, accordingly, True or False.
+        to 'Random' and return, accordingly, True or False.
         """
         if string in FROM_GLC_LEGEND.keys():
             return True
-        elif string == 'random':
+        elif string == 'Random':
             return True
         else:
             return False
@@ -231,7 +231,7 @@ class SplitWindowLST():
         Input is either one of the standard FROM-GLC land cover classes (...),
         or one of its corresponding land cover class codes (...).
 
-        For testing purposes, the string "random" is accepted to select a
+        For testing purposes, the string "Random" is accepted to select a
         random land surface emissivity class.
         """
 
@@ -254,7 +254,7 @@ class SplitWindowLST():
                        'FROM-GLC map\'s legend!')
 
         # random?
-        if type(emissivity_class) == str and emissivity_class == 'random':
+        if type(emissivity_class) == str and emissivity_class == 'Random':
             emissivity_class = random.choice(EMISSIVITIES.keys())
             self.landcover_class = emissivity_class
 

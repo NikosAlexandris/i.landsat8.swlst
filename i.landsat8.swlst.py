@@ -293,7 +293,7 @@
 #% key: emissivity_class
 #% key_desc: emissivity class
 #% description: Manual selection of land cover class to retrieve average emissivity from a look-up table (case sensitive). Not recommended, unless truely operating inside a single land cover class!  --- CURRENTLY NOT WORKING PROPERLY!
-#% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow, random
+#% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow, Random
 #% required : no
 #%end
 
@@ -1070,7 +1070,7 @@ def main():
             # replace with meaningful error
             g.warning('Unknown land cover class string')
 
-        if emissivity_class == 'random':
+        if emissivity_class == 'Random':
             msg = "\n|! Random emissivity class selected > " + \
                 split_window_lst.landcover_class + ' '
 
@@ -1117,7 +1117,7 @@ def main():
     # 5. Estimate Land Surface Temperature
     #
 
-    if info and emissivity_class == 'random':
+    if info and emissivity_class == 'Random':
         msg = '\n|* Will pick a random emissivity class!'
         grass.verbose(msg)
 
