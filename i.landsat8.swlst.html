@@ -23,13 +23,13 @@
 <li>e and De are the average emissivity and emissivity difference of two adjacent thermal channels, respectively, which are similar to Equation (2);</li>
 <li>and fk (k = 0 and 1) is related to the influence of the atmospheric transmittance and emissivity, i.e., <code>fk = f(ei, ej, ti, tji)</code>.</li>
 </ul>
-<p>Note that the algorithm (Equation (6a)) proposed by Jim-Muet al. added CWV directly to estimate LST.</p>
+<p>Note that the algorithm (Equation (6a)) proposed by Jiménez-Muñoz et al. added CWV directly to estimate LST.</p>
 <p>Rozenstein et al. used CWV to estimate the atmospheric transmittance (ti, tj) and optimize retrieval accuracy explicitly.</p>
 <p>Therefore, if the atmospheric CWV is unknown or cannot be obtained successfully, neither of the two algorithms in Equations (6a) and (6b) will work. By contrast, although our algorithm also needs CWV to determine the coefficients, this algorithm still works for unknown CWVs because the coefficients are obtained regardless of the CWV, as shown in Table 1.</p>
 <h2 id="notes">NOTES</h2>
 <p>The algorithm's flowchart (Figure 3 in the paper [0]) is:</p>
 <div class="figure">
-<img src="Figure_3_Flowchart_of_retrieving_LST_from_Landsat8.jpg" />
+<img src="Figure_3_Flowchart_of_retrieving_LST_from_Landsat8.jpg">
 
 </div>
 <h3 id="cloud-masking">Cloud Masking</h3>
@@ -149,7 +149,7 @@
 </div>
 <p>Expert users may need to request for a &quot;fixed&quot; average surface emissivity, in order to perform the algorithm for a single land cover class (one from the classes defined in the FROM-GLC classification scheme) via the <code>emissivity\_class</code> option. Consequently, <code>emissivity\_class</code> cannot be used at the same time with the <code>landover</code> option.</p>
 <div class="code">
-<pre><code>i.landsat8.swlst mtl=MTL b10=B10 t11=AtSatellite_Temperature_11 qab=BQA emissivity_class=&#39;Croplands&#39; -c </code></pre>
+<pre><code>i.landsat8.swlst mtl=MTL b10=B10 t11=AtSatellite_Temperature_11 qab=BQA emissivity_class=&quot;Croplands&quot; -c </code></pre>
 </div>
 <p>A complete &quot;transparent&quot; run-through of what kind of and how the module performs its computations, may be requested via the use of both the <em>--v</em> and <em>-i</em> flags:</p>
 <div class="code">
@@ -160,7 +160,7 @@
 <pre><code>i.landsat8.swlst</code></pre>
 </div>
 <div class="figure">
-<img src=".jpg" />
+<img src=".jpg">
 
 </div>
 <p>...</p>
@@ -168,7 +168,7 @@
 <pre><code>i.landsat8.swlst</code></pre>
 </div>
 <div class="figure">
-<img src=".jpg" />
+<img src=".jpg">
 
 </div>
 <h2 id="todo">TODO</h2>
@@ -188,4 +188,5 @@
 <h2 id="see-also">SEE ALSO</h2>
 <p><em><a href="i.emissivity.html">i.emissivity</a></em></p>
 <h2 id="authors">AUTHORS</h2>
-<p>Nikos Alexandris<br /></p>
+Nikos Alexandris
+<p>
