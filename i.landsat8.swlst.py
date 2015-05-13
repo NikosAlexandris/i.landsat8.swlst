@@ -327,7 +327,6 @@
 #%end
 
 #%rules
-#% required: qab, clouds
 #% exclusive: qab, clouds
 #%end
 
@@ -961,13 +960,14 @@ def main():
             qab = False
             cloud_map = options['clouds']
 
-    else:
+    elif options['prefix']:
         prefix = options['prefix']
         b10 = prefix + '10'
         b11 = prefix + '11'
 
         if not options['clouds']:
             qab = prefix + 'QA'
+            cloud_map = False
         
         else:
             cloud_map = options['clouds']
