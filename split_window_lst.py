@@ -281,8 +281,8 @@ class SplitWindowLST():
     def _retrieve_adjacent_cwv_subranges(self, column_water_vapor):
         """
         Select and return adjacent subranges (string to be used as a dictionary
-        key) based on the atmospheric column water vapor estimation (float ratio)
-        ranging in (0.0, 6.3].
+        key) based on the atmospheric column water vapor estimation (float
+        ratio) ranging in (0.0, 6.3].
 
         Input "cwv" is an estimation of the column water vapor (float ratio).
         """
@@ -299,8 +299,8 @@ class SplitWindowLST():
 
         # if one subrange, return a string
         if len(result) == 1:
-            #self._cwv_subrange = result[0]
-            #self._cwv_subrange_a = self._cwv_subrange_b = False
+            # self._cwv_subrange = result[0]
+            # self._cwv_subrange_a = self._cwv_subrange_b = False
             return result[0]
 
         # if two subranges, return a tuple
@@ -385,7 +385,11 @@ class SplitWindowLST():
     def compute_lst(self, t10, t11, coefficients):
         """
         Compute Land Surface Temperature based on the Split-Window algorithm.
-        Inputs are brightness temperatures measured in channels  i(~11.0 μm) and j (~12.0 μm).
+        Inputs are brightness temperatures measured in channels  i(~11.0 μm)
+        and j (~12.0 μm).
+
+        This is a single value computation function and does not read or return
+        a map.
         """
 
         # check validity of t10, t11
@@ -416,12 +420,14 @@ class SplitWindowLST():
 
     def _set_lst(self):
         """
+        Set the result of the single value computation function as an attribute
+        (?)
         """
         pass
 
     def compute_average_lst(self, t10, t11, subrange_a, subrange_b):
         """
-        Compute average LST
+        Compute average LST, similar as the compute_lst function.
         """
 
         # retrieve coefficients for first subrange and compute lst for it
@@ -437,7 +443,7 @@ class SplitWindowLST():
 
     def _set_average_lst(self):
         """
-        Set the average LST pixel value
+        Set the average LST pixel value as an attribute (?)
         """
         pass
 
@@ -586,7 +592,7 @@ class SplitWindowLST():
                                    t11=self.emissivity_t11)
         return model
 
-    def _build_custom_mapcalc(self, subrange):
+    def _build_subrange_mapcalc(self, subrange):
         """
         Build formula for GRASS GIS' mapcalc for the given cwv subrange.
 
@@ -656,149 +662,60 @@ class SplitWindowLST():
         low_3, high_3 = COLUMN_WATER_VAPOR['Range_3'].subrange
         low_4, high_4 = COLUMN_WATER_VAPOR['Range_4'].subrange
         low_5, high_5 = COLUMN_WATER_VAPOR['Range_5'].subrange
-        low_6, high_6 = COLUMN_WATER_VAPOR['Range_6'].subrange  # complete
+        low_6, high_6 = COLUMN_WATER_VAPOR['Range_6'].subrange  # unused
 
         # build mapcalc expression for each subrange
-        expression_range_1 = self._build_custom_mapcalc('Range_1')
-        expression_range_2 = self._build_custom_mapcalc('Range_2')
-        expression_range_3 = self._build_custom_mapcalc('Range_3')
-        expression_range_4 = self._build_custom_mapcalc('Range_4')
-        expression_range_5 = self._build_custom_mapcalc('Range_5')
-        expression_range_6 = self._build_custom_mapcalc('Range_6')  # complete
+        expression_range_1 = self._build_subrange_mapcalc('Range_1')
+        expression_range_2 = self._build_subrange_mapcalc('Range_2')
+        expression_range_3 = self._build_subrange_mapcalc('Range_3')
+        expression_range_4 = self._build_subrange_mapcalc('Range_4')
+        expression_range_5 = self._build_subrange_mapcalc('Range_5')
+        expression_range_6 = self._build_subrange_mapcalc('Range_6')  # unused
 
         # build one big expression using mighty eval
-        sw_lst_expression = ('eval( sw_lst_1 = {exp_1},'
-                             '\ \n sw_lst_2 = {exp_2},'
-                             '\ \n sw_lst_12 = (sw_lst_1 + sw_lst_2) / 2,'
-                             '\ \n sw_lst_3 = {exp_3},'
-                             '\ \n sw_lst_23 = (sw_lst_2 + sw_lst_3) / 2,'
-                             '\ \n sw_lst_4 = {exp_4},'
-                             '\ \n sw_lst_34 = (sw_lst_3 + sw_lst_4) / 2,'
-                             '\ \n sw_lst_5 = {exp_5},'
-                             '\ \n sw_lst_45 = (sw_lst_5 + sw_lst_5) / 2,'
-                             '\ \n in_range_1 = {low_1} < {DUMMY_CWV} < {high_1},'
-                             '\ \n in_range_2 = {low_2} < {DUMMY_CWV} < {high_2},'
-                             '\ \n in_range_3 = {low_3} < {DUMMY_CWV} < {high_3},'
-                             '\ \n in_range_4 = {low_4} < {DUMMY_CWV} < {high_4},'
-                             '\ \n in_range_5 = {low_5} < {DUMMY_CWV} < {high_5},'
-                             '\ \n if( in_range_1 && in_range_2, sw_lst_12,'
-                             '\ \n if( in_range_2 && in_range_3, sw_lst_23,'
-                             '\ \n if( in_range_3 && in_range_4, sw_lst_34,'
-                             '\ \n if( in_range_4 && in_range_5, sw_lst_45,'
-                             '\ \n if( in_range_1, sw_lst_1,'
-                             '\ \n if( in_range_2, sw_lst_2,'
-                             '\ \n if( in_range_3, sw_lst_3,'
-                             '\ \n if( in_range_4, sw_lst_4,'
-                             '\ \n if( in_range_5, sw_lst_5,'
-                             ' null() ))))))))))')
+        expression = ('eval( sw_lst_1 = {exp_1},'
+                      '\ \n sw_lst_2 = {exp_2},'
+                      '\ \n sw_lst_12 = (sw_lst_1 + sw_lst_2) / 2,'
+                      '\ \n sw_lst_3 = {exp_3},'
+                      '\ \n sw_lst_23 = (sw_lst_2 + sw_lst_3) / 2,'
+                      '\ \n sw_lst_4 = {exp_4},'
+                      '\ \n sw_lst_34 = (sw_lst_3 + sw_lst_4) / 2,'
+                      '\ \n sw_lst_5 = {exp_5},'
+                      '\ \n sw_lst_45 = (sw_lst_5 + sw_lst_5) / 2,'
+                      '\ \n in_range_1 = {low_1} < {DUMMY_CWV} < {high_1},'
+                      '\ \n in_range_2 = {low_2} < {DUMMY_CWV} < {high_2},'
+                      '\ \n in_range_3 = {low_3} < {DUMMY_CWV} < {high_3},'
+                      '\ \n in_range_4 = {low_4} < {DUMMY_CWV} < {high_4},'
+                      '\ \n in_range_5 = {low_5} < {DUMMY_CWV} < {high_5},'
+                      '\ \n if( in_range_1 && in_range_2, sw_lst_12,'
+                      '\ \n if( in_range_2 && in_range_3, sw_lst_23,'
+                      '\ \n if( in_range_3 && in_range_4, sw_lst_34,'
+                      '\ \n if( in_range_4 && in_range_5, sw_lst_45,'
+                      '\ \n if( in_range_1, sw_lst_1,'
+                      '\ \n if( in_range_2, sw_lst_2,'
+                      '\ \n if( in_range_3, sw_lst_3,'
+                      '\ \n if( in_range_4, sw_lst_4,'
+                      '\ \n if( in_range_5, sw_lst_5,'
+                      ' null() ))))))))))')
 
         # replace keywords appropriately
-        swlst_expression = sw_lst_expression.format(exp_1=expression_range_1,
-                                                    low_1=low_1,
-                                                    DUMMY_CWV=DUMMY_MAPCALC_STRING_CWV,
-                                                    high_1=high_1,
-                                                    exp_2=expression_range_2,
-                                                    low_2=low_2, high_2=high_2,
-                                                    exp_3=expression_range_3,
-                                                    low_3=low_3, high_3=high_3,
-                                                    exp_4=expression_range_4,
-                                                    low_4=low_4, high_4=high_4,
-                                                    exp_5=expression_range_5,
-                                                    low_5=low_5, high_5=high_5)
+        swlst_expression = expression.format(exp_1=expression_range_1,
+                                             low_1=low_1,
+                                             DUMMY_CWV=DUMMY_MAPCALC_STRING_CWV,
+                                             high_1=high_1,
+                                             exp_2=expression_range_2,
+                                             low_2=low_2, high_2=high_2,
+                                             exp_3=expression_range_3,
+                                             low_3=low_3, high_3=high_3,
+                                             exp_4=expression_range_4,
+                                             low_4=low_4, high_4=high_4,
+                                             exp_5=expression_range_5,
+                                             low_5=low_5, high_5=high_5)
 
         return swlst_expression
-
-    def _build_mapcalc(self):
-        """
-        Build formula for GRASS GIS' mapcalc
-        """
-        # formula = '{c0} + {c1}*{dummy} + {c2}*{dummy}^2'
-        formula = ('{b0} + '
-                   '({b1} + '
-                   '({b2})*((1-{ae})/{ae})) + '
-                   '({b3})*({de}/{ae}) * (({DUMMY_T10} + {DUMMY_T11})/2) + '
-                   '({b4} + '
-                   '({b5})*((1-{ae})/{ae}) + '
-                   '({b6})*({de}/{ae}^2))*(({DUMMY_T10} - {DUMMY_T11})/2) + '
-                   '({b7})*({DUMMY_T10} - {DUMMY_T11})^2')
-
-        mapcalc = formula.format(b0=self.b0,
-                                 b1=self.b1,
-                                 b2=self.b2,
-                                 ae=self.average_emissivity,
-                                 de=self.delta_emissivity,
-                                 b3=self.b3,
-                                 b4=self.b4,
-                                 b5=self.b5,
-                                 b6=self.b6,
-                                 b7=self.b7,
-                                 DUMMY_T10=DUMMY_MAPCALC_STRING_T10,
-                                 DUMMY_T11=DUMMY_MAPCALC_STRING_T11)
-
-        return mapcalc
-
-    def _build_mapcalc_average(self):
-        """
-        Build formula for GRASS GIS' mapcalc --- NOT COMPLTE, still ToDo!  Is
-        it required at all?
-        """
-        # formula = '{c0} + {c1}*{dummy} + {c2}*{dummy}^2'
-        formula = ('{b0} + '
-                   '({b1} + '
-                   '({b2})*((1-{ae})/{ae})) + '
-                   '({b3})*({de}/{ae}) * (({DUMMY_T10} + {DUMMY_T11})/2) + '
-                   '({b4} + '
-                   '({b5})*((1-{ae})/{ae}) + '
-                   '({b6})*({de}/{ae}^2))*(({DUMMY_T10} - {DUMMY_T11})/2) + '
-                   '({b7})*({DUMMY_T10} - {DUMMY_T11})^2')
-
-        mapcalc = formula.format(b0=self.b0,
-                                 b1=self.b1,
-                                 b2=self.b2,
-                                 ae=self.average_emissivity,
-                                 de=self.delta_emissivity,
-                                 b3=self.b3,
-                                 b4=self.b4,
-                                 b5=self.b5,
-                                 b6=self.b6,
-                                 b7=self.b7,
-                                 DUMMY_T10=DUMMY_MAPCALC_STRING_T10,
-                                 DUMMY_T11=DUMMY_MAPCALC_STRING_T11)
-
-        mapcalc_one = ''
-        mapcalc_two = ''
-        mapcalc_avg = ((mapcalc_one + mapcalc_two) / 2)
-        return mapcalc_avg
-
-    # def _build_mapcalc_direct(self):
-    #     """
-    #     Build formula for GRASS GIS' mapcalc
-    #     """
-    #     formula = ('[{b0} + '
-    #                '({b1} + '
-    #                '{b2}*((1-{ae})/{ae})) + '
-    #                '{b3}*({de}/{ae}) * (({t10} + {t11})/2) + '
-    #                '({b4} + '
-    #                '{b5}*((1-{ae})/{ae}) + '
-    #                '{b6}*({de}/{ae}^2))*(({t10} - {t11})/2) + '
-    #                '{b7}*({t10} - {t11})^2]')
-
-    #     self.mapcalc_direct = formula.format(b0=self.b0,
-    #                                          b1=self.b1,
-    #                                          b2=self.b2,
-    #                                          ae=self.average_emissivity,
-    #                                          de=self.delta_emissivity,
-    #                                          b3=self.b3,
-    #                                          b4=self.b4,
-    #                                          b5=self.b5,
-    #                                          b6=self.b6,
-    #                                          b7=self.b7,
-    #                                          t10=self.emissivity_t10,
-    #                                          t11=self.emissivity_t11)
 
 # reusable & stand-alone
 if __name__ == "__main__":
     print ('Split-Window Algorithm for Estimating Land Surface Temperature '
            'from Landsat8 OLI/TIRS imagery.'
            ' (Running as stand-alone tool?)\n')
-
