@@ -284,15 +284,15 @@
 
 #%option G_OPT_R_INPUT
 #% key: landcover
-#% key_desc: land cover map name
-#% description: Land cover map --- CURRENTLY, WILL LIKELY FAIL IF LANDCOVER DOES NOT OVERLAP LANDSAT SCENE!
+#% key_desc: FROM-GLC map name
+#% description: Finer Resolution Observation & Monitoring of Global Land Cover products that cover the Landsat8 scene under processing. Source <http://data.ess.tsinghua.edu.cn/>.
 #% required : no
 #%end
 
 #%option
 #% key: emissivity_class
 #% key_desc: emissivity class
-#% description: Retriece average emissivities only for a single land cover class (case sensitive). For expert use or testing purposes, otherwise not recommended.
+#% description: Retrieve average emissivities only for a single land cover class (case sensitive). For expert use or testing purposes, otherwise not recommended.
 #% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow, Random
 #% required : no
 #%end
