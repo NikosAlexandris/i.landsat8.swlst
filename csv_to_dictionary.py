@@ -13,7 +13,7 @@ ToDo:
 # see: <http://stackoverflow.com/q/29141609/1172302>
 
 # real data
-csv = '''Emissivity Class|TIRS10|TIRS11
+AE_STRING = '''Emissivity Class|TIRS10|TIRS11
 Cropland|0.971|0.968
 Forest|0.995|0.996
 Grasslands|0.97|0.971
@@ -25,6 +25,13 @@ Impervious|0.973|0.981
 Barren Land|0.969|0.978
 Snow and ice|0.992|0.998'''
 
+CWV_STRING = '''Range|CWV|b0|b1|b2|b3|b4|b5|b6|b7|RMSE
+Range 1|(0.0, 2.5)|-2.78009|1.01408|0.15833|-0.34991|4.04487|3.55414|-8.88394|0.09152|0.34
+Range 2|(2.0, 3.5)|11.00824|0.95995|0.17243|-0.28852|7.11492|0.42684|-6.62025|-0.06381|0.60
+Range 3|(3.0, 4.5)|9.62610|0.96202|0.13834|-0.17262|7.87883|5.17910|-13.26611|-0.07603|0.71
+Range 4|(4.0, 5.5)|0.61258|0.99124|0.10051|-0.09664|7.85758|6.86626|-15.00742|-0.01185|0.86
+Range 5|(5.0, 6.3)|-0.34808|0.98123|0.05599|-0.03518|11.96444|9.06710|-14.74085|-0.20471|0.93
+Range 6|(0.0, 6.3)|-0.41165|1.00522|0.14543|-0.27297|4.06655|-6.92512|-18.27461|0.24468|0.87'''
 
 # required librairies
 import sys
@@ -203,8 +210,12 @@ def get_average_emissivities():
     dictionary wiht named tuples
     """
 
-    # read csv for average emissivities, convert to string
-    csvstring = csv_reader("average_emissivity.csv")
+    try:
+        # read csv for average emissivities, convert to string
+        csvstring = csv_reader("average_emissivity.csv")
+
+    except:
+        csvstring = AE_STRING
 
     # convert string to dictionary
     average_emissivities = csv_to_dictionary(csvstring)
@@ -219,8 +230,11 @@ def get_column_water_vapor():
     a dictionary wiht named tuples
     """
 
-    # read csv for average emissivities, convert to string
-    csvstring = csv_reader("cwv_coefficients.csv")
+    try:
+        # read csv for average emissivities, convert to string
+        csvstring = csv_reader("cwv_coefficients.csv")
+    except:
+        csvstring = CWV_STRING
 
     # convert string to dictionary
     column_water_vapor_coefficients = csv_to_dictionary(csvstring)
