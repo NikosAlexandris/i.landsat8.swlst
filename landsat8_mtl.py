@@ -28,8 +28,15 @@ def set_mtlfile():
 
 class Landsat8_MTL():
     """
-    Retrieve metadata from a Landsat8's MTL file.
+    Retrieve metadata from a Landsat8 MTL file.
     See <http://landsat.usgs.gov/Landsat8_Using_Product.php>.
+
+    ToDo:
+
+    - Implement toar_reflectance
+    - Implement mechanism to translate QA pixel values to QA bits, and vice
+      versa?
+    - Other Landsat8 related functions/algorithms?
     """
 
     def __init__(self, mtl_filename):
