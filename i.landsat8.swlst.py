@@ -267,6 +267,10 @@
 #% required : no
 #%end
 
+#%rules
+#% exclusive: qab, clouds
+#%end
+
 #%option G_OPT_R_INPUT
 #% key: average_emissivity
 #% key_desc: Average emissivity
@@ -284,7 +288,7 @@
 #%option G_OPT_R_INPUT
 #% key: landcover
 #% key_desc: FROM-GLC map name
-#% description: Finer Resolution Observation & Monitoring of Global Land Cover products that cover the Landsat8 scene under processing. Source <http://data.ess.tsinghua.edu.cn/>.
+#% description: FROM-GLC products covering the Landsat8 scene under processing. Source <http://data.ess.tsinghua.edu.cn/>.
 #% required : no
 #%end
 
@@ -293,7 +297,6 @@
 #% key_desc: emissivity class
 #% description: Retrieve average emissivities only for a single land cover class (case sensitive) | Test or expert use
 #% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow, Random
-#% answer: Random
 #% required : no
 #%end
 
@@ -313,8 +316,8 @@
 #%option
 #% key: window
 #% key_desc: cwv window size
-#% description: Odd number sizing an n^2 spatial window for column water vapor retrieval. Estimation accuracy increases with larger windows up to a certain level. Performance (speed) decreases | Recommended window sizes: 5, 7, 9
-#% answer: 5
+#% description: Odd number n sizing an n^2 spatial window for column water vapor retrieval | Details in the manual 
+#% answer: 3
 #% required: yes
 #%end
 
@@ -323,10 +326,6 @@
 #% key_desc: cwv output
 #% description: Name for output Column Water Vapor map | Optional
 #% required: no
-#%end
-
-#%rules
-#% exclusive: qab, clouds
 #%end
 
 # required librairies
