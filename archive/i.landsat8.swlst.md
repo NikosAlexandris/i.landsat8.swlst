@@ -2,9 +2,15 @@ DESCRIPTION
 -----------
 
 *i.landsat8.swlst* is an implementation of the robust and practical
-Slit-Window (SW) algorithm estimating land surface temperature, from the
+Slit-Window (SW) algorithm estimating land surface temperature (LST), from the
 Thermal Infra-Red Sensor (TIRS) aboard Landsat 8 with an accuracy of
 better than 1.0 K.
+
+To produce an LST map, the algorithm requires at minimum:
+
+- TIRS bands 10 and 11
+- the acquisition's metadata file (MTL)
+- a Finer Resolution Observation & Monitoring of Global Land Cover (FROM-GLC) product
 
 ### Details
 
@@ -146,7 +152,10 @@ whereas the transmittance ratio can be calculated based on the TOA
 brightness temperatures of the two bands. Considering N adjacent pixels,
 the CWV in the MSWCVR method is estimated as:
 
--   `cwv = c0 + c1*(tj/ti) + c2*(tj/ti)^2`
+-   `cwv = c0 + c1*(tj/ti) + c2*(tj/ti)^2` (3a)
+
+where:
+
 -   `tj/ti` \~ `Rji = SUM [(Tik-Ti\_mean) \* (Tjk-Tj\_mean)] / SUM[(Tik-Tj\_mean)\^2]`
 
 In Equation (3a):
@@ -156,6 +165,8 @@ In Equation (3a):
 - `N` is the number of adjacent pixels (excluding water and cloud pixels) in a spatial window of size `n` (i.e., `N = n × n`);
 - `Ti,k` and `Tj,k` are top of atmosphere brightness temperatures (K) of bands `i` and `j` for the `k`th pixel;
 - `mean(Ti)` and `mean(Tj)` are the mean (or median -- not implemented yet) brightness temperatures of the `N` pixels for the two bands.
+
+**Note**, while the CWV estimation accuracy increases with larger windows (up to a certain level), the performance (speed) of the module decreases. Generally recommended window sizes are 5, 7, 9.
 
 The regression coefficients:
 
