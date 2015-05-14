@@ -205,14 +205,14 @@
 #%option G_OPT_R_INPUT
 #% key: t10
 #% key_desc: Brightness Temperature 10
-#% description: Brightness temperature (K) from band 10 | Overrides b10
+#% description: Brightness temperature (K) from band 10 | Overrides 'b10'
 #% required : no
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: t11
 #% key_desc: Brightness Temperature 11
-#% description: Brightness temperature (K) from band 11 | Overrides b11
+#% description: Brightness temperature (K) from band 11 | Overrides 'b11'
 #% required : no
 #%end
 
@@ -292,8 +292,9 @@
 #%option
 #% key: emissivity_class
 #% key_desc: emissivity class
-#% description: Retrieve average emissivities only for a single land cover class (case sensitive) | Test or Expert use
+#% description: Retrieve average emissivities only for a single land cover class (case sensitive) | Test or expert use
 #% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow, Random
+#% answer: Random
 #% required : no
 #%end
 
@@ -313,7 +314,7 @@
 #%option
 #% key: window
 #% key_desc: cwv window size
-#% description: Number n in window size n^2 for column water vapor retrieval. Estimation accuracy increases with larger windows up to a certain level. Performance (speed) decreases | Recommended window sizes (5, 7, 9)
+#% description: Number n in window size n^2 for column water vapor retrieval. Estimation accuracy increases with larger windows up to a certain level. Performance (speed) decreases | Recommended window sizes: 5, 7, 9
 #% options: 3,5,7,9,11,13,15
 #% answer: 5
 #% required: yes
