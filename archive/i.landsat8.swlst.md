@@ -23,43 +23,41 @@ channels, which can be expressed as (equation 2 in the paper [0])
 
 where:
 
--   Ti and Tj are Top of Atmosphere brightness temperatures measured in
-    channels i (\~11.0 μm) and j (\~12.0 µm), respectively
+-   `Ti` and `Tj` are Top of Atmosphere brightness temperatures measured in
+    channels `i` (\~11.0 microns) and `j` (\~12.0 µm), respectively
 -   from
     http://landsat.usgs.gov/band\_designations\_landsat\_satellites.php:
     -   Band 10, Thermal Infrared (TIRS) 1, 10.60-11.19, 100\*(30)
     -   Band 11, Thermal Infrared (TIRS) 2, 11.50-12.51, 100\*(30)
--   e is the average emissivity of the two channels (i.e.,
-    `e = 0.5 [ei + ej]`)
+-   e is the average emissivity of the two channels (i.e., `e = 0.5 [ei + ej]`)
 -   De is the channel emissivity difference (i.e., `De = ei - ej`)
--   bk (k = 0,1,...7) are the algorithm coefficients derived from a
+-   `bk` (k = 0, 1, ... 7) are the algorithm coefficients derived from a
     simulated dataset.
 
 [...]
 
 In the above equations,
 
--   dk (k = 0, 1...6) and ek (k = 1, 2, 3, 4) are the algorithm
+-   `dk` (k = 0, 1...6) and `ek` (k = 1, 2, 3, 4) are the algorithm
     coefficients;
--   w is the CWV;
--   e and De are the average emissivity and emissivity difference of two
+-   `w` is the Column Water Vapor;
+-   `e` and `De` are the average emissivity and emissivity difference of two
     adjacent thermal channels, respectively, which are similar to
     Equation (2);
--   and fk (k = 0 and 1) is related to the influence of the atmospheric
+-   and `fk` (k = 0 and 1) is related to the influence of the atmospheric
     transmittance and emissivity, i.e., `fk = f(ei, ej, ti, tji)`.
 
 Note that the algorithm (Equation (6a)) proposed by Jimenez-Munoz et al.
 added CWV directly to estimate LST.
 
 Rozenstein et al. used CWV to estimate the atmospheric transmittance
-(ti, tj) and optimize retrieval accuracy explicitly.
+(`ti`, `tj`) and optimize retrieval accuracy explicitly.
 
 Therefore, if the atmospheric CWV is unknown or cannot be obtained
 successfully, neither of the two algorithms in Equations (6a) and (6b)
-will work. By contrast, although our algorithm also needs CWV to
-determine the coefficients, this algorithm still works for unknown CWVs
-because the coefficients are obtained regardless of the CWV, as shown in
-Table 1.
+will work. By contrast, although the current algorithm also needs CWV to
+determine the coefficients, it still works for unknown CWVs because the
+coefficients are obtained regardless of the CWV, as shown in Table 1 [0].
 
 NOTES
 -----
@@ -93,12 +91,12 @@ factors provided in the metadata file:
 
 where:
 
--   Ll = TOA spectral radiance (Watts/( m2 \* srad \* μm))
--   ML = Band-specific multiplicative rescaling factor from the metadata
-    (RADIANCE\_MULT\_BAND\_x, where x is the band number)
--   AL = Band-specific additive rescaling factor from the metadata
-    (RADIANCE\_ADD\_BAND\_x, where x is the band number)
--   Qcal = Quantized and calibrated standard product pixel values (DN)
+-   `Ll` = TOA spectral radiance (Watts/( m2 \* srad \* microns))
+-   `ML` = Band-specific multiplicative rescaling factor from the metadata
+    (RADIANCE_MULT_BAND_x, where x is the band number)
+-   `AL` = Band-specific additive rescaling factor from the metadata
+    (RADIANCE_ADD_BAND_x, where x is the band number)
+-   `Qcal` = Quantized and calibrated standard product pixel values (DN)
 
 #### Conversion to at-Satellite Temperature
 
@@ -110,12 +108,13 @@ thermal constants provided in the metadata file:
 
 where:
 
--   T = At-satellite brightness temperature (K) - Ll = TOA spectral
-    radiance (Watts/( m2 \* srad \* μm)), below 'DUMMY\_RADIANCE'
--   K1 = Band-specific thermal conversion constant from the metadata
-    (K1\_CONSTANT\_BAND\_x, where x is the band number, 10 or 11)
--   K2 = Band-specific thermal conversion constant from the metadata
-    (K2\_CONSTANT\_BAND\_x, where x is the band number, 10 or 11) ...
+-   `T` = At-satellite brightness temperature (K)
+-   `Ll` = TOA spectral radiance (Watts/(m^2 \* srad \* microns)), below
+    'DUMMY_RADIANCE'
+-   `K1` = Band-specific thermal conversion constant from the metadata
+    (K1_CONSTANT_BAND_x, where x is the band number, 10 or 11)
+-   `K2` = Band-specific thermal conversion constant from the metadata
+    (K2_CONSTANT_BAND_x, where x is the band number, 10 or 11)
 
 ### Land Surface Emissivity
 
@@ -134,7 +133,7 @@ An overview of "Section 3.2: Determination of LSEs":
     (UCSB) Emissivity Library
 
 4.  Estimating FVC (to obtain emissivity of land cover with temporal
-    variation)) from NDVI based on Carlson (1997) and Sobrino (2001)
+    variation) from NDVI based on Carlson (1997) and Sobrino (2001)
 
 5.  Finally, establishing the average emissivity Look-Up table
 
@@ -162,7 +161,7 @@ In Equation (3a):
 
 - `c0`, `c1` and `c2` are coefficients obtained from simulated data;
 - `t` is the band effective atmospheric transmittance;
-- `N` is the number of adjacent pixels (excluding water and cloud pixels) in a spatial window of size `n` (i.e., `N = n × n`);
+- `N` is the number of adjacent pixels (excluding water and cloud pixels) in a spatial window of size `n` (i.e., `N = n x n`);
 - `Ti,k` and `Tj,k` are top of atmosphere brightness temperatures (K) of bands `i` and `j` for the `k`th pixel;
 - `mean(Ti)` and `mean(Tj)` are the mean (or median -- not implemented yet) brightness temperatures of the `N` pixels for the two bands.
 
@@ -179,7 +178,7 @@ where obtained by:
 - 946 cloud-free TIGR atmospheric profiles,
 - the new high accurate atmospheric radiative transfer model MODTRAN 5.2
 - simulating the band effective atmospheric transmittance Model analysis
-  indicated that this method will obtain a CWV RMSE of about 0.5 g/cm2.
+  indicated that this method will obtain a CWV RMSE of about 0.5 g/cm^2.
 
 Details about the columnw water vapor retrieval can be found in:
 
@@ -216,7 +215,7 @@ Outputs:
 
 The algorithm removes the atmospheric effect through differential
 atmospheric absorption in the two adjacent thermal infrared channels
-centered at about 11 and 12 μm. The linear or non-linear combination of
+centered at about 11 and 12 microns. The linear or non-linear combination of
 the brightness temperatures is finally applied for LST estimation based
 on the equation:
 
@@ -230,7 +229,7 @@ temperatures as the pixel LST.
 
 For example, the LST pixel with a CWV of 2.1 g/cm2 is estimated by using
 the coefficients of [0.0, 2.5] and [2.0, 3.5]. This process initially
-reduces the delta-LSTinc and improves the spatial continuity of the LST
+reduces the **delta-**LSTinc and improves the spatial continuity of the LST
 product.
 
 EXAMPLE
@@ -256,9 +255,9 @@ The shortest call for processing a complete Landsat8 scene normally is:
 
 where:
 
-- mtl= the name of the MTL metadata file (normally with a ".txt" extension)
-- prefix= the prefix of the band names imported in GRASS GIS' data base
-- landcover= the name of the FROM-GLC map that covers the extent of the
+- `mtl=` the name of the MTL metadata file (normally with a `.txt` extension)
+- `prefix=` the prefix of the band names imported in GRASS GIS' data base
+- `landcover=` the name of the FROM-GLC map that covers the extent of the
   Landsat8 scene under processing
 
 The pixel value 61440 is selected to automatically to build a cloud
@@ -314,8 +313,8 @@ or
 Expert users may need to request for a "fixed" average surface
 emissivity, in order to perform the algorithm for a single land cover
 class (one from the classes defined in the FROM-GLC classification
-scheme) via the `emissivity\_class` option. Consequently,
-`emissivity\_class` cannot be used at the same time with the `landover`
+scheme) via the `emissivity_class` option. Consequently,
+`emissivity_class` cannot be used at the same time with the `landover`
 option.
 
 <div class="code">
@@ -324,7 +323,7 @@ option.
 
 </div>
 
-A complete "transparent" run-through of what kind of and how the module
+A *transparent* run-through of *what kind of* and *how* the module
 performs its computations, may be requested via the use of both the
 *--v* and *-i* flags:
 
@@ -334,7 +333,7 @@ performs its computations, may be requested via the use of both the
 
 </div>
 
-The above will print out a description of each individual processing
+The above will print out a description for each individual processing
 step, as well as the actual mathematical epxressions applied via GRASS
 GIS' `r.mapcalc` module.
 
@@ -370,7 +369,7 @@ TODO
 -   Go through [Submitting
     Python](http://trac.osgeo.org/grass/wiki/Submitting/Python)
 -   Proper command history tracking.
--   Add timestamps (r.timestamp, temporal framework)
+-   Add timestamps (r.timestamp)
 -   Deduplicate code where applicable
 -   Test if it compiles in other systems
 -   Improve documentation
