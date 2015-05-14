@@ -5,7 +5,8 @@ ToDo:
 - Evaluate BIG mapcalc expressions -- are they correct?
     - Expression for Column Water Vapor
     - Expression for Land Surface Temperature
-- Why is the LST out of range when using a fixed land cover class?
+- ~~Why is the LST out of range when using a fixed land cover class?~~ Cloudy
+  pixels are, mainly, the reason. Better cloud masking is the solution.
 - ~~Why does the multi-step approach on deriving the CWV map differ from the single big mapcalc expression?~~ **Fixed**
 - ~~Implement direct conversion of B10, B11 to brightness temperature values.~~  **Done**
 - ~~Get the FROM-GLC map,~~ **Found**
@@ -24,10 +25,12 @@ ToDo:
 
 [Low]
 
+- Deduplicate code in split_window_lst class >
+  _build_average_emissivity_mapcalc() and _build_delta_emissivity_mapcalc() 
 - Implement a median window filter, an another option in addition to mean.
 - Profiling
 - Implement a complete cloud masking function using the BQA image. Support for
-  user requested confidence or types of clouds (?). Eg: optios=
+  user requested confidence or types of clouds (?). Eg: options=
   clouds,cirrus,high,low ?
 - Multi-Threading? Note, r.mapcalc is already.
 
