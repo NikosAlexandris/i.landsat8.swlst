@@ -250,8 +250,7 @@
 #%option
 #% key: qapixel
 #% key_desc: qa pixel value
-#% description: Pixel value in the quality assessment image for which to build a mask. Refer to <http://landsat.usgs.gov/L8QualityAssessmentBand.php>.
-#% options: 61440,57344,53248
+#% description: Quality assessment pixel value which to build a mask | Source: <http://landsat.usgs.gov/L8QualityAssessmentBand.php>.
 #% answer: 61440
 #% required: no
 #% multiple: yes
@@ -264,7 +263,7 @@
 #%option G_OPT_R_INPUT
 #% key: clouds
 #% key_desc: Clouds MASK
-#% description: A map which will be applied as an inverted MASK | Overrides 'qab'
+#% description: A raster map applied as an inverted MASK | Overrides 'qab'
 #% required : no
 #%end
 
@@ -314,8 +313,7 @@
 #%option
 #% key: window
 #% key_desc: cwv window size
-#% description: Number n in window size n^2 for column water vapor retrieval. Estimation accuracy increases with larger windows up to a certain level. Performance (speed) decreases | Recommended window sizes: 5, 7, 9
-#% options: 3,5,7,9,11,13,15
+#% description: Odd number sizing an n^2 spatial window for column water vapor retrieval. Estimation accuracy increases with larger windows up to a certain level. Performance (speed) decreases | Recommended window sizes: 5, 7, 9
 #% answer: 5
 #% required: yes
 #%end
