@@ -205,14 +205,14 @@
 #%option G_OPT_R_INPUT
 #% key: t10
 #% key_desc: Brightness Temperature 10
-#% description: Brightness temperature (K) from band 10 (use instead of b10 if required)
+#% description: Brightness temperature (K) from band 10 | Overrides b10
 #% required : no
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: t11
 #% key_desc: Brightness Temperature 11
-#% description: Brightness temperature (K) from band 11 (use instead of b11 if required)
+#% description: Brightness temperature (K) from band 11 | Overrides b11
 #% required : no
 #%end
 
@@ -264,21 +264,21 @@
 #%option G_OPT_R_INPUT
 #% key: clouds
 #% key_desc: Clouds MASK
-#% description: A cloud map which will be applied as a MASK
+#% description: A map which will be applied as an inverted MASK | Overrides 'qab'
 #% required : no
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: average_emissivity
 #% key_desc: Average emissivity
-#% description: Average emissivity map for Landsat8 TIRS channels 10 and 11 (optional, expert use)
+#% description: Average emissivity map for Landsat8 TIRS channels 10 and 11 | Optional, expert use
 #% required : no
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: delta_emissivity
 #% key_desc: Delta Emissivity
-#% description: Emissivity difference map for Landsat8 TIRS channels 10 and 11 (optional, expert use)
+#% description: Emissivity difference map for Landsat8 TIRS channels 10 and 11 | Optional, expert use
 #% required : no
 #%end
 
@@ -292,7 +292,7 @@
 #%option
 #% key: emissivity_class
 #% key_desc: emissivity class
-#% description: Retrieve average emissivities only for a single land cover class (case sensitive). For expert use or testing purposes, otherwise not recommended.
+#% description: Retrieve average emissivities only for a single land cover class (case sensitive) | Test or Expert use
 #% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow, Random
 #% required : no
 #%end
@@ -312,8 +312,8 @@
 
 #%option
 #% key: window
-#% key_desc: cwv window size
-#% description: Window size for Column Water Vapor estimation. Accuracy increases with larger windows up to a certain level. Performance (speed) is inversely analogous to window sizing.
+#% key_desc: cwv window size n
+#% description: Window size for column water vapor estimation. Estimation accuracy increases with larger windows up to a certain level. Performance (speed) decreases.
 #% options: 3,5,7
 #% answer: 5
 #% required: yes
@@ -322,7 +322,7 @@
 #%option G_OPT_R_OUTPUT
 #% key: cwv
 #% key_desc: cwv output
-#% description: Name for output Column Water Vapor map [optional]
+#% description: Name for output Column Water Vapor map | Optional
 #% required: no
 #%end
 
@@ -548,7 +548,7 @@ def mask_clouds(qa_band, qa_pixel):
     """
     ToDo:
 
-    - a better, independent mechanism for QA.
+    - a better, independent mechanism for QA. --> see also Landsat8 class.
     - support for multiple qa_pixel values (eg. input as a list of values)
 
     Create and apply a cloud mask based on the Quality Assessment Band
