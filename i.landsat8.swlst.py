@@ -312,9 +312,9 @@
 
 #%option
 #% key: window
-#% key_desc: cwv window size n
-#% description: Window size for column water vapor estimation. Estimation accuracy increases with larger windows up to a certain level. Performance (speed) decreases.
-#% options: 3,5,7
+#% key_desc: cwv window size
+#% description: Number n in window size n^2 for column water vapor retrieval. Estimation accuracy increases with larger windows up to a certain level. Performance (speed) decreases | Recommended window sizes (5, 7, 9)
+#% options: 3,5,7,9,11,13,15
 #% answer: 5
 #% required: yes
 #%end
