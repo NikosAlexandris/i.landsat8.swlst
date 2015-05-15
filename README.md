@@ -13,6 +13,8 @@ ToDo:
 - ~~implement mechanism to read land cover classes from it
   and use'm to retrieve emissivities~~ **Done**
 - ~~How to use the FVC?~~ Don't. Just **use the Look-up table** (see [\*] for details).
+- ~~Save average emissivity and delta emissivity maps for caching (re-use in
+  subsequent trials, huge time saver!)~~ **Implemented**
 
 [Mid]
 
