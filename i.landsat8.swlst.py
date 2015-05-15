@@ -176,9 +176,9 @@
 #% required: no
 #%end
 
-#%rules
-#% collective: prefix, mtl
-#%end
+##%rules
+##% collective: prefix, mtl
+##%end
 
 #%option G_OPT_R_INPUT
 #% key: b10
@@ -1105,8 +1105,8 @@ def main():
     #
 
     if info and cwv_window_size != 3:
-        msg = '\n|i Window size for Column Water Vapor estimation: '
-        msg += str(cwv_window_size)
+        msg = '\n|i Spatial window of size {n} for Column Water Vapor estimation: '
+        msg = msg.format(n=cwv_window_size)
         g.message(msg)
 
     cwv = Column_Water_Vapor(cwv_window_size, t10, t11)
