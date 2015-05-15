@@ -670,7 +670,7 @@ class SplitWindowLST():
         expression_range_3 = self._build_subrange_mapcalc('Range_3')
         expression_range_4 = self._build_subrange_mapcalc('Range_4')
         expression_range_5 = self._build_subrange_mapcalc('Range_5')
-        expression_range_6 = self._build_subrange_mapcalc('Range_6')  # unused
+        expression_range_6 = self._build_subrange_mapcalc('Range_6')  # Attention
 
         # build one big expression using mighty eval
         expression = ('eval( sw_lst_1 = {exp_1},'
@@ -682,6 +682,7 @@ class SplitWindowLST():
                       '\ \n sw_lst_34 = (sw_lst_3 + sw_lst_4) / 2,'
                       '\ \n sw_lst_5 = {exp_5},'
                       '\ \n sw_lst_45 = (sw_lst_5 + sw_lst_5) / 2,'
+                      '\ \n sw_lst_6 = {exp_6},'
                       '\ \n in_range_1 = {low_1} < {DUMMY_CWV} && {DUMMY_CWV} < {high_1},'
                       '\ \n in_range_2 = {low_2} < {DUMMY_CWV} && {DUMMY_CWV} < {high_2},'
                       '\ \n in_range_3 = {low_3} < {DUMMY_CWV} && {DUMMY_CWV} < {high_3},'
@@ -696,7 +697,7 @@ class SplitWindowLST():
                       '\ \n if( in_range_3, sw_lst_3,'
                       '\ \n if( in_range_4, sw_lst_4,'
                       '\ \n if( in_range_5, sw_lst_5,'
-                      ' null() ))))))))))')
+                      ' sw_lst_6 ))))))))))')  # ' null() ))))))))))')
 
         # replace keywords appropriately
         swlst_expression = expression.format(exp_1=expression_range_1,
@@ -710,7 +711,8 @@ class SplitWindowLST():
                                              exp_4=expression_range_4,
                                              low_4=low_4, high_4=high_4,
                                              exp_5=expression_range_5,
-                                             low_5=low_5, high_5=high_5)
+                                             low_5=low_5, high_5=high_5,
+                                             exp_6=expression_range_6)
 
         return swlst_expression
 
