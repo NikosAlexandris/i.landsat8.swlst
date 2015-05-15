@@ -303,7 +303,7 @@ class Column_Water_Vapor():
 
         rji_denominator = self._denominator_for_ratio(mean_ti=DUMMY_Ti_MEAN)
 
-        rji = '( {numerator} )  /  ( {denominator} )'
+        rji = '( {numerator} ) / ( {denominator} )'
         rji = rji.format(numerator=rji_numerator, denominator=rji_denominator)
 
         return rji
