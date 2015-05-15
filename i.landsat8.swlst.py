@@ -272,10 +272,17 @@
 #%end
 
 #%option G_OPT_R_INPUT
-#% key: average_emissivity
-#% key_desc: Average emissivity
-#% description: Average emissivity map for Landsat8 TIRS channels 10 and 11 | Optional, expert use
+#% key: emissivity
+#% key_desc: Land surface emissivity
+#% description: Land surface emissivity map | Optional, expert use, overrides retrieval of average emissivity from landcover
 #% required : no
+#%end
+
+#%option G_OPT_R_OUTPUT
+#% key: emissivity_out
+#% key_desc: Land surface emissivity output
+#% description: Name for output emissivity map | Also for re-use in subsequent trials with different spatial window sizes
+#% required: no
 #%end
 
 #%option G_OPT_R_INPUT
@@ -283,6 +290,13 @@
 #% key_desc: Delta Emissivity
 #% description: Emissivity difference map for Landsat8 TIRS channels 10 and 11 | Optional, expert use
 #% required : no
+#%end
+
+#%option G_OPT_R_OUTPUT
+#% key: delta_emissivity_out
+#% key_desc: Delta emissivity output
+#% description: Name for output delta emissivity map | Recommended for re-use in subsequent trials with different spatial window sizes
+#% required: no
 #%end
 
 #%option G_OPT_R_INPUT
@@ -692,10 +706,14 @@ def determine_average_emissivity(outname, landcover_map, avg_lse_expression):
         run('r.info', map=outname, flags='r')
 
     # uncomment below to save for testing!
-    #save_map(outname)
+    # save_map(outname)
 
     del(avg_lse_expression)
     del(avg_lse_equation)
+    
+    # save land surface emissivity map?
+    if emissivity_output:
+        run('g.copy', raster=(outname, emissivity_output))
 
 
 def determine_delta_emissivity(outname, landcover_map, delta_lse_expression):
@@ -721,10 +739,14 @@ def determine_delta_emissivity(outname, landcover_map, delta_lse_expression):
         run('r.info', map=outname, flags='r')
 
     # uncomment below to save for testing!
-    #save_map(outname)
+    # save_map(outname)
 
     del(delta_lse_expression)
     del(delta_lse_equation)
+
+    # save delta land surface emissivity map?
+    if delta_emissivity_output:
+        run('g.copy', raster=(outname, delta_emissivity_output))
 
 
 def get_cwv_window_means(outname, t1x, t1x_mean_expression):
@@ -979,8 +1001,13 @@ def main():
     cwv_output = options['cwv']
 
     # optional maps
-    average_emissivity_map = options['average_emissivity']
+    average_emissivity_map = options['emissivity']
     delta_emissivity_map = options['delta_emissivity']
+    
+    # output for in-between maps?
+    global emissivity_output, delta_emissivity_output
+    emissivity_output = options['emissivity_out']
+    delta_emissivity_output = options['delta_emissivity_out']
 
     global landcover_map, emissivity_class
     landcover_map = options['landcover']
