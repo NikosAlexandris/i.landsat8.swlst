@@ -153,7 +153,7 @@ def test_split_window_lst():
     # cwv_range_x = column_water_vapor_range(cwv)
     # print " * Atmospheric column water vapor range:", cwv_range_x
 
-    swlst = SplitWindowLST(emissivity_b10, emissivity_b11)
+    swlst = SplitWindowLST(somekey)  # somekey generated above
     print "Create object and test '__str__' of SplitWindowLST() class:\n\n", swlst
 
     print " > The 'citation' attribute:", swlst.citation
@@ -278,7 +278,7 @@ def test_split_window_lst():
     key_subrange_generator = ((key, COLUMN_WATER_VAPOR[key].subrange) for key in COLUMN_WATER_VAPOR.keys())
 
 
-    sw_lst_expression = swlst.swl_st_mapcalc
+    sw_lst_expression = swlst.sw_lst_mapcalc
     print "Big expression:\n\n", sw_lst_expression
 
 

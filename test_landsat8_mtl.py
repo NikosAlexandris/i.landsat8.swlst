@@ -8,7 +8,7 @@
 from landsat8_mtl import Landsat8_MTL
 
 
-MTLFILE = 'test_mtl.txt'
+MTLFILE = 'mtl.txt'
 
 
 def test(mtlfile):
