@@ -275,12 +275,24 @@ computational region, the *-k* flag can be used:
 
 </div>
 
+A fast call for processing a part of a Lansat8 scene, respecting the
+current region settings, is to use existing maps for all in-between processing
+steps. In this case, the command may be:
+
+<div class="code">
+
+    i.landsat8.swlst  t10= t11= clouds= emissivity= delta_emissivity= landcover=FROM_GLC -k 
+
+</div>
+
+
+
 A user defined map for clouds, instead of relying on the Quality
 Assessment band, can be used via the `clouds` option:
 
 <div class="code">
 
-    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC clouds=Cloud_Map -k 
+    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC clouds=Cloud_Map 
 
 </div>
 
