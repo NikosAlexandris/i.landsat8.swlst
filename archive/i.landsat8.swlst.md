@@ -359,7 +359,11 @@ GIS' `r.mapcalc` module.
 
 <div class="figure">
 
-![](.jpg)
+![](lst_window_3.png)
+![](lst_window_5.png)
+![](lst_window_7.png)
+![](lst_window_9.png)
+![](lst_window_11.png)
 
 </div>
 
