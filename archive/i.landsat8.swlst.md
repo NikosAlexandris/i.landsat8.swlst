@@ -194,25 +194,6 @@ Quebec, QC, Canada, July 2014; pp. 3045--3048.
 
 #### Split-Window Algorithm
 
-A class implementing the split-window algorithm for Landsat8 imagery
-Inputs:
-
--   The class itself requires only a string for 'landcover' which is:
-    1.  a fixed land cover class string (one from the classes defined in the
-    FROM-GLC legend)
-    2.  a land cover class code (integer) one from the classes defined in
-    the FROM-GLC classification scheme.
-
--   Inputs for individual functions vary, look at their definitions.
-
-Outputs:
-
--   Valid expressions for GRASS GIS' r.mapcalc raster processing module
--   Direct computation for... though not necessary, nor useful for GRASS
-    GIS modules directly?
-
-##### Details
-
 The algorithm removes the atmospheric effect through differential
 atmospheric absorption in the two adjacent thermal infrared channels
 centered at about 11 and 12 microns. The linear or non-linear combination of
