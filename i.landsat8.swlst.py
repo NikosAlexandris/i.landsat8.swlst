@@ -281,21 +281,21 @@
 #%option G_OPT_R_OUTPUT
 #% key: emissivity_out
 #% key_desc: Land surface emissivity output
-#% description: Name for output emissivity map | Also for re-use in subsequent trials with different spatial window sizes
+#% description: Name for output emissivity map | Recommended for re-use as "emissivity=" input in subsequent trials with different spatial window sizes
 #% required: no
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: delta_emissivity
 #% key_desc: Delta Emissivity
-#% description: Emissivity difference map for Landsat8 TIRS channels 10 and 11 | Optional, expert use
+#% description: Emissivity difference map for Landsat8 TIRS channels 10 and 11 | Optional, expert use, overrides retrieval of delta emissivity from landcover
 #% required : no
 #%end
 
 #%option G_OPT_R_OUTPUT
 #% key: delta_emissivity_out
 #% key_desc: Delta emissivity output
-#% description: Name for output delta emissivity map | Recommended for re-use in subsequent trials with different spatial window sizes
+#% description: Name for output delta emissivity map | Recommended for re-use as "delta_emissivity=" in subsequent trials with different spatial window sizes
 #% required: no
 #%end
 
@@ -330,7 +330,7 @@
 #%option
 #% key: window
 #% key_desc: cwv window size
-#% description: Odd number n sizing an n^2 spatial window for column water vapor retrieval | Details in the manual 
+#% description: Odd number n sizing an n^2 spatial window for column water vapor retrieval | Increase to reduce spatial discontinuation in the final LST
 #% answer: 3
 #% required: yes
 #%end
@@ -383,6 +383,17 @@ def cleanup():
     """
     grass.run_command('g.remove', flags='f', type="rast",
                       pattern='tmp.{pid}*'.format(pid=os.getpid()), quiet=True)
+
+
+def tmp_map_name(name):
+    """
+    Return a temporary map name, for example:
+    
+    tmp_avg_lse = tmp + '.avg_lse'
+    """
+    temporary_file = grass.tempfile()
+    tmp = "tmp." + grass.basename(temporary_file)  # use its basename
+    return tmp + '.' + str(name)
 
 
 def run(cmd, **kwargs):
@@ -535,8 +546,8 @@ def tirs_to_at_satellite_temperature(tirs_1x, mtl_file):
     """
     # which band number and MTL file
     band_number = extract_number_from_string(tirs_1x)
-    tmp_radiance = tmp + '.radiance' + '.' + band_number
-    tmp_brightness_temperature = tmp + '.brightness_temperature' + '.' + \
+    tmp_radiance = tmp_map_name('radiance') + '.' + band_number
+    tmp_brightness_temperature = tmp_map_name('brightness_temperature') + '.' + \
         band_number
     landsat8 = Landsat8_MTL(mtl_file)
 
@@ -573,7 +584,7 @@ def mask_clouds(qa_band, qa_pixel):
            'in the Quality Assessment band.'.format(qap=qa_pixel))
     g.message(msg)
 
-    tmp_cloudmask = tmp + '.cloudmask'
+    tmp_cloudmask = tmp_map_name('cloudmask')
     qabits_expression = 'if({band} == {pixel}, 1, null())'.format(band=qa_band,
                                                                   pixel=qa_pixel)
 
@@ -945,19 +956,18 @@ def main():
     Main program
     """
 
-    # prefix for Temporary files
-    global tmp
-    tmpfile = grass.tempfile()  # replace with os.getpid?
-    tmp = "tmp." + grass.basename(tmpfile)  # use its basename
-
     # Temporary filenames
-    # tmp_ti_mean = tmp + '.ti_mean'  # for cwv
-    # tmp_tj_mean = tmp + '.tj_mean'  # for cwv
-    # tmp_ratio = tmp + '.ratio'  # for cwv
-    tmp_avg_lse = tmp + '.avg_lse'
-    tmp_delta_lse = tmp + '.delta_lse'
-    tmp_cwv = tmp + '.cwv'  # column water vapor map
-    tmp_lst = "{prefix}.lst".format(prefix=tmp)  # lst
+
+    # Following three meant for a test step-by-step cwv estimation, see unused
+    # functions!
+    # tmp_ti_mean = tmp_map_name('ti_mean')  # for cwv
+    # tmp_tj_mean = tmp_map_name('tj_mean')  # for cwv
+    # tmp_ratio = tmp_map_name('ratio')  # for cwv
+
+    tmp_avg_lse = tmp_map_name('avg_lse')
+    tmp_delta_lse = tmp_map_name('delta_lse')
+    tmp_cwv = tmp_map_name('cwv')
+    tmp_lst = tmp_map_name('lst')
 
     # basic equation for mapcalc
     global equation, citation_lst
