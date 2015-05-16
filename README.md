@@ -1,4 +1,53 @@
-ToDo:
+*i.landsat8.swlst* is an implementation of the robust and practical
+Slit-Window (SW) algorithm estimating land surface temperature (LST), from the
+Thermal Infra-Red Sensor (TIRS) aboard Landsat 8 with an accuracy of
+better than 1.0 K.
+
+To produce an LST map, the algorithm requires at minimum:
+
+- TIRS bands 10 and 11
+- the acquisition's metadata file (MTL)
+- a Finer Resolution Observation & Monitoring of Global Land Cover (FROM-GLC) product
+
+Algorithm description
+=====================
+
+- To add...
+
+Installation
+============
+
+## Requirements
+------------
+
+see [GRASS Addons SVN repository, README file, Installation - Code Compilation](https://svn.osgeo.org/grass/grass-addons/README)
+
+## Steps
+
+Making the script `i.fusion.hpf` available from within any GRASS-GIS ver. 7.x session, may be done via the following steps:
+
+1.  launch a GRASS-GIS’ ver. 7.x session
+
+2.  navigate into the script’s source directory
+
+3.  execute `make MODULE_TOPDIR=$GISBASE`
+
+Usage examples
+==============
+
+After installation, from within a GRASS-GIS session, see help details via `i.fusion.hpf --help`
+
+- To add...
+
+
+Implementation notes
+====================
+
+- Created on Wed Mar 18 10:00:53 2015
+- First all-through execution: Tue May 12 21:50:42 EEST 2015
+
+
+## To Do
 
 [High Priority]
 
@@ -71,3 +120,22 @@ from NDVI based on Carlson (1997) and Sobrino (2001)
 
 5) Finally, establishing the average emissivity Look-Up table
 
+References
+==========
+
+-   [0] Du, Chen; Ren, Huazhong; Qin, Qiming; Meng, Jinjie; Zhao,
+    Shaohua. 2015. "A Practical Split-Window Algorithm for Estimating
+    Land Surface Temperature from Landsat 8 Data." Remote Sens. 7, no.
+    1: 647-665.
+    http://www.mdpi.com/2072-4292/7/1/647/htm\#sthash.ba1pt9hj.dpuf
+
+-   [1] Huazhong Ren, Chen Du, Qiming Qin, Rongyuan Liu, Jinjie Meng,
+    and Jing Li. "Atmospheric Water Vapor Retrieval from Landsat 8 and
+    Its Validation." 3045--3048. IEEE, 2014.
+
+Ευχαριστώ
+=========
+
+- Yann Chemin
+- Pietro Zambelli
+- StackExchange contributors
