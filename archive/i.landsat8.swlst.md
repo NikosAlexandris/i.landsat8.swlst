@@ -1,11 +1,9 @@
 DESCRIPTION
 -----------
 
-*i.landsat8.swlst* is an implementation of the robust and practical
-Slit-Window (SW) algorithm estimating land surface temperature (LST), from the
-Thermal Infra-Red Sensor (TIRS) aboard Landsat 8 with an accuracy of
-better than 1.0 K.
-
+*i.landsat8.swlst* is an implementation of the robust and practical Slit-Window
+(SW) algorithm estimating land surface temperature (LST), from the Thermal
+Infra-Red Sensor (TIRS) aboard Landsat 8 with an accuracy of better than 1.0 K.
 To produce an LST map, the algorithm requires at minimum:
 
 - TIRS bands 10 and 11
@@ -17,7 +15,7 @@ To produce an LST map, the algorithm requires at minimum:
 A new refinement of the generalized split-window algorithm proposed by
 Wan (2014) [19] is added with a quadratic term of the difference amongst
 the brightness temperatures (Ti, Tj) of the adjacent thermal infrared
-channels, which can be expressed as (equation 2 in the paper [0])
+channels, which can be expressed as (equation 2 in [0])
 
 `LST = b0 + [b1 + b2 * (1-e)/e + b3 * (De/e2)] * (Ti+T)/j2 + [b4 + b5 * (1-e)/e + b6 * (De/e2)] * (Ti-Tj)/2 + b7 * (Ti-Tj)^2`
 
@@ -213,8 +211,8 @@ the coefficients of [0.0, 2.5] and [2.0, 3.5]. This process initially
 reduces the **delta-**LSTinc and improves the spatial continuity of the LST
 product.
 
-EXAMPLE
--------
+EXAMPLES
+--------
 
 At minimum, the module requires the following in order to derive a land
 surface temperature map:
@@ -241,11 +239,24 @@ where:
 - `landcover=` the name of the FROM-GLC map that covers the extent of the
   Landsat8 scene under processing
 
-The pixel value 61440 is selected to automatically to build a cloud
-mask. At the moment, only one pixel value may be requested from the
+The pixel value 61440 is selected automatically to build a cloud
+mask. At the moment, only a single pixel value may be requested from the
 Quality Assessment band. For details, refer to
 [http://landsat.usgs.gov/L8QualityAssessmentBand.php USGS' webpage for
 Landsat8 Quality Assessment Band]
+
+`window` is the most important option. It defines the size of the spatial
+window querying for column water vapor values. A larger window leads to more
+accurate results, at the cost of performance. However, large window sizes are
+preferred as small windows result in a spatial discontinuation effect in the
+final LST product. An example instructing a spatial window of size 7^2 is:
+
+<div class="code">
+
+    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC window=7 -k 
+
+</div>
+
 
 In order to restrict the processing in to the currently set
 computational region, the *-k* flag can be used:
@@ -256,16 +267,15 @@ computational region, the *-k* flag can be used:
 
 </div>
 
-A fast call for processing a part of a Lansat8 scene, respecting the
-current region settings, is to use existing maps for all in-between processing
-steps. In this case, the command may be:
+
+The Celsius color table may be applied for the output land surface
+temperature map via the *-c* flag:
 
 <div class="code">
 
-    i.landsat8.swlst  t10= t11= clouds= emissivity= delta_emissivity= landcover=FROM_GLC -k 
+    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -k -c 
 
 </div>
-
 
 
 A user defined map for clouds, instead of relying on the Quality
@@ -273,33 +283,48 @@ Assessment band, can be used via the `clouds` option:
 
 <div class="code">
 
-    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC clouds=Cloud_Map 
+    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC clouds=Cloud_Map -k -c
 
 </div>
 
-The Celsius color table may be applied for the output land surface
-temperature map via the *-c* flag:
+
+Optionally, using any existing at-satellite temperature maps via the `t10` and
+`t11` options, will skip the conversion from digital numbers for bands B10
+and B11 . For example using the `t11` option instead of `b11`:
 
 <div class="code">
 
-    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -c 
+    i.landsat8.swlst mtl=MTL b10=B10 t11=AtSatellite_Temperature_11 landcover=FROM_GLC -k -c 
 
 </div>
 
-The user can use existing at-satellite temperature maps via the `t10`
-and `t11` options, selectively. For example:
+or using both `t10` and `t11`:
 
 <div class="code">
 
-    i.landsat8.swlst mtl=MTL b10=B10 t11=AtSatellite_Temperature_11 landcover=FROM_GLC -c 
+    i.landsat8.swlst mtl=MTL t10=AtSatellite_Temperature_10 t11=AtSatellite_Temperature_11 landcover=FROM_GLC -k -c 
 
 </div>
 
-or
+A fast call is to use existing maps for all in-between processing steps:
+at-satellite temperatures, cloud and emissivity maps.
+
+    * At-satellite temperature maps (optiones `t10`, `t11`) may be derived via
+      the i.landsat.toar module. Note that `i.landsat.toar` does not
+      process single bands selectively.
+
+    * The `cloud` option can be any user-defined map. Essentialy, it applies
+      the given map as an inverted mask.
+      
+    * The emissivity maps, derived by the module itself, can be saved once
+      via the `emissivity_out` and `delta_emissivity_out` options and used
+      afterwards via the `emissivity` and `delta_emissivity` options. Expert
+      users, however, may use emissivity maps from other sources directly.
+      An example command may be:
 
 <div class="code">
 
-    i.landsat8.swlst mtl=MTL t10=AtSatellite_Temperature_10 t11=AtSatellite_Temperature_11 landcover=FROM_GLC -c 
+    i.landsat8.swlst t10=T10 t11=T11 clouds=Cloud_Map emissivity=Average_Emissivity_Map delta_emissivity=Delta_Emissivity_Map landcover=FROM_GLC -k -c 
 
 </div>
 
@@ -330,25 +355,6 @@ The above will print out a description for each individual processing
 step, as well as the actual mathematical epxressions applied via GRASS
 GIS' `r.mapcalc` module.
 
-<div class="code">
-
-    i.landsat8.swlst
-
-</div>
-
-<div class="figure">
-
-![](.jpg)
-
-</div>
-
-...
-
-<div class="code">
-
-    i.landsat8.swlst
-
-</div>
 
 <div class="figure">
 
@@ -368,7 +374,7 @@ TODO
 -   Proper command history tracking.
 -   Add timestamps (r.timestamp)
 -   Deduplicate code where applicable
--   Test if it compiles in other systems
+-   Test compiling in other systems
 -   Improve documentation
 
 REFERENCES
