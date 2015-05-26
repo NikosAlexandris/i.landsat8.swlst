@@ -696,6 +696,8 @@ def replace_dummies(string, *args, **kwargs):
 
 def determine_average_emissivity(outname, landcover_map, avg_lse_expression):
     """
+    Produce an average emissivity map based on FROM-GLC map covering the region
+    of interest.
     """
     msg = ('\n|i Determining average land surface emissivity based on a '
            'look-up table ')
@@ -729,6 +731,8 @@ def determine_average_emissivity(outname, landcover_map, avg_lse_expression):
 
 def determine_delta_emissivity(outname, landcover_map, delta_lse_expression):
     """
+    Produce a delta emissivity map based on the FROM-GLC map covering the
+    region of interest.
     """
     msg = ('\n|i Determining delta land surface emissivity based on a '
            'look-up table ')
