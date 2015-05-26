@@ -1,5 +1,7 @@
 """
-Convert csv data to a dictionary with namedtuples as values
+Convert csv data to a dictionary with namedtuples as values. However, a string
+csv-file look-a-like may be used directly. Currently, the latter option is
+used.
 
 ToDo:
 * Add usage examples!
@@ -126,7 +128,8 @@ def csv_to_dictionary(csv):
     Transform input from "special" csv into a python dictionary with namedtuples
     as values. Note, "strings" of interest are hardcoded!
 
-    Also, fix the re-definition of the function transform(). How to solve this?
+    Also, fix the re-definition of the function transform(). See
+    <http://stackoverflow.com/q/30204197/1172302>
     '''
     # split input in rows
     rows = csv.split('\n')
