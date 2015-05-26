@@ -9,11 +9,6 @@ To produce an LST map, the algorithm requires at minimum:
 - the acquisition's metadata file (MTL)
 - a Finer Resolution Observation & Monitoring of Global Land Cover (FROM-GLC) product
 
-Algorithm description
-=====================
-
-- To add...
-
 Installation
 ============
 
@@ -35,9 +30,44 @@ Making the script `i.fusion.hpf` available from within any GRASS-GIS ver. 7.x se
 Usage examples
 ==============
 
-After installation, from within a GRASS-GIS session, see help details via `i.fusion.hpf --help`
+After installation, from within a GRASS-GIS session, see help details via `i.landsat8.swlst --help`
 
-- To add...
+The shortest call for processing a complete Landsat8 scene normally is:
+
+<div class="code">
+
+    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC
+
+</div>
+
+where:
+
+- `mtl=` the name of the MTL metadata file (normally with a `.txt` extension)
+- `prefix=` the prefix of the band names imported in GRASS GIS' data base
+- `landcover=` the name of the FROM-GLC map that covers the extent of the
+  Landsat8 scene under processing
+
+A computationally faster call is to use existing maps for all in-between
+processing steps: at-satellite temperatures, cloud and emissivity maps.
+
+    * At-satellite temperature maps (optiones `t10`, `t11`) may be derived via
+      the i.landsat.toar module. Note that `i.landsat.toar` does not
+      process single bands selectively.
+
+    * The `cloud` option can be any user-defined map. Essentialy, it applies
+      the given map as an inverted mask.
+      
+    * The emissivity maps, derived by the module itself, can be saved once
+      via the `emissivity_out` and `delta_emissivity_out` options and used
+      afterwards via the `emissivity` and `delta_emissivity` options. Expert
+      users, however, may use emissivity maps from other sources directly.
+      An example command may be:
+
+<div class="code">
+
+    i.landsat8.swlst t10=T10 t11=T11 clouds=Cloud_Map emissivity=Average_Emissivity_Map delta_emissivity=Delta_Emissivity_Map landcover=FROM_GLC -k -c 
+
+</div>
 
 
 Implementation notes
@@ -100,25 +130,6 @@ Tundra|0.98|0.984
 Impervious|0.973|0.981
 Barren Land|0.969|0.978
 Snow and ice|0.992|0.998
-
-An overview of "Section 3.2: Determination of LSEs":
-
-1) The FROM-GLC (30m) contains 10 types of land covers (cropland,
-forest, grassland, shrubland, wetland, waterbody, tundra, impervious, barren
-land and snow-ice).
-
-2) Deriving emissivities for each land cover class by using different
-combinations of three BRDF kernel models (geometrical, volumetric and specular
-models)
-
-3) Vegetation & ground emissivity spectra for the BRDF models selected
-from the MODIS University of California, Santa Barbara (UCSB) Emissivity
-Library
-
-4) Estimating FVC (to obtain emissivity of land cover with temporal variation))
-from NDVI based on Carlson (1997) and Sobrino (2001)
-
-5) Finally, establishing the average emissivity Look-Up table
 
 References
 ==========
