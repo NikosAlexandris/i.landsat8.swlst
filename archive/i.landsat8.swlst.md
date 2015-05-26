@@ -1,9 +1,11 @@
 DESCRIPTION
 -----------
 
-*i.landsat8.swlst* is an implementation of the robust and practical Slit-Window
+*i.landsat8.swlst* is an implementation of a robust and practical Slit-Window
 (SW) algorithm estimating land surface temperature (LST), from the Thermal
 Infra-Red Sensor (TIRS) aboard Landsat 8 with an accuracy of better than 1.0 K.
+
+
 To produce an LST map, the algorithm requires at minimum:
 
 - TIRS bands 10 and 11
@@ -46,7 +48,7 @@ In the above equations,
     transmittance and emissivity, i.e., `fk = f(ei, ej, ti, tji)`.
 
 Note that the algorithm (Equation (6a)) proposed by Jimenez-Munoz et al.
-added CWV directly to estimate LST.
+added column water vapor (CWV) directly to estimate LST.
 
 Rozenstein et al. used CWV to estimate the atmospheric transmittance
 (`ti`, `tj`) and optimize retrieval accuracy explicitly.
@@ -116,7 +118,7 @@ where:
 
 ### Land Surface Emissivity
 
-An overview of "Section 3.2: Determination of LSEs":
+Determination of LSEs (overview of Section 3.2)
 
 1.  The FROM-GLC (30m) contains 10 types of land covers (cropland,
     forest, grassland, shrubland, wetland, waterbody, tundra,
@@ -137,8 +139,20 @@ An overview of "Section 3.2: Determination of LSEs":
 
 ### Column Water Vapor
 
-Retrieving atmospheric column water vapor from Landsat8 TIRS data based
-on the modified split-window covariance and variance ratio (MSWCVR).
+Retrieving atmospheric CWV from Landsat8 TIRS data based on the modified
+split-window covariance and variance ratio (MSWCVR).
+
+Algorithm Coefficients (overview of Section 3.1)
+
+1. The CWV is divided into 5 sub-ranges with an overlap of 0.5
+   g/cm2 between 2 adjacent sub-ranges: [0.0, 2.5], [2.0, 3.5], [3.0, 4.5],
+   [4.0, 5.5] and [5.0, 6.3] g/cm2.
+
+3. The CWV is retrieved from a modified split-window covariance and variance ratio method.
+
+4. However, given the somewhat unsuccessful CWV retrieval, a group of
+   coefficients for the entire CWV range is calculated to ensure the spatial
+   continuity of the LST product.
 
 #### Modified Split-Window Covariance-Variance Method
 
@@ -177,6 +191,11 @@ where obtained by:
 - the new high accurate atmospheric radiative transfer model MODTRAN 5.2
 - simulating the band effective atmospheric transmittance Model analysis
   indicated that this method will obtain a CWV RMSE of about 0.5 g/cm^2.
+
+The algorithm will not cause significant uncertainty to the final LST retrieval
+with known CWV, but it will lead some error to the LST result for the cases
+without input CWV. To reduce this effect, the authors are trying to find more
+representative profiles to optimize the current algorithm.
 
 Details about the columnw water vapor retrieval can be found in:
 
@@ -399,5 +418,4 @@ AUTHORS
 -------
 
 Nikos Alexandris
-
 
