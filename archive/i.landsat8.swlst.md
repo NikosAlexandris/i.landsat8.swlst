@@ -5,12 +5,63 @@ DESCRIPTION
 (SW) algorithm estimating land surface temperature (LST), from the Thermal
 Infra-Red Sensor (TIRS) aboard Landsat 8 with an accuracy of better than 1.0 K.
 
+The components of the algorithm estimating LST values are at-satellite
+brightness temperature (BT); land surface emissivity (LSE); and the coefficients of
+the main Split-Window equation (SWC).
 
-To produce an LST map, the algorithm requires at minimum:
+LSEs are derived from an established look-up table linking the FROM-GLC
+classification scheme to average emissivities. The NDVI and the FVC are *not*
+computed each time an LST estimation is requested. Read [0] for details.
+
+The SWC depend on each pixel's column water vapor (CWV). CWV values are
+retrieved based on a modified Split-Window Covariance-Variance Matrix method
+(MSWCVM) [1]
+
+At-satellite brightness temperatures are derived from the TIRS channels 10 and
+11. Prior to any processing, these are filtered for clouds and their quantized
+digital numbers converted to at-satellite temperature values.
+
+
+
+               +--------+   +--------------------------+
+               |Landsat8+--->Cloud screen & calibration|
+               +--------+   +---+--------+-------------+
+                                |        |
+                                |        |
+                              +-v-+   +--v-+
+                              |OLI|   |TIRS|
+                              +-+-+   +--+-+
+                                |        |
+                                |        |
+                             +--v-+   +--v-------------------+  +-------------+
+                             |NDVI|   |Brightness temperature+-->MSWCVM method|
+              +----------+   +--+-+   +--+-------------------+  +----------+--+
+              |Land cover|      |        |                               |
+              +----------+      |        |                               |
+                      |       +-v-+   +--v-------------------+    +------v--+
+                      |       |FVC|   |Split Window Algorithm|    |ColWatVap|
++---------------------v--+    +-+-+   +-------------------+--+    +------+--+
+|Emissivity look|up table|      |                         |              |
++---------------------+--+      |                         |              |
+                      |      +--v--------------------+    |    +---------v--+
+                      +------>Pixel emissivity ei, ej+--> | <--+Coefficients|
+                             +-----------------------+    |    +------------+
+                                                          |
+                                                          |
+                                          +---------------v--+
+                                          |LST and emissivity|
+                                          +------------------+
+
+                 [ Figure 3 in [0]: Flowchart of retrieving LST from Landsat8 ]
+
+
+
+Hence, to produce an LST map, the algorithm requires at minimum:
 
 - TIRS bands 10 and 11
 - the acquisition's metadata file (MTL)
 - a Finer Resolution Observation & Monitoring of Global Land Cover (FROM-GLC) product
+
 
 ### Details
 
@@ -34,7 +85,6 @@ where:
 -   `bk` (k = 0, 1, ... 7) are the algorithm coefficients derived from a
     simulated dataset.
 
-[...]
 
 In the above equations,
 
@@ -47,28 +97,22 @@ In the above equations,
 -   and `fk` (k = 0 and 1) is related to the influence of the atmospheric
     transmittance and emissivity, i.e., `fk = f(ei, ej, ti, tji)`.
 
-Note that the algorithm (Equation (6a)) proposed by Jimenez-Munoz et al.
-added column water vapor (CWV) directly to estimate LST.
 
-Rozenstein et al. used CWV to estimate the atmospheric transmittance
-(`ti`, `tj`) and optimize retrieval accuracy explicitly.
+### Comparing to other split-window algorithms
 
-Therefore, if the atmospheric CWV is unknown or cannot be obtained
-successfully, neither of the two algorithms in Equations (6a) and (6b)
+Note that the algorithm (Equation (6a)) proposed by Jimenez-Munoz et al. added
+column water vapor (CWV) directly to estimate LST. Rozenstein et al. used CWV
+to estimate the atmospheric transmittance (`ti`, `tj`) and optimize retrieval
+accuracy explicitly. Therefore, if the atmospheric CWV is unknown or cannot be
+obtained successfully, neither of the two algorithms in Equations (6a) and (6b)
 will work. By contrast, although the current algorithm also needs CWV to
 determine the coefficients, it still works for unknown CWVs because the
 coefficients are obtained regardless of the CWV, as shown in Table 1 [0].
 
+
 NOTES
 -----
 
-The algorithm's flowchart (Figure 3 in the paper [0]) is:
-
-<div class="figure">
-
-![](Figure_3_Flowchart_of_retrieving_LST_from_Landsat8.jpg)
-
-</div>
 
 ### Cloud Masking
 
@@ -207,8 +251,6 @@ Quebec, QC, Canada, July 2014; pp. 3045--3048.
 
 ### Land Surface Temperature
 
-...
-
 #### Split-Window Algorithm
 
 The algorithm removes the atmospheric effect through differential
@@ -229,6 +271,7 @@ For example, the LST pixel with a CWV of 2.1 g/cm2 is estimated by using
 the coefficients of [0.0, 2.5] and [2.0, 3.5]. This process initially
 reduces the **delta-**LSTinc and improves the spatial continuity of the LST
 product.
+
 
 EXAMPLES
 --------
@@ -391,7 +434,7 @@ TODO
 -   Go through [Submitting
     Python](http://trac.osgeo.org/grass/wiki/Submitting/Python)
 -   Proper command history tracking.
--   Add timestamps (r.timestamp)
+-   Complete flag for timestamping the LST [and CWV] output (r.timestamp)
 -   Deduplicate code where applicable
 -   Test compiling in other systems
 -   Improve documentation
