@@ -81,9 +81,15 @@ Implementation notes
 
 [High Priority]
 
+- Fix retrieval of adjacent subranges (exclude 6, get it only if there is no
+  match for subranges 1, 2, 3, 4, and 5)
+
 - Evaluate BIG mapcalc expressions -- are they correct?
     - Expression for Column Water Vapor
+    - CWV output values range -- is it rational?
     - Expression for Land Surface Temperature
+    - LST output values range -- is it rational?  At the moment, not!
+
 - ~~Why is the LST out of range when using a fixed land cover class?~~ Cloudy
   pixels are, mainly, the reason. Better cloud masking is the solution.
 - ~~Why does the multi-step approach on deriving the CWV map differ from the single big mapcalc expression?~~ **Fixed**
