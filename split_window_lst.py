@@ -65,10 +65,18 @@ def check_t1x_range(number):
 def check_cwv(cwv):
     """
     Check whether a column water value lies within a "valid" range. Which is?
+
+    - Questions to answer:
+    
+        - What should happen when the value is out of range?
+        - Use subrange-6?
+        - If yes, how much tolerance for outliers < 0.0 and > 6.3 ?  Testing
+          for +-.5
+
     """
-    if cwv < 0.0 or cwv > 6.3:
+    if cwv < 0.0 - .5 or cwv > 6.3 + .5:
         raise ValueError('The column water vapor estimation is out of the '
-                         'expected ranfe [0.0, 6.3]')
+                         'expected range [0.0, 6.3]')
     else:
         return True
 
@@ -293,8 +301,13 @@ class SplitWindowLST():
         key_subrange_generator = ((key, COLUMN_WATER_VAPOR[key].subrange)
                                   for key in COLUMN_WATER_VAPOR.keys())
 
+        # get all but the last -- using a list, after all!
+        subranges = list(key_subrange_generator)
+        print "Subranges:", subranges
+        print
+
         # cwv in one or two subranges?
-        result = [range_x for range_x, (low, high) in key_subrange_generator
+        result = [range_x for range_x, (low, high) in subranges[:5]
                   if low < cwv < high]
 
         # if one subrange, return a string
@@ -309,6 +322,10 @@ class SplitWindowLST():
             # self._cwv_subrange_a, self._cwv_subrange_b = tuple(result)
             return result[0], result[1]
 
+        # what if it fails? -> subrange6
+        else:
+            return subranges[5][0]
+
     def _set_adjacent_cwv_subranges(self, column_water_vapor):
         """
         Set the retrieved cwv subranges as an attribute, though not a public
@@ -322,6 +339,8 @@ class SplitWindowLST():
         elif len(result) == 2:
             self._cwv_subrange = False
             self._cwv_subrange_a, self._cwv_subrange_b = tuple(result)
+
+        # what to do for subrange6?
 
     def _retrieve_cwv_coefficients(self, subrange):
         """
@@ -681,7 +700,7 @@ class SplitWindowLST():
                       '\ \n sw_lst_4 = {exp_4},'
                       '\ \n sw_lst_34 = (sw_lst_3 + sw_lst_4) / 2,'
                       '\ \n sw_lst_5 = {exp_5},'
-                      '\ \n sw_lst_45 = (sw_lst_5 + sw_lst_5) / 2,'
+                      '\ \n sw_lst_45 = (sw_lst_4 + sw_lst_5) / 2,'
                       '\ \n sw_lst_6 = {exp_6},'
                       '\ \n in_range_1 = {low_1} < {DUMMY_CWV} && {DUMMY_CWV} < {high_1},'
                       '\ \n in_range_2 = {low_2} < {DUMMY_CWV} && {DUMMY_CWV} < {high_2},'
