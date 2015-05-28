@@ -162,14 +162,14 @@
 
 #%option G_OPT_F_INPUT
 #% key: mtl
-#% key_desc: mtl file
+#% key_desc: filename
 #% description: Landsat8 metadata file (MTL)
 #% required: no
 #%end
 
 #%option G_OPT_R_BASENAME_INPUT
 #% key: prefix
-#% key_desc: string
+#% key_desc: basename
 #% type: string
 #% label: OLI/TIRS band names prefix
 #% description: Prefix of Landsat8 OLI/TIRS band names
@@ -182,7 +182,7 @@
 
 #%option G_OPT_R_INPUT
 #% key: b10
-#% key_desc: Band 10
+#% key_desc: name
 #% description: TIRS 10 (10.60 - 11.19 microns)
 #% required : no
 #%end
@@ -193,7 +193,7 @@
 
 #%option G_OPT_R_INPUT
 #% key: b11
-#% key_desc: Band 11
+#% key_desc: name
 #% description: TIRS 11 (11.50 - 12.51 microns)
 #% required : no
 #%end
@@ -204,14 +204,14 @@
 
 #%option G_OPT_R_INPUT
 #% key: t10
-#% key_desc: Brightness Temperature 10
+#% key_desc: name
 #% description: Brightness temperature (K) from band 10 | Overrides 'b10'
 #% required : no
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: t11
-#% key_desc: Brightness Temperature 11
+#% key_desc: name
 #% description: Brightness temperature (K) from band 11 | Overrides 'b11'
 #% required : no
 #%end
@@ -242,14 +242,14 @@
 
 #%option G_OPT_R_INPUT
 #% key: qab
-#% key_desc: QA band
-#% description: Landsat 8 quality assessment band
+#% key_desc: name
+#% description: Landsat 8 Quality Assessment band
 #% required : no
 #%end
 
 #%option
 #% key: qapixel
-#% key_desc: qa pixel value
+#% key_desc: pixelvalue
 #% description: Quality assessment pixel value which to build a mask | Source: <http://landsat.usgs.gov/L8QualityAssessmentBand.php>.
 #% answer: 61440
 #% required: no
@@ -262,7 +262,7 @@
 
 #%option G_OPT_R_INPUT
 #% key: clouds
-#% key_desc: Clouds MASK
+#% key_desc: name
 #% description: A raster map applied as an inverted MASK | Overrides 'qab'
 #% required : no
 #%end
@@ -273,42 +273,42 @@
 
 #%option G_OPT_R_INPUT
 #% key: emissivity
-#% key_desc: Land surface emissivity
+#% key_desc: name
 #% description: Land surface emissivity map | Optional, expert use, overrides retrieval of average emissivity from landcover
 #% required : no
 #%end
 
 #%option G_OPT_R_OUTPUT
 #% key: emissivity_out
-#% key_desc: Land surface emissivity output
+#% key_desc: name
 #% description: Name for output emissivity map | Recommended for re-use as "emissivity=" input in subsequent trials with different spatial window sizes
 #% required: no
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: delta_emissivity
-#% key_desc: Delta Emissivity
+#% key_desc: name
 #% description: Emissivity difference map for Landsat8 TIRS channels 10 and 11 | Optional, expert use, overrides retrieval of delta emissivity from landcover
 #% required : no
 #%end
 
 #%option G_OPT_R_OUTPUT
 #% key: delta_emissivity_out
-#% key_desc: Delta emissivity output
+#% key_desc: name
 #% description: Name for output delta emissivity map | Recommended for re-use as "delta_emissivity=" in subsequent trials with different spatial window sizes
 #% required: no
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: landcover
-#% key_desc: FROM-GLC map name
+#% key_desc: name
 #% description: FROM-GLC products covering the Landsat8 scene under processing. Source <http://data.ess.tsinghua.edu.cn/>.
 #% required : no
 #%end
 
 #%option
 #% key: emissivity_class
-#% key_desc: emissivity class
+#% key_desc: string
 #% description: Retrieve average emissivities only for a single land cover class (case sensitive) | Test or expert use
 #% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow, Random
 #% required : no
@@ -321,7 +321,7 @@
 
 #%option G_OPT_R_OUTPUT
 #% key: lst
-#% key_desc: lst output
+#% key_desc: name
 #% description: Name for output Land Surface Temperature map
 #% required: yes
 #% answer: lst
@@ -329,7 +329,7 @@
 
 #%option
 #% key: window
-#% key_desc: cwv window size
+#% key_desc: integer
 #% description: Odd number n sizing an n^2 spatial window for column water vapor retrieval | Increase to reduce spatial discontinuation in the final LST
 #% answer: 3
 #% required: yes
@@ -337,7 +337,7 @@
 
 #%option G_OPT_R_OUTPUT
 #% key: cwv
-#% key_desc: cwv output
+#% key_desc: name
 #% description: Name for output Column Water Vapor map | Optional
 #% required: no
 #%end
