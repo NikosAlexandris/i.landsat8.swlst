@@ -22,7 +22,7 @@ At-satellite brightness temperatures are derived from the TIRS channels 10 and
 digital numbers converted to at-satellite temperature values.
 
 
-
+```
                +--------+   +--------------------------+
                |Landsat8+--->Cloud screen & calibration|
                +--------+   +---+--------+-------------+
@@ -51,7 +51,7 @@ digital numbers converted to at-satellite temperature values.
                                           +---------------v--+
                                           |LST and emissivity|
                                           +------------------+
-
+```
                  [ Figure 3 in [0]: Flowchart of retrieving LST from Landsat8 ]
 
 
@@ -100,14 +100,16 @@ In the above equations,
 
 ### Comparing to other split-window algorithms
 
-Note that the algorithm (Equation (6a)) proposed by Jimenez-Munoz et al. added
-column water vapor (CWV) directly to estimate LST. Rozenstein et al. used CWV
-to estimate the atmospheric transmittance (`ti`, `tj`) and optimize retrieval
-accuracy explicitly. Therefore, if the atmospheric CWV is unknown or cannot be
-obtained successfully, neither of the two algorithms in Equations (6a) and (6b)
-will work. By contrast, although the current algorithm also needs CWV to
-determine the coefficients, it still works for unknown CWVs because the
-coefficients are obtained regardless of the CWV, as shown in Table 1 [0].
+From the paper:
+
+> Note that the algorithm (Equation (6a)) proposed by Jimenez-Munoz et al. added
+> column water vapor (CWV) directly to estimate LST. Rozenstein et al. used CWV
+> to estimate the atmospheric transmittance (`ti`, `tj`) and optimize retrieval
+> accuracy explicitly. Therefore, if the atmospheric CWV is unknown or cannot be
+> obtained successfully, neither of the two algorithms in Equations (6a) and (6b)
+> will work. By contrast, although the current algorithm also needs CWV to
+> determine the coefficients, it still works for unknown CWVs because the
+> coefficients are obtained regardless of the CWV, as shown in Table 1 [0].
 
 
 NOTES
