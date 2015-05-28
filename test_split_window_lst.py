@@ -52,7 +52,7 @@ def random_column_water_vapor():
     an atmospheric column water vapor subrange, as part of testing the
     Split-WindowLST class.
     """
-    return random.uniform(0.0, 6.3)
+    return random.uniform(0.0 -1, 6.3 + 1)
 
 
 def test_split_window_lst():
@@ -177,6 +177,8 @@ def test_split_window_lst():
         print " * Column Water Vapor coefficients (b0, b1, ..., b7) in <", cwv_range_x,
         
         print "> :", b0, b1, b2, b3, b4, b5, b6, b7
+        
+        print " * Model:", swlst._build_model(cwv_coefficients_x)
         
         print " * Checking the '_retrieve_rmse' method:", swlst._retrieve_rmse(cwv_range_x)
         
