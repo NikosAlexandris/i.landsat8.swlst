@@ -160,6 +160,11 @@
 #% description: Apply Celsius colortable to output LST map
 #%end
 
+#%flag
+#% key: t
+#% description: Time-stamping the output LST map | Applies to the optional CWV output map | NOT IMPLEMENTED YET
+#%end
+
 #%option G_OPT_F_INPUT
 #% key: mtl
 #% key_desc: filename
@@ -388,7 +393,7 @@ def cleanup():
 def tmp_map_name(name):
     """
     Return a temporary map name, for example:
-    
+
     tmp_avg_lse = tmp + '.avg_lse'
     """
     temporary_file = grass.tempfile()
@@ -462,15 +467,23 @@ def extract_number_from_string(string):
                string)[-1])
 
 
-def get_metadata(mtl_filename, bandnumber):
+def add_timestamp(mtl_filename, outname):
     """
-    Retrieve metadata of interest for given band.
+    Retrieve metadata from MTL file.
     """
     metadata = Landsat8_MTL(mtl_filename)
-    msg = "Scene ID is:" + str(metadata.scene_id)
+
+    # required format is: day=integer month=string year=integer time=hh:mm:ss.dd
+    acquisition_date = str(metadata.date_acquired)  ### FixMe ###
+    acquisition_time = str(metadata.scene_center_time)[0:7]
+    date_time_string = acquisition_date + ' ' + acquisition_time
+
+    msg = "Date and time of acquisition: " + date_time_string
     grass.verbose(msg)
 
-    return metadata
+    run('r.timestamp', map=outname, date=date_time_string)
+
+    del(timestamp)
 
 
 def digital_numbers_to_radiance(outname, band, radiance_expression):
@@ -1034,9 +1047,9 @@ def main():
     info = flags['i']
     keep_region = flags['k']
     colortable = flags['c']
+    timestamping = flags['t']
 
     # ToDo:
-    # timestamps = not(flags['t'])
     # shell = flags['g']
 
     #
@@ -1110,7 +1123,8 @@ def main():
 
         if split_window_lst.landcover_class is False:
             # replace with meaningful error
-            g.warning('Unknown land cover class string')
+            g.warning('Unknown land cover class string! Note, this string '
+                      'input option is case sensitive.')
 
         if emissivity_class == 'Random':
             msg = "\n|! Random emissivity class selected > " + \
@@ -1174,6 +1188,13 @@ def main():
 
     # remove MASK
     r.mask(flags='r', verbose=True)
+
+    # time-stamping
+    if timestamping:
+        add_timestamp(mtl_file, tmp_lst)
+
+        if cwv_output:
+            add_timestamp(mtl_file, tmp_cwv)
 
     # strings for metadata
     history_lst = 'Split-Window model: '
