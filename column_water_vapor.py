@@ -66,7 +66,7 @@ class Column_Water_Vapor():
 
     The regression coefficients:
 
-    - c0 = −9.674
+    - c0 = -9.674
     - c1 = 0.653
     - c2 = 9.087
 
