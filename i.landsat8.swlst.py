@@ -160,7 +160,7 @@
 #% description: Apply Celsius colortable to output LST map
 #%end
 
-#%option
+#%option G_OPT_F_INPUT
 #% key: mtl
 #% key_desc: mtl file
 #% description: Landsat8 metadata file (MTL)
@@ -495,6 +495,7 @@ def digital_numbers_to_radiance(outname, band, radiance_expression):
 
     if info:
         run('r.info', map=outname, flags='r')
+        #run('r.univar', map=outname)
 
     del(radiance_expression)
     del(radiance_equation)
@@ -521,6 +522,7 @@ def radiance_to_brightness_temperature(outname, radiance, temperature_expression
 
     if info:
         run('r.info', map=outname, flags='r')
+        #run('r.univar', map=outname)
 
     del(temperature_expression)
     del(temperature_equation)
