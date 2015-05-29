@@ -114,10 +114,9 @@ class SplitWindowLST():
     finally applied for LST estimation based on the equation:
 
     LST = b0 +
-        + (b1 + b2 * ((1-ae)/ae)) +
-        + b3 * (de/ae) * ((t10 + t11)/2) +
-        + (b4 + b5 * ((1-ae)/ae) + b6 * (de/ae^2)) * ((t10 - t11)/2) +
-        + b7 * (t10 - t11)^2
+        + ( b1 + b2 * ( 1 - ae ) / ae + b3 * de / ae^2 ) * ( t10 + t11 ) / 2 +
+        + ( b4 + b5 * ( 1 - ae ) / ae + b6 * de / ae^2 ) * ( t10 - t11 ) / 2 +
+        + b7 * ( t10 - t11 )^2
 
     To reduce the influence of the CWV error on the LST, for a CWV within the
     overlap of two adjacent CWV sub-ranges, we first use the coefficients from
@@ -303,8 +302,7 @@ class SplitWindowLST():
 
         # get all but the last -- using a list, after all!
         subranges = list(key_subrange_generator)
-        print "Subranges:", subranges
-        print
+        # print " * Subranges:", subranges
 
         # cwv in one or two subranges?
         result = [range_x for range_x, (low, high) in subranges[:5]
@@ -324,6 +322,7 @@ class SplitWindowLST():
 
         # what if it fails? -> subrange6
         else:
+            # print " * Using the complete CWV range [0, 6.3]"
             return subranges[5][0]
 
     def _set_adjacent_cwv_subranges(self, column_water_vapor):
@@ -407,8 +406,14 @@ class SplitWindowLST():
         Inputs are brightness temperatures measured in channels  i(~11.0 μm)
         and j (~12.0 μm).
 
-        This is a single value computation function and does not read or return
+        *Note*, this is a single value computation function and does not read or return
         a map.
+
+
+        LST = b0 +
+            + (b1 + b2 * ((1-ae)/ae) + b3 * (de/ae^2)) * ((t10 + t11)/2) +
+            + (b4 + b5 * ((1-ae)/ae) + b6 * (de/ae^2)) * ((t10 - t11)/2) +
+            + b7 * (t10 - t11)^2
         """
 
         # check validity of t10, t11
@@ -426,15 +431,16 @@ class SplitWindowLST():
 
         # addends
         a = b0
-        b = b1 + b2 * ((1-avg) / avg)
-        c = b3*(delta / avg) * ((t10 + t11) / 2)
-        d1 = b4 + b5 * ((1-avg) / avg) + b6 * (delta / avg**2)
-        d2 = (t10 - t11) / 2
-        d = d1 * d2
-        e = b7 * (t10 - t11)**2
+        b1 = b1 + b2 * (1-avg) / avg + b3 * delta / avg**2
+        b2 = (t10 + t11) / 2
+        b = b1 * b2
+        c1 = b4 + b5 * (1-avg) / avg + b6 * delta / avg**2
+        c2 = (t10 - t11) / 2
+        c = c1 * c2
+        d = b7 * (t10 - t11)**2
 
         # land surface temperature
-        lst = a + b + c + d + e
+        lst = a + b + c + d
         return lst
 
     def _set_lst(self):
@@ -615,18 +621,18 @@ class SplitWindowLST():
         """
         Build formula for GRASS GIS' mapcalc for the given cwv subrange.
 
-        ToDo: Improve the mechanism which selects emissivities from either a fixed
-        land cover class  or  a land cover map.
+        ToDo: Review and Improve the mechanism which selects emissivities from
+        either a fixed land cover class  OR  a land cover map.
         """
         # formula = '{c0} + {c1}*{dummy} + {c2}*{dummy}^2'
         formula = ('{b0} + '
                    '({b1} + '
-                   '({b2})*((1-{ae})/{ae})) + '
-                   '({b3})*({de}/{ae}) * (({DUMMY_T10} + {DUMMY_T11})/2) + '
+                   '({b2}) * ((1 - {ae}) / {ae}^2) + '
+                   '({b3}) * ({de}/{ae}^2)) * (({DUMMY_T10}+{DUMMY_T11})/2) + '
                    '({b4} + '
-                   '({b5})*((1-{ae})/{ae}) + '
-                   '({b6})*({de}/{ae}^2))*(({DUMMY_T10} - {DUMMY_T11})/2) + '
-                   '({b7})*({DUMMY_T10} - {DUMMY_T11})^2')
+                   '({b5}) * ((1 - {ae}) / {ae}) + '
+                   '({b6}) * ({de}/{ae}^2)) * (({DUMMY_T10}-{DUMMY_T11})/2) + '
+                   '({b7}) * ({DUMMY_T10} - {DUMMY_T11})^2')
 
         # Implement mechanism to either select
 
