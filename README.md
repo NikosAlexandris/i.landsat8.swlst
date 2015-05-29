@@ -86,7 +86,8 @@ Implementation notes
 
 - Evaluate BIG mapcalc expressions -- are they correct?
     - Expression for Column Water Vapor
-    - CWV output values range -- is it rational?
+    - ~~CWV output values range -- is it rational?~~ It was not. There is a
+      typo in paper [0]. The correct order of the coefficients is in [1].
     - Expression for Land Surface Temperature
     - LST output values range -- is it rational?  At the moment, not!
 
