@@ -15,9 +15,9 @@ computed each time an LST estimation is requested. Read [0] for details.
 
 The SWC depend on each pixel's column water vapor (CWV). CWV values are
 retrieved based on a modified Split-Window Covariance-Variance Matrix Ratio
-method (MSWCVM) [1, 2]. Spatial discontinuity found in the images of the retrieved
-CWV are attributed to the data gap in the images caused by stray light outside
-FOV of TIRS instrument [2]
+method (MSWCVM) [1, 2]. **Note**, the spatial discontinuity found in the images of
+the retrieved CWV, is attributed to the data gap in the images caused by stray
+light outside of the FOV of the TIRS instrument [2]
 
 At-satellite brightness temperatures are derived from the TIRS channels 10 and
 11. Prior to any processing, these are filtered for clouds and their quantized
