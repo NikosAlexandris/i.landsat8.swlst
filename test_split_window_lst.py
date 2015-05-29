@@ -70,7 +70,9 @@ def test_split_window_lst():
     t10 = random_brightness_temperature_values(1)
     t11 = random.choice(((t10 + 50), (t10 - 50)))  # check some failures as well
     print " * Random brightness temperature values for T10, T11:", t10, t11
-    print
+    print (' * NOTE: Some out of a reasonable range T10, T11 values, which '
+           'cause the current test to fail, are tolerated on-purpose in order '
+           'to test the range checking function `check_t1x_range()`.')
     print
     print
 
@@ -112,6 +114,12 @@ def test_split_window_lst():
     #
 
     print "[ COLUMN_WATER_VAPOR ]"
+    print
+    print (' * NOTE: Some out of range values which cause the current test to '
+           'fail, are tolerated on-purpose in order to check for the CWV '
+           'range checking function.  Check for the range of the '
+           'random_column_water_vapor() function.')
+    
     COLUMN_WATER_VAPOR = coefficients.get_column_water_vapor()
     print "\n * Dictionary for column water vapor coefficients:\n\n",
     print COLUMN_WATER_VAPOR
@@ -124,7 +132,7 @@ def test_split_window_lst():
     print
 
     cwv = random_column_water_vapor()
-    print " * For the test, some random atmospheric column water vapor (g/cm^2):", cwv
+    print " * For the test, some random atmospheric column water vapor '(g/cm^2):", cwv
 
     #
     cwv_range_x = random.choice([key for key in COLUMN_WATER_VAPOR.keys()])
@@ -161,7 +169,15 @@ def test_split_window_lst():
 
     # get a column water vapor subrange
     cwv_range_x = swlst._retrieve_adjacent_cwv_subranges(cwv)
-    print " * The CWV value {cwv} falls inside:".format(cwv=cwv), cwv_range_x, "|Type:", type(cwv_range_x)
+
+    # special case for Subrange 6
+    if cwv_range_x == 'Range_6':
+        msg = (' * The CWV value {cwv} falls outside of one of the subranges. '
+               'Using the complete CWV range [0.0, 6.3] described as')
+        msg = msg.format(cwv=cwv)
+        print msg, cwv_range_x
+    else:
+        print " * The CWV value {cwv} falls inside:".format(cwv=cwv), cwv_range_x, "|Type:", type(cwv_range_x)
    
 ### First, test all _retrieve functions ###
     
