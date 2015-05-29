@@ -157,7 +157,7 @@
 
 #%flag
 #% key: c
-#% description: Apply Celsius colortable to output LST map
+#% description: Convert to and apply Celsius colortable to output LST map | NOT IMPLEMENTED YET
 #%end
 
 #%flag
