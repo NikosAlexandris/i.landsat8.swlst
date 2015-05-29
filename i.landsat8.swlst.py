@@ -12,6 +12,33 @@
                land surface temperature, from the Thermal Infra-Red Sensor
                (TIRS) aboard Landsat 8 with an accuracy of better than 1.0 K.
 
+                
+               Description
+
+               The components of the algorithm estimating LST values are
+               at-satellite brightness temperature (BT); land surface
+               emissivity (LSE); and the coefficients of the main Split-Window
+               equation (SWC).
+
+               LSEs are derived from an established look-up table linking the
+               FROM-GLC classification scheme to average emissivities. The
+               NDVI and the FVC are *not* computed each time an LST estimation
+               is requested. Read [0] for details.
+
+               The SWC depend on each pixel's column water vapor (CWV). CWV
+               values are retrieved based on a modified Split-Window
+               Covariance-Variance Matrix Ratio method (MSWCVMR) [1, 2].
+               **Note**, the spatial discontinuity found in the images of the
+               retrieved CWV, is attributed to the data gap in the images
+               caused by stray light outside of the FOV of the TIRS instrument
+               [2]
+
+               At-satellite brightness temperatures are derived from the TIRS
+               channels 10 and 11. Prior to any processing, these are filtered
+               for clouds and their quantized digital numbers converted to
+               at-satellite temperature values.
+
+
                The input parameters include:
 
                - the brightness temperatures (Ti and Tj) of the two adjacent
@@ -22,6 +49,7 @@
                  red and near-infrared reflectance of the Operational Land
                  Imager (OLI).
 
+               
                The algorithm's flowchart (Figure 3 in the paper [0]) is:
 
                +--------+   +--------------------------+
@@ -53,6 +81,7 @@
                                           |LST and emissivity|
                                           +------------------+
 
+
                Sources:
 
                [0] Du, Chen; Ren, Huazhong; Qin, Qiming; Meng, Jinjie;
@@ -61,9 +90,15 @@
                Remote Sens. 7, no. 1: 647-665.
                <http://www.mdpi.com/2072-4292/7/1/647/htm#sthash.ba1pt9hj.dpuf>
 
-               [1] Huazhong Ren, Chen Du, Qiming Qin, Rongyuan Liu,
-               Jinjie Meng, and Jing Li. "Atmospheric Water Vapor Retrieval
-               from Landsat 8 and Its Validation." 3045–3048. IEEE, 2014.
+               [1] [Look below for the publised paper!] Huazhong Ren, Chen Du,
+               Qiming Qin, Rongyuan Liu, Jinjie Meng, and Jing Li. "Atmospheric
+               Water Vapor Retrieval from Landsat 8 and Its Validation."
+               3045–3048. IEEE, 2014.
+
+               [2] Ren, H., Du, C., Liu, R., Qin, Q., Yan, G., Li, Z. L., &
+               Meng, J. (2015). Atmospheric water vapor retrieval from Landsat
+               8 thermal infrared images. Journal of Geophysical Research:
+               Atmospheres, 120(5), 1723-1738.
 
 
                Details
@@ -157,12 +192,12 @@
 
 #%flag
 #% key: c
-#% description: Convert to and apply Celsius colortable to output LST map | NOT IMPLEMENTED YET
+#% description: Convert LST output to celsius degrees, apply color table
 #%end
 
 #%flag
 #% key: t
-#% description: Time-stamping the output LST map | Applies to the optional CWV output map | NOT IMPLEMENTED YET
+#% description: Time-stamping the output LST map | Applies to the optional CWV output map | INCOMPLETE
 #%end
 
 #%option G_OPT_F_INPUT
@@ -491,7 +526,7 @@ def digital_numbers_to_radiance(outname, band, radiance_expression):
     Convert Digital Number values to TOA Radiance. For details, see in Landsat8
     class.  Zero (0) DNs set to NULL here (not via the class' function).
     """
-    msg = "\n|i Setting 0 Digital Numbers in {band} to NULL"
+    msg = "\n|i Setting zero (0) Digital Numbers in {band} to NULL"
     msg = msg.format(band=band)
     g.message(msg)
     run('r.null', map=band, setnull=0)
@@ -976,6 +1011,25 @@ def estimate_lst(outname, t10, t11, avg_lse_map, delta_lse_map, cwv_map, lst_exp
     del(split_window_equation)
 
 
+def kelvin_to_celsius(outname, lst_map):
+    """
+    Convert Kelvin to Celsius
+    """
+    msg = '\n|i Converting LST output from Kelvin to Celsius degrees'
+    #g.message(msg)
+
+    kelvin_to_celsius_expression = '{lst} - 273.15'.format(lst=lst_map)
+    kelvin_to_celsius_equation = equation.format(result=lst_map,
+            expression=kelvin_to_celsius_expression)
+    grass.mapcalc(kelvin_to_celsius_equation, overwrite=True)
+    
+    msg += '\n|i Applying the "Celsius" color table'
+    g.message(msg)
+    run('r.colors', map=lst_map, color='celsius')
+
+    del(kelvin_to_celsius_expression)
+    del(kelvin_to_celsius_equation)
+
 def main():
     """
     Main program
@@ -1052,7 +1106,7 @@ def main():
     global info
     info = flags['i']
     keep_region = flags['k']
-    colortable = flags['c']
+    celsius = flags['c']
     timestamping = flags['t']
 
     # ToDo:
@@ -1202,12 +1256,16 @@ def main():
         if cwv_output:
             add_timestamp(mtl_file, tmp_cwv)
 
+    # Celsius color table
+    if celsius:
+        kelvin_to_celsius(tmp_lst, tmp_lst)
+
     # strings for metadata
     history_lst = 'Split-Window model: '
     history_lst += split_window_lst.sw_lst_mapcalc
     title_lst = 'Land Surface Temperature (C)'
     description_lst = ('Split-Window LST')
-    if colortable:
+    if celsius:
         units_lst = 'Celsius'
     else:
         units_lst = 'Kelvin'
@@ -1219,18 +1277,6 @@ def main():
         units=units_lst, description=description_lst,
         source1=source1_lst, source2=source2_lst,
         history=history_lst)
-
-    # Celsius color table
-    if colortable:
-        g.message('\n|i Assigning the "celsius" color table to the LST map')
-
-# Convert Kelvin to Celsius -- not tested yet
-#        kelvin_to_celsius_expression = '{lst} - 273.15'.format(lst=tmp_lst)
-#        kelvin_to_celsius_equation = equation.format(result=tmp_lst,
-#                expression=kelvin_to_celsius_expression)
-#       grass.mapcalc(kelvin_to_celsius_equation, overwrite=True)
-
-        run('r.colors', map=tmp_lst, color='celsius')
 
     # (re)name the LST product
     run("g.rename", rast=(tmp_lst, lst_output))
