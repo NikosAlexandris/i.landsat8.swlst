@@ -14,8 +14,10 @@ classification scheme to average emissivities. The NDVI and the FVC are *not*
 computed each time an LST estimation is requested. Read [0] for details.
 
 The SWC depend on each pixel's column water vapor (CWV). CWV values are
-retrieved based on a modified Split-Window Covariance-Variance Matrix method
-(MSWCVM) [1]
+retrieved based on a modified Split-Window Covariance-Variance Matrix Ratio
+method (MSWCVM) [1, 2]. Spatial discontinuity found in the images of the retrieved
+CWV are attributed to the data gap in the images caused by stray light outside
+FOV of TIRS instrument [2]
 
 At-satellite brightness temperatures are derived from the TIRS channels 10 and
 11. Prior to any processing, these are filtered for clouds and their quantized
@@ -62,7 +64,6 @@ Hence, to produce an LST map, the algorithm requires at minimum:
 - the acquisition's metadata file (MTL)
 - a Finer Resolution Observation & Monitoring of Global Land Cover (FROM-GLC) product
 
-
 ### Details
 
 A new refinement of the generalized split-window algorithm proposed by
@@ -97,7 +98,6 @@ In the above equations,
 -   and `fk` (k = 0 and 1) is related to the influence of the atmospheric
     transmittance and emissivity, i.e., `fk = f(ei, ej, ti, tji)`.
 
-
 ### Comparing to other split-window algorithms
 
 From the paper:
@@ -111,10 +111,8 @@ From the paper:
 > determine the coefficients, it still works for unknown CWVs because the
 > coefficients are obtained regardless of the CWV, as shown in Table 1 [0].
 
-
 NOTES
 -----
-
 
 ### Cloud Masking
 
@@ -250,10 +248,7 @@ vapor retrieval from landsat 8 and its validation. In Proceedings of the
 IEEE International Geosciene and Remote Sensing Symposium (IGARSS),
 Quebec, QC, Canada, July 2014; pp. 3045--3048.
 
-
-### Land Surface Temperature
-
-#### Split-Window Algorithm
+### Split-Window Algorithm
 
 The algorithm removes the atmospheric effect through differential
 atmospheric absorption in the two adjacent thermal infrared channels
@@ -273,7 +268,6 @@ For example, the LST pixel with a CWV of 2.1 g/cm2 is estimated by using
 the coefficients of [0.0, 2.5] and [2.0, 3.5]. This process initially
 reduces the **delta-**LSTinc and improves the spatial continuity of the LST
 product.
-
 
 EXAMPLES
 --------
@@ -453,6 +447,10 @@ REFERENCES
 -   [1] Huazhong Ren, Chen Du, Qiming Qin, Rongyuan Liu, Jinjie Meng,
     and Jing Li. "Atmospheric Water Vapor Retrieval from Landsat 8 and
     Its Validation." 3045--3048. IEEE, 2014.
+
+-   [2] Ren, H., Du, C., Liu, R., Qin, Q., Yan, G., Li, Z. L., & Meng, J.
+    (2015). Atmospheric water vapor retrieval from Landsat 8 thermal infrared
+    images. Journal of Geophysical Research: Atmospheres, 120(5), 1723-1738.
 
 SEE ALSO
 --------
