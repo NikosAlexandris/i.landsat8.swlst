@@ -2,7 +2,7 @@
 <p><em>i.landsat8.swlst</em> is an implementation of a robust and practical Slit-Window (SW) algorithm estimating land surface temperature (LST), from the Thermal Infra-Red Sensor (TIRS) aboard Landsat 8 with an accuracy of better than 1.0 K.</p>
 <p>The components of the algorithm estimating LST values are at-satellite brightness temperature (BT); land surface emissivity (LSE); and the coefficients of the main Split-Window equation (SWC).</p>
 <p>LSEs are derived from an established look-up table linking the FROM-GLC classification scheme to average emissivities. The NDVI and the FVC are <em>not</em> computed each time an LST estimation is requested. Read [0] for details.</p>
-<p>The SWC depend on each pixel's column water vapor (CWV). CWV values are retrieved based on a modified Split-Window Covariance-Variance Matrix method (MSWCVM) [1]</p>
+<p>The SWC depend on each pixel's column water vapor (CWV). CWV values are retrieved based on a modified Split-Window Covariance-Variance Matrix Ratio method (MSWCVM) [1, 2]. Spatial discontinuity found in the images of the retrieved CWV are attributed to the data gap in the images caused by stray light outside FOV of TIRS instrument [2]</p>
 <p>At-satellite brightness temperatures are derived from the TIRS channels 10 and 11. Prior to any processing, these are filtered for clouds and their quantized digital numbers converted to at-satellite temperature values.</p>
 <pre><code>               +--------+   +--------------------------+
                |Landsat8+---&gt;Cloud screen &amp; calibration|
@@ -144,8 +144,7 @@
 <p>The algorithm will not cause significant uncertainty to the final LST retrieval with known CWV, but it will lead some error to the LST result for the cases without input CWV. To reduce this effect, the authors are trying to find more representative profiles to optimize the current algorithm.</p>
 <p>Details about the columnw water vapor retrieval can be found in:</p>
 <p>Ren, H.; Du, C.; Qin, Q.; Liu, R.; Meng, J.; Li, J. Atmospheric water vapor retrieval from landsat 8 and its validation. In Proceedings of the IEEE International Geosciene and Remote Sensing Symposium (IGARSS), Quebec, QC, Canada, July 2014; pp. 3045--3048.</p>
-<h3 id="land-surface-temperature">Land Surface Temperature</h3>
-<h4 id="split-window-algorithm">Split-Window Algorithm</h4>
+<h3 id="split-window-algorithm">Split-Window Algorithm</h3>
 <p>The algorithm removes the atmospheric effect through differential atmospheric absorption in the two adjacent thermal infrared channels centered at about 11 and 12 microns. The linear or non-linear combination of the brightness temperatures is finally applied for LST estimation based on the equation:</p>
 <p><code>LST = b0 + + (b1 + b2 \* ((1-ae)/ae)) + + b3 \* (de/ae) \* ((t10 + t11)/2) + + (b4 + b5 \* ((1-ae)/ae) + b6 \* (de/ae\^2)) \* ((t10 - t11)/2) + + b7 \* (t10 - t11)\^2</code></p>
 <p>To reduce the influence of the CWV error on the LST, for a CWV within the overlap of two adjacent CWV sub-ranges, we first use the coefficients from the two adjacent CWV sub-ranges to calculate the two initial temperatures and then use the average of the initial temperatures as the pixel LST.</p>
@@ -233,6 +232,7 @@
 <ul>
 <li><p>[0] Du, Chen; Ren, Huazhong; Qin, Qiming; Meng, Jinjie; Zhao, Shaohua. 2015. &quot;A Practical Split-Window Algorithm for Estimating Land Surface Temperature from Landsat 8 Data.&quot; Remote Sens. 7, no. 1: 647-665. http://www.mdpi.com/2072-4292/7/1/647/htm#sthash.ba1pt9hj.dpuf</p></li>
 <li><p>[1] Huazhong Ren, Chen Du, Qiming Qin, Rongyuan Liu, Jinjie Meng, and Jing Li. &quot;Atmospheric Water Vapor Retrieval from Landsat 8 and Its Validation.&quot; 3045--3048. IEEE, 2014.</p></li>
+<li><p>[2] Ren, H., Du, C., Liu, R., Qin, Q., Yan, G., Li, Z. L., &amp; Meng, J. (2015). Atmospheric water vapor retrieval from Landsat 8 thermal infrared images. Journal of Geophysical Research: Atmospheres, 120(5), 1723-1738.</p></li>
 </ul>
 <h2 id="see-also">SEE ALSO</h2>
 <p><em><a href="i.emissivity.html">i.emissivity</a></em></p>
