@@ -66,9 +66,26 @@ class Column_Water_Vapor():
 
     The regression coefficients:
 
-    - c0 = -9.674
+    ==================================================================
+
+    * NOTE, there is a typo in the paper 
+
+    [0] Du, Chen; Ren, Huazhong; Qin, Qiming; Meng, Jinjie; Zhao,
+    Shaohua. 2015. "A Practical Split-Window Algorithm for Estimating
+    Land Surface Temperature from Landsat 8 Data." Remote Sens. 7, no.
+    1: 647-665.
+    http://www.mdpi.com/2072-4292/7/1/647/htm\#sthash.ba1pt9hj.dpuf
+
+    from which the equation's coefficients are (also) published.
+
+    The correct order of constants is as below, source from the
+    referenced paper below.
+
+    ==================================================================
+
+    - c2 = -9.674
     - c1 = 0.653
-    - c2 = 9.087
+    - c0 = 9.087
 
     where obtained by:
 
@@ -78,6 +95,13 @@ class Column_Water_Vapor():
 
     Model analysis indicated that this method will obtain a CWV RMSE of about
     0.5 g/cm2. Details about the CWV retrieval can be found in:
+
+    Ren, H., Du, C., Liu, R., Qin, Q., Yan, G., Li, Z. L., & Meng, J. (2015).
+    Atmospheric water vapor retrieval from Landsat 8 thermal infrared images.
+    Journal of Geophysical Research: Atmospheres, 120(5), 1723-1738.
+    
+
+    Old reference:
 
     Ren, H.; Du, C.; Qin, Q.; Liu, R.; Meng, J.; Li, J. Atmospheric water vapor
     retrieval from landsat 8 and its validation. In Proceedings of the IEEE
@@ -96,9 +120,9 @@ class Column_Water_Vapor():
                          'and Its Validation." 3045-3048. IEEE, 2014.')
 
         # model constants
-        self.c0 = -9.674
+        self.c2 = -9.674
         self.c1 = 0.653
-        self.c2 = 9.087
+        self.c0 = 9.087
 
         # window of N (= n by n) pixels, adjacent pixels
         assert window_size % 2 != 0, "Window size should be an even number!"
@@ -169,6 +193,7 @@ class Column_Water_Vapor():
 
         # ratio ji
         ratio_ji = numerator_ji / denominator_ji
+        #print "Ratio ji:", ratio_ji
 
         # column water vapor
         cwv = self.c0 + self.c1 * (ratio_ji) + self.c2 * ((ratio_ji) ** 2)
