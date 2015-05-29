@@ -1,7 +1,26 @@
-*i.landsat8.swlst* is an implementation of the robust and practical
-Slit-Window (SW) algorithm estimating land surface temperature (LST), from the
-Thermal Infra-Red Sensor (TIRS) aboard Landsat 8 with an accuracy of
-better than 1.0 K.
+*i.landsat8.swlst* is an implementation of a practical Slit-Window (SW)
+algorithm, estimating land surface temperature (LST), from the Thermal Infra-Red
+Sensor (TIRS) aboard Landsat 8 with an accuracy of better than 1.0 K.
+
+## Description
+
+The components of the algorithm estimating LST values are at-satellite
+brightness temperature (BT); land surface emissivity (LSE); and the coefficients of
+the main Split-Window equation (SWC).
+
+LSEs are derived from an established look-up table linking the FROM-GLC
+classification scheme to average emissivities. The NDVI and the FVC are *not*
+computed each time an LST estimation is requested. Read [0] for details.
+
+The SWC depend on each pixel's column water vapor (CWV). CWV values are
+retrieved based on a modified Split-Window Covariance-Variance Matrix Ratio
+method (MSWCVM) [1, 2]. **Note**, the spatial discontinuity found in the images of
+the retrieved CWV, is attributed to the data gap in the images caused by stray
+light outside of the FOV of the TIRS instrument [2]
+
+At-satellite brightness temperatures are derived from the TIRS channels 10 and
+11. Prior to any processing, these are filtered for clouds and their quantized
+digital numbers converted to at-satellite temperature values.
 
 To produce an LST map, the algorithm requires at minimum:
 
@@ -85,11 +104,15 @@ Implementation notes
   match for subranges 1, 2, 3, 4, and 5)
 
 - Evaluate BIG mapcalc expressions -- are they correct?
-    - Expression for Column Water Vapor
+    - ~~Expression for Column Water Vapor~~
+
     - ~~CWV output values range -- is it rational?~~ It was not. There is a
-      typo in paper [0]. The correct order of the coefficients is in [1].
-    - Expression for Land Surface Temperature
-    - LST output values range -- is it rational?  At the moment, not!
+      typo in paper [0]. The correct order of the coefficients is in papers [1, 2].
+
+    - ~~Expression for Land Surface Temperature~~
+
+    - ~~LST output values range -- is it rational?  At the moment, not!~~
+      Fixed. The main Split-Window equation was wrong.
 
 - ~~Why is the LST out of range when using a fixed land cover class?~~ Cloudy
   pixels are, mainly, the reason. Better cloud masking is the solution.
@@ -104,22 +127,32 @@ Implementation notes
 
 [Mid]
 
-- Use existing i.emissivity?  Not exactly compatible.  Anyhow, options to input
-  average and delta emissivity maps implemented.
+- Redo the example screenshots for the manual after corrections for CWV, LST
+  equations.
+
+- Use existing i.emissivity?  Not exactly compatible -- read paper for details.
+  Anyhow, options to input average and delta emissivity maps implemented.
+
 - Raster Row I/O -- Maybe *not* an option: see discussion with Peter
   Zambelli
+
 - How to perform pixel value validity checks for in-between and end products?
-  r.mapcalc can't do this.
+  `r.mapcalc` can't do this. Best to implement a test checking the values
+  on-the-fly while they are created. A C-function?
 
 [Low]
 
 - Deduplicate code in split_window_lst class >
-  _build_average_emissivity_mapcalc() and _build_delta_emissivity_mapcalc() 
+  _build_average_emissivity_mapcalc() and _build_delta_emissivity_mapcalc()
+
 - Implement a median window filter, an another option in addition to mean.
+
 - Profiling
+
 - Implement a complete cloud masking function using the BQA image. Support for
   user requested confidence or types of clouds (?). Eg: options=
   clouds,cirrus,high,low ?
+
 - Multi-Threading? Note, r.mapcalc is already.
 
 
@@ -151,9 +184,15 @@ References
     and Jing Li. "Atmospheric Water Vapor Retrieval from Landsat 8 and
     Its Validation." 3045--3048. IEEE, 2014.
 
+-   [2] Ren, H., Du, C., Liu, R., Qin, Q., Yan, G., Li, Z. L., & Meng, J.
+    (2015). Atmospheric water vapor retrieval from Landsat 8 thermal infrared
+    images. Journal of Geophysical Research: Atmospheres, 120(5), 1723-1738.
+
 Ευχαριστώ
 =========
 
 - Yann Chemin
 - Pietro Zambelli
 - StackExchange contributors
+- Sajid Pareeth
+- Georgios Alexandris, Anthoula Alexandri
