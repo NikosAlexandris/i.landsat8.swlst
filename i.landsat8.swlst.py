@@ -488,9 +488,14 @@ def add_timestamp(mtl_filename, outname):
 
 def digital_numbers_to_radiance(outname, band, radiance_expression):
     """
-    Convert Digital Numbers to TOA Radiance. For details, see in Landsat8
-    class.
+    Convert Digital Number values to TOA Radiance. For details, see in Landsat8
+    class.  Zero (0) DNs set to NULL here (not via the class' function).
     """
+    msg = "\n|i Setting 0 Digital Numbers in {band} to NULL"
+    msg = msg.format(band=band)
+    g.message(msg)
+    run('r.null', map=band, setnull=0)
+
     msg = "\n|i Rescaling {band} digital numbers to spectral radiance "
     msg = msg.format(band=band)
 
@@ -580,6 +585,7 @@ def tirs_to_at_satellite_temperature(tirs_1x, mtl_file):
     del(temperature_expression)
 
     return tmp_brightness_temperature
+    save_map(tmp_brightness_temperature)
 
 
 def mask_clouds(qa_band, qa_pixel):
@@ -1201,7 +1207,10 @@ def main():
     history_lst += split_window_lst.sw_lst_mapcalc
     title_lst = 'Land Surface Temperature (C)'
     description_lst = ('Split-Window LST')
-    units_lst = 'Celsius'
+    if colortable:
+        units_lst = 'Celsius'
+    else:
+        units_lst = 'Kelvin'
     source1_lst = citation_lst
     source2_lst = citation_cwv
 
@@ -1214,6 +1223,13 @@ def main():
     # Celsius color table
     if colortable:
         g.message('\n|i Assigning the "celsius" color table to the LST map')
+
+# Convert Kelvin to Celsius -- not tested yet
+#        kelvin_to_celsius_expression = '{lst} - 273.15'.format(lst=tmp_lst)
+#        kelvin_to_celsius_equation = equation.format(result=tmp_lst,
+#                expression=kelvin_to_celsius_expression)
+#       grass.mapcalc(kelvin_to_celsius_equation, overwrite=True)
+
         run('r.colors', map=tmp_lst, color='celsius')
 
     # (re)name the LST product
