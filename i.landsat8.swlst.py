@@ -1045,8 +1045,9 @@ def main():
 
     # Temporary filenames
 
-    # Following three meant for a test step-by-step cwv estimation, see unused
-    # functions!
+    # The following three are meant for a test step-by-step cwv estimation, see
+    # unused functions!
+
     # tmp_ti_mean = tmp_map_name('ti_mean')  # for cwv
     # tmp_tj_mean = tmp_map_name('tj_mean')  # for cwv
     # tmp_ratio = tmp_map_name('ratio')  # for cwv
@@ -1265,7 +1266,7 @@ def main():
         if cwv_output:
             add_timestamp(mtl_file, cwv_output)
 
-    # convert to celsius, apply color table
+    # convert to celsius and apply color table?
     if celsius:
         kelvin_to_celsius(tmp_lst, tmp_lst)
 
