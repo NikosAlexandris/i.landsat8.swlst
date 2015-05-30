@@ -1256,21 +1256,33 @@ def main():
         if cwv_output:
             add_timestamp(mtl_file, tmp_cwv)
 
-    # Celsius color table
+    # convert to celsius, apply color table
     if celsius:
         kelvin_to_celsius(tmp_lst, tmp_lst)
 
+    else:
+        # color table for kelvin
+        run('r.colors', map=tmp_lst, color=kelvin)
+
+    # ToDo: helper function for r.support
     # strings for metadata
     history_lst = 'Split-Window model: '
     history_lst += split_window_lst.sw_lst_mapcalc
-    title_lst = 'Land Surface Temperature (C)'
-    description_lst = ('Split-Window LST')
+    description_lst = ('Land Surface Temperature derived from a split-window algorithm. ')
+    description_lst += citation_lst
+    description_lst += citation_cwv
+
     if celsius:
+        title_lst = 'Land Surface Temperature (C)'
         units_lst = 'Celsius'
+
     else:
+        title_lst = 'Land Surface Temperature (K)'
         units_lst = 'Kelvin'
-    source1_lst = citation_lst
-    source2_lst = citation_cwv
+
+    landsat8_metadata = Landsat8_MTL(mtl_file)
+    source1_lst = landsat8_metadata.scene_id
+    source2_lst = landsat8_metadata.origin
 
     # history entry
     run("r.support", map=tmp_lst, title=title_lst,
