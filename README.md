@@ -14,9 +14,17 @@ computed each time an LST estimation is requested. Read [0] for details.
 
 The SWC depend on each pixel's column water vapor (CWV). CWV values are
 retrieved based on a modified Split-Window Covariance-Variance Matrix Ratio
-method (MSWCVM) [1, 2]. **Note**, the spatial discontinuity found in the images of
+method (MSWCVMR) [1, 2]. **Note**, the spatial discontinuity found in the images of
 the retrieved CWV, is attributed to the data gap in the images caused by stray
-light outside of the FOV of the TIRS instrument [2]
+light outside of the FOV of the TIRS instrument [2]. In addition, the size of
+the spatial window querying for CWV values in adjacent pixels, is a key
+parameter of the MSWCVMR method. It influences accuracy and performance. In [2]
+it is stated:
+
+> A small window size n (N = n * n, see equation (1a)) cannot ensure a high
+> correlation between two bands' temperatures due to the instrument noise. In
+> contrast, the size cannot be too large because the variations in the surface
+> and atmospheric conditions become larger as the size increases.
 
 At-satellite brightness temperatures are derived from the TIRS channels 10 and
 11. Prior to any processing, these are filtered for clouds and their quantized
@@ -32,7 +40,7 @@ Installation
 ============
 
 ## Requirements
-------------
+---------------
 
 see [GRASS Addons SVN repository, README file, Installation - Code Compilation](https://svn.osgeo.org/grass/grass-addons/README)
 
@@ -45,7 +53,7 @@ Making the script `i.fusion.hpf` available from within any GRASS-GIS ver. 7.x se
 2.  navigate into the script’s source directory
 
 3.  execute `make MODULE_TOPDIR=$GISBASE`
-
+M
 Usage examples
 ==============
 
@@ -104,6 +112,7 @@ Implementation notes
   match for subranges 1, 2, 3, 4, and 5)
 
 - Evaluate BIG mapcalc expressions -- are they correct?
+
     - ~~Expression for Column Water Vapor~~
 
     - ~~CWV output values range -- is it rational?~~ It was not. There is a
