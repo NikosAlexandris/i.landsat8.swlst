@@ -19,12 +19,11 @@ computed each time an LST estimation is requested. Read [0] for details.
 
 The SWC depend on each pixel's column water vapor (CWV). CWV values are
 retrieved based on a modified Split-Window Covariance-Variance Matrix Ratio
-method (MSWCVM) [1, 2]. **Note**, the spatial discontinuity found in the images of
+method (MSWCVMR) [1, 2]. **Note**, the spatial discontinuity found in the images of
 the retrieved CWV, is attributed to the data gap in the images caused by stray
-light outside of the FOV of the TIRS instrument. [2]  In addition, the size of
+light outside of the FOV of the TIRS instrument [2]. In addition, the size of
 the spatial window querying for CWV values in adjacent pixels, is a key
 parameter of the MSWCVMR method. It influences accuracy and performance.
-
 
 At-satellite brightness temperatures are derived from the TIRS channels 10 and
 11. Prior to any processing, these are filtered for clouds and their quantized
@@ -353,7 +352,7 @@ The output land surface temperature map maybe be delivered in Celsius degrees
 (units and appropriate color table) via the *-c* flag:
 
 <div class="code">
-    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -k -c 
+    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -k -c
 </div>
 
 
