@@ -2,10 +2,6 @@
 """
 A class for the Split Window Algorithm for Land Surface Temperature estimation
 @author: nik | Created on Wed Mar 18 11:28:45 2015
-
-ToDo:
-    * USE eval, it is your friend! Current mapcalc expressions are
-    unnecessarily too complex to read.
 """
 
 # import average emissivities
@@ -67,7 +63,7 @@ def check_cwv(cwv):
     Check whether a column water value lies within a "valid" range. Which is?
 
     - Questions to answer:
-    
+
         - What should happen when the value is out of range?
         - Use subrange-6?
         - If yes, how much tolerance for outliers < 0.0 and > 6.3 ?  Testing
@@ -220,8 +216,8 @@ class SplitWindowLST():
     def _landcover_string_validity(self, string):
         """
         Check whether the given string belongs to the list (keys) of known land
-        cover class names (to the FROM-GLC classification scheme) or is identical
-        to 'Random' and return, accordingly, True or False.
+        cover class names (to the FROM-GLC classification scheme) or is
+        identical to 'Random' and return, accordingly, True or False.
         """
         if string in FROM_GLC_LEGEND.keys():
             return True
@@ -406,9 +402,8 @@ class SplitWindowLST():
         Inputs are brightness temperatures measured in channels  i(~11.0 μm)
         and j (~12.0 μm).
 
-        *Note*, this is a single value computation function and does not read or return
-        a map.
-
+        *Note*, this is a single value computation function and does not read
+        or return a map.
 
         LST = b0 +
             + (b1 + b2 * ((1-ae)/ae) + b3 * (de/ae^2)) * ((t10 + t11)/2) +
@@ -651,8 +646,8 @@ class SplitWindowLST():
 
         if not self.landcover_class:
 
-            # This is required for when a fixed emissivity_class is used, instead
-            # of a FROM-GLC (landcover) map.
+            # This is required for when a fixed emissivity_class is used,
+            # instead of a FROM-GLC (landcover) map.
 
             # print "Using the FROM-GLC map"
             avg_lse = DUMMY_MAPCALC_STRING_AVG_LSE
@@ -695,7 +690,9 @@ class SplitWindowLST():
         expression_range_3 = self._build_subrange_mapcalc('Range_3')
         expression_range_4 = self._build_subrange_mapcalc('Range_4')
         expression_range_5 = self._build_subrange_mapcalc('Range_5')
-        expression_range_6 = self._build_subrange_mapcalc('Range_6')  # Attention
+
+        # complete range
+        expression_range_6 = self._build_subrange_mapcalc('Range_6')
 
         # build one big expression using mighty eval
         expression = ('eval( sw_lst_1 = {exp_1},'
