@@ -445,7 +445,6 @@ GIS' `r.mapcalc` module.
 ![](lst_window_5.jpg)
 ![](lst_window_7.jpg)
 ![](lst_window_9.jpg)
-![](lst_window_11.jpg)
 </div>
 
 <div class="figure">
@@ -453,7 +452,6 @@ GIS' `r.mapcalc` module.
 ![](lst_window_5_detail_500px.jpg)
 ![](lst_window_7_detail_500px.jpg)
 ![](lst_window_9_detail_500px.jpg)
-![](lst_window_11_detail_500px.jpg)
 </div>
 
 TODO
