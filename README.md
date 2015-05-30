@@ -108,18 +108,15 @@ Implementation notes
 
 [High Priority]
 
-- Fix retrieval of adjacent subranges (exclude 6, get it only if there is no
-  match for subranges 1, 2, 3, 4, and 5)
+- ~~Fix retrieval of adjacent subranges (exclude 6, get it only if there is no
+  match for subranges 1, 2, 3, 4, and 5)~~
 
-- Evaluate BIG mapcalc expressions -- are they correct?
+- Evaluate BIG mapcalc expressions -- are they correct?  I guess so ;-)
 
     - ~~Expression for Column Water Vapor~~
-
     - ~~CWV output values range -- is it rational?~~ It was not. There is a
       typo in paper [0]. The correct order of the coefficients is in papers [1, 2].
-
     - ~~Expression for Land Surface Temperature~~
-
     - ~~LST output values range -- is it rational?  At the moment, not!~~
       Fixed. The main Split-Window equation was wrong.
 
@@ -136,15 +133,11 @@ Implementation notes
 
 [Mid]
 
-- Redo the example screenshots for the manual after corrections for CWV, LST
-  equations.
-
+- ~~Redo the example screenshots for the manual after corrections for CWV, LST
+  equations.~~
 - Use existing i.emissivity?  Not exactly compatible -- read paper for details.
   Anyhow, options to input average and delta emissivity maps implemented.
-
-- Raster Row I/O -- Maybe *not* an option: see discussion with Peter
-  Zambelli
-
+- Raster Row I/O -- Maybe *not* an option: see discussion with Pietro Zambelli
 - How to perform pixel value validity checks for in-between and end products?
   `r.mapcalc` can't do this. Best to implement a test checking the values
   on-the-fly while they are created. A C-function?
@@ -153,17 +146,12 @@ Implementation notes
 
 - Deduplicate code in split_window_lst class >
   _build_average_emissivity_mapcalc() and _build_delta_emissivity_mapcalc()
-
 - Implement a median window filter, an another option in addition to mean.
-
 - Profiling
-
 - Implement a complete cloud masking function using the BQA image. Support for
   user requested confidence or types of clouds (?). Eg: options=
   clouds,cirrus,high,low ?
-
 - Multi-Threading? Note, r.mapcalc is already.
-
 
 [\*] Details: the authors followed the CBEM method. Based on the FROM-GLC map,
 they derived the following look-up table (LUT):
