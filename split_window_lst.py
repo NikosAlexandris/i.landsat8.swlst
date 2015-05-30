@@ -150,12 +150,12 @@ class SplitWindowLST():
         # basic equation (for __str__)
         self._equation = ('[b0 + '
                           '(b1 + '
-                          'b2*((1-ae)/ae)) + '
-                          'b3*(de/ae) * ((t10 + t11)/2) + '
+                          'b2 * (1-ae) / ae + '
+                          'b3 * de / ae^2) * (t10 + t11) / 2 + '
                           '(b4 + '
-                          'b5*((1-ae)/ae) + '
-                          'b6*(de/ae^2))*((t10 - t11)/2) + '
-                          'b7*(t10 - t11)^2]')
+                          'b5 * (1-ae) / ae + '
+                          'b6 * de / ae^2) * (t10 - t11) / 2 + '
+                          'b7 * (t10 - t11)^2]')
 
         # basic model (for... )
         self._model = ('[{b0} + '
