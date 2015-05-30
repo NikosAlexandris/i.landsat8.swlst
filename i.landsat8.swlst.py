@@ -202,7 +202,7 @@
 
 #%flag
 #% key: n
-#% description: Set zero digital numbers in b10, b11 to NULL | ToDo: Perform in tmp copy of the maps, not in input maps!
+#% description: Set zero digital numbers in b10, b11 to NULL | ToDo: Perform in copy of input input maps!
 #%end
 
 #%option G_OPT_F_INPUT
@@ -304,7 +304,7 @@
 #%option
 #% key: qapixel
 #% key_desc: pixelvalue
-#% description: Quality assessment pixel value which to build a mask | Source: <http://landsat.usgs.gov/L8QualityAssessmentBand.php>.
+#% description: Quality assessment pixel value for which to build a mask | Source: <http://landsat.usgs.gov/L8QualityAssessmentBand.php>.
 #% answer: 61440
 #% required: no
 #% multiple: yes
@@ -328,28 +328,28 @@
 #%option G_OPT_R_INPUT
 #% key: emissivity
 #% key_desc: name
-#% description: Land surface emissivity map | Optional, expert use, overrides retrieval of average emissivity from landcover
+#% description: Land surface emissivity map | Expert use, overrides retrieving average emissivity from landcover
 #% required : no
 #%end
 
 #%option G_OPT_R_OUTPUT
 #% key: emissivity_out
 #% key_desc: name
-#% description: Name for output emissivity map | Recommended for re-use as "emissivity=" input in subsequent trials with different spatial window sizes
+#% description: Name for output emissivity map | For re-use as "emissivity=" input in subsequent trials with different spatial window sizes
 #% required: no
 #%end
 
 #%option G_OPT_R_INPUT
 #% key: delta_emissivity
 #% key_desc: name
-#% description: Emissivity difference map for Landsat8 TIRS channels 10 and 11 | Optional, expert use, overrides retrieval of delta emissivity from landcover
+#% description: Emissivity difference map for Landsat8 TIRS channels 10 and 11 | Expert use, overrides retrieving delta emissivity from landcover
 #% required : no
 #%end
 
 #%option G_OPT_R_OUTPUT
 #% key: delta_emissivity_out
 #% key_desc: name
-#% description: Name for output delta emissivity map | Recommended for re-use as "delta_emissivity=" in subsequent trials with different spatial window sizes
+#% description: Name for output delta emissivity map | For re-use as "delta_emissivity=" in subsequent trials with different spatial window sizes
 #% required: no
 #%end
 
@@ -363,7 +363,7 @@
 #%option
 #% key: emissivity_class
 #% key_desc: string
-#% description: Retrieve average emissivities only for a single land cover class (case sensitive) | Test or expert use
+#% description: Retrieve average emissivities only for a single land cover class (case sensitive) | Expert use
 #% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow, Random
 #% required : no
 #%end
@@ -1109,9 +1109,10 @@ def main():
     lst_output = options['lst']
     
     # save Brightness Temperature maps?
+    global brightness_temperature_prefix
     brightness_temperature_prefix = options['prefix_bt']
 
-    global cwv_output, brightness_temperature_prefix
+    global cwv_output
     cwv_window_size = int(options['window'])
     cwv_output = options['cwv']
 
