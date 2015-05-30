@@ -191,13 +191,18 @@
 #%end
 
 #%flag
+#% key: t
+#% description: Time-stamping the output LST map | Applies to the optional CWV output map
+#%end
+
+#%flag
 #% key: c
 #% description: Convert LST output to celsius degrees, apply color table
 #%end
 
 #%flag
-#% key: t
-#% description: Time-stamping the output LST map | Applies to the optional CWV output map | INCOMPLETE
+#% key: n
+#% description: Set zero digital numbers to NULL | Currently applies only for b10, b11 inputs
 #%end
 
 #%option G_OPT_F_INPUT
@@ -506,11 +511,13 @@ def add_timestamp(mtl_filename, outname):
     """
     Retrieve metadata from MTL file.
     """
+    import datetime
     metadata = Landsat8_MTL(mtl_filename)
 
     # required format is: day=integer month=string year=integer time=hh:mm:ss.dd
     acquisition_date = str(metadata.date_acquired)  ### FixMe ###
-    acquisition_time = str(metadata.scene_center_time)[0:7]
+    acquisition_date = datetime.datetime.strptime(acquisition_date, '%Y-%m-%d').strftime('%d %b %Y')
+    acquisition_time = str(metadata.scene_center_time)[0:8]
     date_time_string = acquisition_date + ' ' + acquisition_time
 
     msg = "Date and time of acquisition: " + date_time_string
@@ -518,7 +525,7 @@ def add_timestamp(mtl_filename, outname):
 
     run('r.timestamp', map=outname, date=date_time_string)
 
-    del(timestamp)
+    del(date_time_string)
 
 
 def digital_numbers_to_radiance(outname, band, radiance_expression):
@@ -526,10 +533,11 @@ def digital_numbers_to_radiance(outname, band, radiance_expression):
     Convert Digital Number values to TOA Radiance. For details, see in Landsat8
     class.  Zero (0) DNs set to NULL here (not via the class' function).
     """
-    msg = "\n|i Setting zero (0) Digital Numbers in {band} to NULL"
-    msg = msg.format(band=band)
-    g.message(msg)
-    run('r.null', map=band, setnull=0)
+    if null:
+        msg = "\n|i Setting zero (0) Digital Numbers in {band} to NULL"
+        msg = msg.format(band=band)
+        g.message(msg)
+        run('r.null', map=band, setnull=0)
 
     msg = "\n|i Rescaling {band} digital numbers to spectral radiance "
     msg = msg.format(band=band)
@@ -935,13 +943,13 @@ def estimate_cwv_big_expression(outname, t10, t11, cwv_expression):
     if cwv_output:
 
         # strings for metadata
-        history_cwv = 'Column Water Vapor model: '
-        history_cwv += 'Add info here'
-        title_cwv = 'Column Water Vapor (?)'
-        description_cwv = ('Split-Window LST')
-        units_cwv = 'FixMe'
-        source1_cwv = 'Add here'
-        source2_cwv = 'Add here'
+        history_cwv = 'FixMe -- Column Water Vapor model: '
+        history_cwv += 'FixMe -- Add equation?'
+        title_cwv = 'Column Water Vapor'
+        description_cwv = 'Column Water Vapor'
+        units_cwv = 'g/cm^2'
+        source1_cwv = 'FixMe'
+        source2_cwv = 'FixMe'
 
         # history entry
         run("r.support", map=outname, title=title_cwv,
@@ -1103,11 +1111,12 @@ def main():
     emissivity_class = options['emissivity_class']
 
     # flags
-    global info
+    global info, null
     info = flags['i']
     keep_region = flags['k']
     celsius = flags['c']
     timestamping = flags['t']
+    null = flags['n']
 
     # ToDo:
     # shell = flags['g']
@@ -1254,7 +1263,7 @@ def main():
         add_timestamp(mtl_file, tmp_lst)
 
         if cwv_output:
-            add_timestamp(mtl_file, tmp_cwv)
+            add_timestamp(mtl_file, cwv_output)
 
     # convert to celsius, apply color table
     if celsius:
@@ -1262,15 +1271,15 @@ def main():
 
     else:
         # color table for kelvin
-        run('r.colors', map=tmp_lst, color=kelvin)
+        run('r.colors', map=tmp_lst, color='kelvin')
 
     # ToDo: helper function for r.support
     # strings for metadata
-    history_lst = 'Split-Window model: '
-    history_lst += split_window_lst.sw_lst_mapcalc
+    history_lst = '\n' + citation_lst
+    history_lst += '\n\n' + citation_cwv
+    history_lst += '\n\nSplit-Window model: '
+    history_lst += split_window_lst._equation  # :wsw_lst_mapcalc
     description_lst = ('Land Surface Temperature derived from a split-window algorithm. ')
-    description_lst += citation_lst
-    description_lst += citation_cwv
 
     if celsius:
         title_lst = 'Land Surface Temperature (C)'
