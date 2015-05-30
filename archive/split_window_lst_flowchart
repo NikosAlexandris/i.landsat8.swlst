@@ -1,0 +1,55 @@
+               +--------+   +--------------------------+                               
+               |Landsat8+--->Cloud screen & calibration|                               
+               +--------+   +---+--------+-------------+                               
+                                |        |                                             
+                                |        |                                             
+                              +-v-+   +--v-+                                           
+                              |OLI|   |TIRS|                                           
+                              +-+-+   +--+-+                                           
+                                |        |                                             
+                                |        |                                             
+                             +--v-+   +--v-------------------+          +-------------+
+                             |NDVI|   |Brightness temperature+---------->MSWCVM method|
+              +----------+   +--+-+   +--+-------------------+          +----------+--+
+              |Land cover|      |        |                                         |   
+              +----------+      |        |                                         |   
+                      |       +-v-+   +--v-------------------+    +----------------v--+
+                      |       |FVC|   |Split Window Algorithm|    |Column Water Vapour|
++---------------------v--+    +-+-+   +-------------------+--+    +----------------+--+
+|Emissivity look|up table|      |                         |                        |   
++---------------------+--+      |                         |                        |   
+                      |      +--v--------------------+    |    +-------------------v--+
+                      +------>Pixel emissivity ei, ej+--> | <--+Algorithm coefficients|
+                             +-----------------------+    |    +----------------------+
+                                                          |                            
+                                                          |                            
+                                          +---------------v--+                         
+                                          |LST and emissivity|                         
+                                          +------------------+                         
+              Landsat8  --> Cloud screen & calibration                               
+                                                                                     
+                               |        |                                            
+                               v        v                                            
+                                                                                     
+                              OLI     TIRS                                           
+                                                                                     
+                               |        |                                            
+                               v        v                                            
+                                                                                     
+                             NDVI     Brightness temperature    --->  MSWCVM method  
+                                                                                     
+              Land cover       |        |                                       |    
+                               v        v                                       v    
+                     |                                                               
+                     v        FVC     Split Window Algorithm    Column Water Vapour  
+                                                                                     
+Emissivity look-up table       |                         +                      |    
+                               v                         |                      v    
+                     +                                   |                           
+                     +---->  Pixel emissivity ei, ej --> | <-- Algorithm coefficients
+                                                         |                           
+                                                         v                           
+                                                                                     
+                                                 LST & emissivity                    
+
+# http://asciiflow.com/
