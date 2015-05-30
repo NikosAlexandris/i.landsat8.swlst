@@ -202,7 +202,7 @@
 
 #%flag
 #% key: n
-#% description: Set zero digital numbers to NULL | Currently applies only for b10, b11 inputs
+#% description: Set zero digital numbers in b10, b11 to NULL | ToDo: Perform in tmp copy of the maps, not in input maps!
 #%end
 
 #%option G_OPT_F_INPUT
@@ -245,6 +245,15 @@
 
 #%rules
 #% requires_all: b11, mtl
+#%end
+
+#%option G_OPT_R_BASENAME_INPUT
+#% key: prefix_bt
+#% key_desc: basename
+#% type: string
+#% label: Prefix for output at-satellite brightness temperature maps (K)
+#% description: Prefix for brightness temperature maps (K)
+#% required: no
 #%end
 
 #%option G_OPT_R_INPUT
@@ -627,8 +636,13 @@ def tirs_to_at_satellite_temperature(tirs_1x, mtl_file):
     del(radiance_expression)
     del(temperature_expression)
 
+    # save Brightness Temperature map?
+    if brightness_temperature_prefix:
+        bt_output = brightness_temperature_prefix + band_number
+        run('g.copy', raster=(tmp_brightness_temperature, bt_output))
+    del(bt_output)
+
     return tmp_brightness_temperature
-    save_map(tmp_brightness_temperature)
 
 
 def mask_clouds(qa_band, qa_pixel):
@@ -782,9 +796,6 @@ def determine_average_emissivity(outname, landcover_map, avg_lse_expression):
     if info:
         run('r.info', map=outname, flags='r')
 
-    # uncomment below to save for testing!
-    # save_map(outname)
-
     del(avg_lse_expression)
     del(avg_lse_equation)
     
@@ -816,9 +827,6 @@ def determine_delta_emissivity(outname, landcover_map, delta_lse_expression):
 
     if info:
         run('r.info', map=outname, flags='r')
-
-    # uncomment below to save for testing!
-    # save_map(outname)
 
     del(delta_lse_expression)
     del(delta_lse_equation)
@@ -852,6 +860,9 @@ def get_cwv_window_means(outname, t1x, t1x_mean_expression):
 
     del(t1x_mean_expression)
     del(tx_mean_equation)
+    
+    # save for debuging
+    #save_map(outname)
 
 
 def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
@@ -879,6 +890,9 @@ def estimate_ratio_ji(outname, tmp_ti_mean, tmp_tj_mean, ratio_expression):
 
     if info:
         run('r.info', map=outname, flags='r')
+
+    # save for debuging
+    #save_map(outname)
 
 
 def estimate_column_water_vapor(outname, ratio, cwv_expression):
@@ -910,8 +924,8 @@ def estimate_column_water_vapor(outname, ratio, cwv_expression):
     if cwv_output:
         run('g.copy', raster=(outname, cwv_output))
 
-    # uncomment below to save for testing!
-    # save_map(outname)
+    # save for debuging
+    #save_map(outname)
 
 
 def estimate_cwv_big_expression(outname, t10, t11, cwv_expression):
@@ -1030,7 +1044,7 @@ def kelvin_to_celsius(outname, lst_map):
     kelvin_to_celsius_equation = equation.format(result=lst_map,
             expression=kelvin_to_celsius_expression)
     grass.mapcalc(kelvin_to_celsius_equation, overwrite=True)
-    
+
     msg += '\n|i Applying the "Celsius" color table'
     g.message(msg)
     run('r.colors', map=lst_map, color='celsius')
@@ -1093,8 +1107,11 @@ def main():
 
     qapixel = options['qapixel']
     lst_output = options['lst']
+    
+    # save Brightness Temperature maps?
+    brightness_temperature_prefix = options['prefix_bt']
 
-    global cwv_output
+    global cwv_output, brightness_temperature_prefix
     cwv_window_size = int(options['window'])
     cwv_output = options['cwv']
 
