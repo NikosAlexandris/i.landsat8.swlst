@@ -2,7 +2,8 @@
 algorithm, estimating land surface temperature (LST), from the Thermal Infra-Red
 Sensor (TIRS) aboard Landsat 8 with an accuracy of better than 1.0 K.
 
-## Description
+Description
+===========
 
 The components of the algorithm estimating LST values are at-satellite
 brightness temperature (BT); land surface emissivity (LSE); and the coefficients of
@@ -53,7 +54,7 @@ Making the script `i.fusion.hpf` available from within any GRASS-GIS ver. 7.x se
 2.  navigate into the script’s source directory
 
 3.  execute `make MODULE_TOPDIR=$GISBASE`
-M
+
 Usage examples
 ==============
 
