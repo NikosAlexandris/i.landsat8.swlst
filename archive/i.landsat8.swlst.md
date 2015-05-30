@@ -3,7 +3,11 @@ DESCRIPTION
 
 *i.landsat8.swlst* is an implementation of a robust and practical Slit-Window
 (SW) algorithm estimating land surface temperature (LST), from the Thermal
-Infra-Red Sensor (TIRS) aboard Landsat 8 with an accuracy of better than 1.0 K.
+Infra-Red Sensor (TIRS) aboard Landsat 8 with an accuracy of better than 1.0
+K. [1]
+
+
+### Overview
 
 The components of the algorithm estimating LST values are at-satellite
 brightness temperature (BT); land surface emissivity (LSE); and the coefficients of
@@ -17,7 +21,10 @@ The SWC depend on each pixel's column water vapor (CWV). CWV values are
 retrieved based on a modified Split-Window Covariance-Variance Matrix Ratio
 method (MSWCVM) [1, 2]. **Note**, the spatial discontinuity found in the images of
 the retrieved CWV, is attributed to the data gap in the images caused by stray
-light outside of the FOV of the TIRS instrument [2]
+light outside of the FOV of the TIRS instrument. [2]  In addition, the size of
+the spatial window querying for CWV values in adjacent pixels, is a key
+parameter of the MSWCVMR method. It influences accuracy and performance.
+
 
 At-satellite brightness temperatures are derived from the TIRS channels 10 and
 11. Prior to any processing, these are filtered for clouds and their quantized
@@ -283,19 +290,23 @@ surface temperature map:
     processed
 
 The shortest call for processing a complete Landsat8 scene normally is:
-
 <div class="code">
-
-    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC
-
+    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -n
 </div>
+
 
 where:
 
 - `mtl=` the name of the MTL metadata file (normally with a `.txt` extension)
+
 - `prefix=` the prefix of the band names imported in GRASS GIS' data base
+
 - `landcover=` the name of the FROM-GLC map that covers the extent of the
   Landsat8 scene under processing
+
+- the `n` flag will set zero digital number values, which may represent NoData
+  in the original bands, to NULL. This option is probably unnecessary for
+  smaller regions in which there are no NoData pixels present.
 
 The pixel value 61440 is selected automatically to build a cloud
 mask. At the moment, only a single pixel value may be requested from the
@@ -303,16 +314,22 @@ Quality Assessment band. For details, refer to
 [http://landsat.usgs.gov/L8QualityAssessmentBand.php USGS' webpage for
 Landsat8 Quality Assessment Band]
 
-`window` is the most important option. It defines the size of the spatial
-window querying for column water vapor values. A larger window leads to more
-accurate results, at the cost of performance. However, large window sizes are
-preferred as small windows result in a spatial discontinuation effect in the
-final LST product. An example instructing a spatial window of size 7^2 is:
+`window` is an important option. It defines the size of the spatial window
+querying for column water vapor values. Small window sizes introduce a spatial
+discontinuation effect in the final LST image. Larger window sizes lead to more
+accurate results, at the cost of performance. However, too large window sizes
+should be avoided as they would include large variations of land and
+atmospheric conditions. In [2] it is stated:
+
+> A small window size n (N = n * n, see equation (1a)) cannot ensure a high
+> correlation between two bands' temperatures due to the instrument noise. In
+> contrast, the size cannot be too large because the variations in the surface
+> and atmospheric conditions become larger as the size increases.
+
+An example instructing a spatial window of size 7^2 is:
 
 <div class="code">
-
-    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC window=7 -k 
-
+    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC window=7
 </div>
 
 
@@ -320,19 +337,23 @@ In order to restrict the processing in to the currently set
 computational region, the *-k* flag can be used:
 
 <div class="code">
-
     i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -k 
-
 </div>
 
 
-The Celsius color table may be applied for the output land surface
-temperature map via the *-c* flag:
+The Landsat8 scene's time and date of acquisition may be applied to the LST
+(and to the optionally requested CWV) map via the `t` flag.
 
 <div class="code">
+    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -k -t
+</div>
 
+
+The output land surface temperature map maybe be delivered in Celsius degrees
+(units and appropriate color table) via the *-c* flag:
+
+<div class="code">
     i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -k -c 
-
 </div>
 
 
@@ -340,31 +361,29 @@ A user defined map for clouds, instead of relying on the Quality
 Assessment band, can be used via the `clouds` option:
 
 <div class="code">
-
-    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC clouds=Cloud_Map -k -c
-
+    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC clouds=Cloud_Map -k
 </div>
 
 
-Optionally, using any existing at-satellite temperature maps via the `t10` and
-`t11` options, will skip the conversion from digital numbers for bands B10
-and B11 . For example using the `t11` option instead of `b11`:
+Using the `prefix_bt` option, the in-between at-satellite brightness
+temperature maps may be saved for re-use in sub-sequent trials via the `t10`
+and `t11` options. Using the `t10` and `t11` options, will skip the conversion
+from digital numbers for bands B10 and B11. Alternatively, any existing
+at-satellite brightness temperature maps maybe used via the `t10/11` options.
+For example using the `t11` option instead of `b11`:
 
 <div class="code">
-
-    i.landsat8.swlst mtl=MTL b10=B10 t11=AtSatellite_Temperature_11 landcover=FROM_GLC -k -c 
-
+    i.landsat8.swlst mtl=MTL b10=B10 t11=AtSatellite_Temperature_11 landcover=FROM_GLC -k
 </div>
 
 or using both `t10` and `t11`:
 
 <div class="code">
-
-    i.landsat8.swlst mtl=MTL t10=AtSatellite_Temperature_10 t11=AtSatellite_Temperature_11 landcover=FROM_GLC -k -c 
-
+    i.landsat8.swlst mtl=MTL t10=AtSatellite_Temperature_10 t11=AtSatellite_Temperature_11 landcover=FROM_GLC -k
 </div>
 
-A fast call is to use existing maps for all in-between processing steps:
+
+A faster run is achieved by using existing maps for all in-between processing steps:
 at-satellite temperatures, cloud and emissivity maps.
 
     * At-satellite temperature maps (optiones `t10`, `t11`) may be derived via
@@ -373,7 +392,7 @@ at-satellite temperatures, cloud and emissivity maps.
 
     * The `cloud` option can be any user-defined map. Essentialy, it applies
       the given map as an inverted mask.
-      
+
     * The emissivity maps, derived by the module itself, can be saved once
       via the `emissivity_out` and `delta_emissivity_out` options and used
       afterwards via the `emissivity` and `delta_emissivity` options. Expert
@@ -381,10 +400,9 @@ at-satellite temperatures, cloud and emissivity maps.
       An example command may be:
 
 <div class="code">
-
-    i.landsat8.swlst t10=T10 t11=T11 clouds=Cloud_Map emissivity=Average_Emissivity_Map delta_emissivity=Delta_Emissivity_Map landcover=FROM_GLC -k -c 
-
+    i.landsat8.swlst t10=BT10 t11=BT11 clouds=Cloud_Map emissivity=Average_Emissivity_Map delta_emissivity=Delta_Emissivity_Map landcover=FROM_GLC -n
 </div>
+
 
 Expert users may need to request for a "fixed" average surface
 emissivity, in order to perform the algorithm for a single land cover
@@ -394,19 +412,16 @@ scheme) via the `emissivity_class` option. Consequently,
 option.
 
 <div class="code">
-
     i.landsat8.swlst mtl=MTL b10=B10 t11=AtSatellite_Temperature_11 qab=BQA emissivity_class="Croplands" -c 
-
 </div>
+
 
 A *transparent* run-through of *what kind of* and *how* the module
 performs its computations, may be requested via the use of both the
 *--v* and *-i* flags:
 
 <div class="code">
-
-    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -i --v 
-
+    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -i --v  
 </div>
 
 The above will print out a description for each individual processing
@@ -415,13 +430,11 @@ GIS' `r.mapcalc` module.
 
 
 <div class="figure">
-
 ![](lst_window_3.png)
 ![](lst_window_5.png)
 ![](lst_window_7.png)
 ![](lst_window_9.png)
 ![](lst_window_11.png)
-
 </div>
 
 TODO
@@ -430,7 +443,6 @@ TODO
 -   Go through [Submitting
     Python](http://trac.osgeo.org/grass/wiki/Submitting/Python)
 -   Proper command history tracking.
--   Complete flag for timestamping the LST [and CWV] output (r.timestamp)
 -   Deduplicate code where applicable
 -   Test compiling in other systems
 -   Improve documentation
