@@ -166,6 +166,12 @@ where:
 -   `K2` = Band-specific thermal conversion constant from the metadata
     (K2_CONSTANT_BAND_x, where x is the band number, 10 or 11)
 
+
+<div class="figure">
+![](LC81840332014146LGN00_B10.jpg)
+![](LC81840332014146LGN00_B11.jpg)
+</div>
+
 ### Land Surface Emissivity
 
 Determination of LSEs (overview of Section 3.2)
@@ -296,14 +302,14 @@ The shortest call for processing a complete Landsat8 scene normally is:
 
 where:
 
-- `mtl=` the name of the MTL metadata file (normally with a `.txt` extension)
+- **`mtl=`** the name of the MTL metadata file (normally with a `.txt` extension)
 
-- `prefix=` the prefix of the band names imported in GRASS GIS' data base
+- **`prefix=`** the prefix of the band names imported in GRASS GIS' data base
 
-- `landcover=` the name of the FROM-GLC map that covers the extent of the
+- **`landcover=`** the name of the FROM-GLC map that covers the extent of the
   Landsat8 scene under processing
 
-- the `n` flag will set zero digital number values, which may represent NoData
+- the **`n`** flag will set zero digital number values, which may represent NoData
   in the original bands, to NULL. This option is probably unnecessary for
   smaller regions in which there are no NoData pixels present.
 
@@ -313,7 +319,7 @@ Quality Assessment band. For details, refer to
 [http://landsat.usgs.gov/L8QualityAssessmentBand.php USGS' webpage for
 Landsat8 Quality Assessment Band]
 
-`window` is an important option. It defines the size of the spatial window
+**`window`** is an important option. It defines the size of the spatial window
 querying for column water vapor values. Small window sizes introduce a spatial
 discontinuation effect in the final LST image. Larger window sizes lead to more
 accurate results, at the cost of performance. However, too large window sizes
@@ -333,7 +339,7 @@ An example instructing a spatial window of size 7^2 is:
 
 
 In order to restrict the processing in to the currently set
-computational region, the *-k* flag can be used:
+computational region, the **`-k`** flag can be used:
 
 <div class="code">
     i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -k 
@@ -341,7 +347,7 @@ computational region, the *-k* flag can be used:
 
 
 The Landsat8 scene's time and date of acquisition may be applied to the LST
-(and to the optionally requested CWV) map via the `t` flag.
+(and to the optionally requested CWV) map via the **`-t`** flag.
 
 <div class="code">
     i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -k -t
@@ -349,27 +355,31 @@ The Landsat8 scene's time and date of acquisition may be applied to the LST
 
 
 The output land surface temperature map maybe be delivered in Celsius degrees
-(units and appropriate color table) via the *-c* flag:
+(units and appropriate color table) via the **`-c`** flag:
 
 <div class="code">
     i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -k -c
 </div>
 
+<div class="figure">
+![](lst_window_5_detail_celsius_500px.jpg)
+</div>
+
 
 A user defined map for clouds, instead of relying on the Quality
-Assessment band, can be used via the `clouds` option:
+Assessment band, can be used via the **`clouds`** option:
 
 <div class="code">
     i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC clouds=Cloud_Map -k
 </div>
 
 
-Using the `prefix_bt` option, the in-between at-satellite brightness
-temperature maps may be saved for re-use in sub-sequent trials via the `t10`
-and `t11` options. Using the `t10` and `t11` options, will skip the conversion
-from digital numbers for bands B10 and B11. Alternatively, any existing
-at-satellite brightness temperature maps maybe used via the `t10/11` options.
-For example using the `t11` option instead of `b11`:
+Using the **`prefix_bt`** option, the in-between at-satellite brightness
+temperature maps may be saved for re-use in sub-sequent trials via the
+**`t10`** and **`t11`** options. Using the `t10` and `t11` options, will skip
+the conversion from digital numbers for bands B10 and B11. Alternatively, any
+existing at-satellite brightness temperature maps maybe used via the `t10/11`
+options. For example using the `t11` option instead of `b11`:
 
 <div class="code">
     i.landsat8.swlst mtl=MTL b10=B10 t11=AtSatellite_Temperature_11 landcover=FROM_GLC -k
@@ -389,21 +399,21 @@ at-satellite temperatures, cloud and emissivity maps.
       the i.landsat.toar module. Note that `i.landsat.toar` does not
       process single bands selectively.
 
-    * The `cloud` option can be any user-defined map. Essentialy, it applies
+    * The `clouds` option can be any user defined map. Essentialy, it applies
       the given map as an inverted mask.
 
-    * The emissivity maps, derived by the module itself, can be saved once
-      via the `emissivity_out` and `delta_emissivity_out` options and used
-      afterwards via the `emissivity` and `delta_emissivity` options. Expert
-      users, however, may use emissivity maps from other sources directly.
-      An example command may be:
+    * The emissivity maps, derived by the module itself, can be saved once via
+      the `emissivity_out` and `delta_emissivity_out` options and used
+      afterwards via the **`emissivity`** and **`delta_emissivity`** options.
+      Expert users, however, may use emissivity maps from other sources
+      directly. An example command may be:
 
 <div class="code">
     i.landsat8.swlst t10=BT10 t11=BT11 clouds=Cloud_Map emissivity=Average_Emissivity_Map delta_emissivity=Delta_Emissivity_Map landcover=FROM_GLC -n
 </div>
 
 
-Expert users may need to request for a "fixed" average surface
+Expert users may need to request for a *fixed* average surface
 emissivity, in order to perform the algorithm for a single land cover
 class (one from the classes defined in the FROM-GLC classification
 scheme) via the `emissivity_class` option. Consequently,
@@ -417,7 +427,7 @@ option.
 
 A *transparent* run-through of *what kind of* and *how* the module
 performs its computations, may be requested via the use of both the
-*--v* and *-i* flags:
+**`--v`** and **`-i`** flags:
 
 <div class="code">
     i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC -i --v  
@@ -428,12 +438,22 @@ step, as well as the actual mathematical epxressions applied via GRASS
 GIS' `r.mapcalc` module.
 
 
+### Example figures
+
 <div class="figure">
-![](lst_window_3.png)
-![](lst_window_5.png)
-![](lst_window_7.png)
-![](lst_window_9.png)
-![](lst_window_11.png)
+![](lst_window_3.jpg)
+![](lst_window_5.jpg)
+![](lst_window_7.jpg)
+![](lst_window_9.jpg)
+![](lst_window_11.jpg)
+</div>
+
+<div class="figure">
+![](lst_window_3_detail_500px.jpg)
+![](lst_window_5_detail_500px.jpg)
+![](lst_window_7_detail_500px.jpg)
+![](lst_window_9_detail_500px.jpg)
+![](lst_window_11_detail_500px.jpg)
 </div>
 
 TODO
