@@ -12,34 +12,12 @@
                land surface temperature, from the Thermal Infra-Red Sensor
                (TIRS) aboard Landsat 8 with an accuracy of better than 1.0 K.
 
-                
-               Description
-
                The components of the algorithm estimating LST values are
                at-satellite brightness temperature (BT); land surface
                emissivity (LSE); and the coefficients of the main Split-Window
-               equation (SWC).
+               equation (SWC) linked to the Column Water Vapor.
 
-               LSEs are derived from an established look-up table linking the
-               FROM-GLC classification scheme to average emissivities. The
-               NDVI and the FVC are *not* computed each time an LST estimation
-               is requested. Read [0] for details.
-
-               The SWC depend on each pixel's column water vapor (CWV). CWV
-               values are retrieved based on a modified Split-Window
-               Covariance-Variance Matrix Ratio method (MSWCVMR) [1, 2].
-               **Note**, the spatial discontinuity found in the images of the
-               retrieved CWV, is attributed to the data gap in the images
-               caused by stray light outside of the FOV of the TIRS instrument
-               [2]
-
-               At-satellite brightness temperatures are derived from the TIRS
-               channels 10 and 11. Prior to any processing, these are filtered
-               for clouds and their quantized digital numbers converted to
-               at-satellite temperature values.
-
-
-               The input parameters include:
+               The module's input parameters include:
 
                - the brightness temperatures (Ti and Tj) of the two adjacent
                  TIRS channels,
@@ -81,7 +59,6 @@
                                           |LST and emissivity|
                                           +------------------+
 
-
                Sources:
 
                [0] Du, Chen; Ren, Huazhong; Qin, Qiming; Meng, Jinjie;
@@ -100,81 +77,18 @@
                8 thermal infrared images. Journal of Geophysical Research:
                Atmospheres, 120(5), 1723-1738.
 
-
-               Details
-
-               A new refinement of the generalized split-window algorithm
-               proposed by Wan (2014) [19] is added with a quadratic term of
-               the difference amongst the brightness temperatures (Ti, Tj) of
-               the adjacent thermal infrared channels, which can be expressed
-               as (equation 2 in the paper [0])
-
-               LST = b0 +
-                    [b1 + b2 * (1−ε)/ε + b3 * (Δε/ε2)] * (Ti+T)/j2 +
-                    [b4 + b5 * (1−ε)/ε + b6 * (Δε/ε2)] * (Ti−Tj)/2 +
-                     b7 * (Ti−Tj)^2
-
-               where:
-
-               - Ti and Tj are Top of Atmosphere brightness temperatures
-               measured in channels i (~11.0 μm) and j (~12.0 µm),
-               respectively;
-                 - from
-            <http://landsat.usgs.gov/band_designations_landsat_satellites.php>:
-                   - Band 10, Thermal Infrared (TIRS) 1, 10.60-11.19, 100*(30)
-                   - Band 11, Thermal Infrared (TIRS) 2, 11.50-12.51, 100*(30)
-
-               - ε is the average emissivity of the two channels (i.e., ε = 0.5
-               [εi + εj]),
-
-               - Δε is the channel emissivity difference (i.e., Δε = εi − εj);
-
-               - bk (k = 0,1,...7) are the algorithm coefficients derived in
-               the following simulated dataset.
-
-               [...]
-
-               In the above equations,
-
-                   - dk (k = 0, 1...6) and ek (k = 1, 2, 3, 4) are the
-                   algorithm coefficients;
-
-                   - w is the CWV;
-
-                   - ε and ∆ε are the average emissivity and emissivity
-                   difference of two adjacent thermal channels, respectively,
-                   which are similar to Equation (2);
-
-                   - and fk (k = 0 and 1) is related to the influence of the
-                   atmospheric transmittance and emissivity, i.e., f k =
-                   f(εi,εj,τ i ,τj).
-
-                Note that the algorithm (Equation (6a)) proposed by
-                Jiménez-Muñoz et al. added CWV directly to estimate LST.
-
-                Rozenstein et al. used CWV to estimate the atmospheric
-                transmittance (τi, τj) and optimize retrieval accuracy
-                explicitly.
-
-                Therefore, if the atmospheric CWV is unknown or cannot be
-                obtained successfully, neither of the two algorithms in
-                Equations (6a) and (6b) will work. By contrast, although our
-                algorithm also needs CWV to determine the coefficients, this
-                algorithm still works for unknown CWVs because the coefficients
-                are obtained regardless of the CWV, as shown in Table 1.
-
  COPYRIGHT:    (C) 2015 by the GRASS Development Team
 
                This program is free software under the GNU General Public
                License (>=v2). Read the file COPYING that comes with GRASS
                for details.
-
 """
 
 #%Module
 #%  description: Practical split-window algorithm estimating Land Surface Temperature from Landsat 8 OLI/TIRS imagery (Du, Chen; Ren, Huazhong; Qin, Qiming; Meng, Jinjie; Zhao, Shaohua. 2015)
 #%  keywords: imagery
 #%  keywords: split window
+#%  keywords: column water vapor
 #%  keywords: land surface temperature
 #%  keywords: lst
 #%  keywords: landsat8
@@ -484,7 +398,7 @@ def random_digital_numbers(count=2):
 def random_column_water_vapor_subrange():
     """
     Helper function, while coding and testing, returning a random column water
-    vapour key to assist in testing the module.
+    vapor key to assist in testing the module.
     """
     cwvkey = random.choice(COLUMN_WATER_VAPOUR.keys())
     # COLUMN_WATER_VAPOUR[cwvkey].subrange
@@ -529,8 +443,8 @@ def add_timestamp(mtl_filename, outname):
     acquisition_time = str(metadata.scene_center_time)[0:8]
     date_time_string = acquisition_date + ' ' + acquisition_time
 
-    msg = "Date and time of acquisition: " + date_time_string
-    grass.verbose(msg)
+    #msg = "Date and time of acquisition: " + date_time_string
+    #grass.verbose(msg)
 
     run('r.timestamp', map=outname, date=date_time_string)
 
