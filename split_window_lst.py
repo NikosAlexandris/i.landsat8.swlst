@@ -45,7 +45,7 @@ FROM_GLC_LEGEND = {'Cropland': (10, 11, 12, 13),
 # helper functions
 def check_t1x_range(number):
     """
-    Check if Brithness Temperature (Kelvin degrees) values for T10, T11, lie
+    Check if Brigthness Temperature (Kelvin degrees) values for T10, T11, lie
     inside a reasonable range, eg [200, 330].
 
     Note, the Digital Number values in bands B10 and B11, are 16-bit. The
@@ -115,9 +115,9 @@ class SplitWindowLST():
         + b7 * ( t10 - t11 )^2
 
     To reduce the influence of the CWV error on the LST, for a CWV within the
-    overlap of two adjacent CWV sub-ranges, we first use the coefficients from
-    the two adjacent CWV sub-ranges to calculate the two initial temperatures
-    and then use the average of the initial temperatures as the pixel LST.
+    overlap of two adjacent CWV sub-ranges, the coefficients for the two
+    adjacent CWV sub-ranges are used to calculate the two initial temperatures.
+    Then, the average of these temperatures is assigned to as the pixel LST.
 
     For example, the LST pixel with a CWV of 2.1 g/cm2 is estimated by using
     the coefficients of [0.0, 2.5] and [2.0, 3.5]. This process initially
