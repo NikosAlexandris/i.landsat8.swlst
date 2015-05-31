@@ -6,14 +6,14 @@ Description
 ===========
 
 The components of the algorithm estimating LST values are at-satellite
-brightness temperature (BT); land surface emissivity (LSE); and the coefficients of
+brightness temperature (BT); land surface emissivities (LSEs); and the coefficients of
 the main Split-Window equation (SWC).
 
-LSEs are derived from an established look-up table linking the FROM-GLC
+**LSEs** are derived from an established look-up table linking the FROM-GLC
 classification scheme to average emissivities. The NDVI and the FVC are *not*
 computed each time an LST estimation is requested. Read [0] for details.
 
-The SWC depend on each pixel's column water vapor (CWV). CWV values are
+The **SWC** depend on each pixel's column water vapor (CWV). **CWV** values are
 retrieved based on a modified Split-Window Covariance-Variance Matrix Ratio
 method (MSWCVMR) [1, 2]. **Note**, the spatial discontinuity found in the images of
 the retrieved CWV, is attributed to the data gap in the images caused by stray
@@ -27,9 +27,8 @@ it is stated:
 > contrast, the size cannot be too large because the variations in the surface
 > and atmospheric conditions become larger as the size increases.
 
-At-satellite brightness temperatures are derived from the TIRS channels 10 and
-11. Prior to any processing, these are filtered for clouds and their quantized
-digital numbers converted to at-satellite temperature values.
+At-satellite brightness temperatures are derived from the TIRS channels 10 and 11.
+Prior to any processing, the raw digital numbers are filtered for clouds.
 
 To produce an LST map, the algorithm requires at minimum:
 
@@ -47,7 +46,7 @@ see [GRASS Addons SVN repository, README file, Installation - Code Compilation](
 
 ## Steps
 
-Making the script `i.fusion.hpf` available from within any GRASS-GIS ver. 7.x session, may be done via the following steps:
+Making the script `i.lansat8.swlst` available from within any GRASS-GIS ver. 7.x session, may be done via the following steps:
 
 1.  launch a GRASS-GIS’ ver. 7.x session
 
@@ -82,7 +81,7 @@ processing steps: at-satellite temperatures, cloud and emissivity maps.
       the i.landsat.toar module. Note that `i.landsat.toar` does not
       process single bands selectively.
 
-    * The `cloud` option can be any user-defined map. Essentialy, it applies
+    * The `clouds` option can be any user-defined map. Essentialy, it applies
       the given map as an inverted mask.
       
     * The emissivity maps, derived by the module itself, can be saved once
@@ -92,9 +91,7 @@ processing steps: at-satellite temperatures, cloud and emissivity maps.
       An example command may be:
 
 <div class="code">
-
     i.landsat8.swlst t10=T10 t11=T11 clouds=Cloud_Map emissivity=Average_Emissivity_Map delta_emissivity=Delta_Emissivity_Map landcover=FROM_GLC -k -c 
-
 </div>
 
 
@@ -147,7 +144,7 @@ Implementation notes
 
 - Deduplicate code in split_window_lst class >
   _build_average_emissivity_mapcalc() and _build_delta_emissivity_mapcalc()
-- Implement a median window filter, an another option in addition to mean.
+- Implement a median window filter, as another option in addition to mean.
 - Profiling
 - Implement a complete cloud masking function using the BQA image. Support for
   user requested confidence or types of clouds (?). Eg: options=
