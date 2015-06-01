@@ -69,8 +69,9 @@ where:
 
 - `mtl=` the name of the MTL metadata file (normally with a `.txt` extension)
 - `prefix=` the prefix of the band names imported in GRASS GIS' data base
-- `landcover=` the name of the FROM-GLC map that covers the extent of the
-  Landsat8 scene under processing
+- `landcover=` the name of a FROM-GLC map product that covers the extent of the
+  Landsat8 scene under processing. FORM-GLC products are available at
+  <http://data.ess.tsinghua.edu.cn/>.
 
 A computationally faster call is to use existing maps for all in-between
 processing steps: at-satellite temperatures, cloud and emissivity maps.
@@ -182,6 +183,8 @@ References
 -   [2] Ren, H., Du, C., Liu, R., Qin, Q., Yan, G., Li, Z. L., & Meng, J.
     (2015). Atmospheric water vapor retrieval from Landsat 8 thermal infrared
     images. Journal of Geophysical Research: Atmospheres, 120(5), 1723-1738.
+
+-   [3] FROM-GLC products, <http://data.ess.tsinghua.edu.cn/>
 
 Ευχαριστώ
 =========
