@@ -1,4 +1,4 @@
-*i.landsat8.swlst* is an implementation of a practical Slit-Window (SW)
+*i.landsat8.swlst* is a GRASS GIS add-on, implementating a practical Slit-Window (SW)
 algorithm, estimating land surface temperature (LST), from the Thermal Infra-Red
 Sensor (TIRS) aboard Landsat 8 with an accuracy of better than 1.0 K.
 
@@ -7,13 +7,13 @@ Description
 
 The components of the algorithm estimating LST values are at-satellite
 brightness temperature (BT); land surface emissivities (LSEs); and the coefficients of
-the main Split-Window equation (SWC).
+the main Split-Window equation (SWCs).
 
 **LSEs** are derived from an established look-up table linking the FROM-GLC
 classification scheme to average emissivities. The NDVI and the FVC are *not*
 computed each time an LST estimation is requested. Read [0] for details.
 
-The **SWC** depend on each pixel's column water vapor (CWV). **CWV** values are
+The **SWCs** depend on each pixel's column water vapor (CWV). **CWV** values are
 retrieved based on a modified Split-Window Covariance-Variance Matrix Ratio
 method (MSWCVMR) [1, 2]. **Note**, the spatial discontinuity found in the images of
 the retrieved CWV, is attributed to the data gap in the images caused by stray
@@ -61,11 +61,9 @@ After installation, from within a GRASS-GIS session, see help details via `i.lan
 
 The shortest call for processing a complete Landsat8 scene normally is:
 
-<div class="code">
-
-    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC
-
-</div>
+```bash
+i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC
+```
 
 where:
 
@@ -77,22 +75,22 @@ where:
 A computationally faster call is to use existing maps for all in-between
 processing steps: at-satellite temperatures, cloud and emissivity maps.
 
-    * At-satellite temperature maps (optiones `t10`, `t11`) may be derived via
-      the i.landsat.toar module. Note that `i.landsat.toar` does not
-      process single bands selectively.
+  * At-satellite temperature maps (optiones `t10`, `t11`) may be derived via
+  the i.landsat.toar module. Note that `i.landsat.toar` does not
+  process single bands selectively.
 
-    * The `clouds` option can be any user-defined map. Essentialy, it applies
-      the given map as an inverted mask.
-      
-    * The emissivity maps, derived by the module itself, can be saved once
-      via the `emissivity_out` and `delta_emissivity_out` options and used
-      afterwards via the `emissivity` and `delta_emissivity` options. Expert
-      users, however, may use emissivity maps from other sources directly.
-      An example command may be:
+  * The `clouds` option can be any user-defined map. Essentialy, it applies
+    the given map as an inverted mask.
+    
+  * The emissivity maps, derived by the module itself, can be saved once
+    via the `emissivity_out` and `delta_emissivity_out` options and used
+    afterwards via the `emissivity` and `delta_emissivity` options. Expert
+    users, however, may use emissivity maps from other sources directly.
+    An example command may be:
 
-<div class="code">
-    i.landsat8.swlst t10=T10 t11=T11 clouds=Cloud_Map emissivity=Average_Emissivity_Map delta_emissivity=Delta_Emissivity_Map landcover=FROM_GLC -k -c 
-</div>
+```bash
+  i.landsat8.swlst t10=T10 t11=T11 clouds=Cloud_Map emissivity=Average_Emissivity_Map delta_emissivity=Delta_Emissivity_Map landcover=FROM_GLC -k -c 
+```
 
 
 Implementation notes
@@ -154,6 +152,7 @@ Implementation notes
 [\*] Details: the authors followed the CBEM method. Based on the FROM-GLC map,
 they derived the following look-up table (LUT):
 
+```
 Emissivity Class|TIRS10|TIRS11
 Cropland|0.971|0.968
 Forest|0.995|0.996
@@ -165,6 +164,7 @@ Tundra|0.98|0.984
 Impervious|0.973|0.981
 Barren Land|0.969|0.978
 Snow and ice|0.992|0.998
+```
 
 References
 ==========
