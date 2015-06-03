@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Determinatin of atmospheric column water vapor based on
+Determining atmospheric column water vapor based on
 Huazhong Ren, Chen Du, Qiming Qin, Rongyuan Liu, Jinjie Meng, Jing Li
 
 @author nik | 2015-04-18 03:48:20
