@@ -76,8 +76,8 @@ where:
 A faster call is to use existing maps for all in-between
 processing steps: at-satellite temperatures, cloud and emissivity maps.
 
-  * At-satellite temperature maps (optiones `t10`, `t11`) may be derived via
-  the i.landsat.toar module. Note that `i.landsat.toar` does not
+  * At-satellite temperature maps (options `t10`, `t11`) may be derived via
+  the `i.landsat.toar` module. Note that `i.landsat.toar` does not
   process single bands selectively.
 
   * The `clouds` option can be any user-defined map. Essentialy, it applies
