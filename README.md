@@ -73,7 +73,7 @@ where:
   Landsat8 scene under processing. FORM-GLC products are available at
   <http://data.ess.tsinghua.edu.cn/>.
 
-A computationally faster call is to use existing maps for all in-between
+A faster call is to use existing maps for all in-between
 processing steps: at-satellite temperatures, cloud and emissivity maps.
 
   * At-satellite temperature maps (optiones `t10`, `t11`) may be derived via
