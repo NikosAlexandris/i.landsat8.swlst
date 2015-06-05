@@ -126,6 +126,7 @@ class Column_Water_Vapor():
 
         # window of N (= n by n) pixels, adjacent pixels
         assert window_size % 2 != 0, "Window size should be an even number!"
+        assert window_size >= 7, "Window size should be larger than 5"
         self.window_size = window_size
 
         self.window_height = self.window_size
@@ -235,13 +236,16 @@ class Column_Water_Vapor():
 
     def _median_tirs_expression(self, modifiers):
         """
-        Return mapcalc expression for window means based on the given mapcalc
+        Return mapcalc expression for window medians based on the given mapcalc
         pixel modifiers.
 
-        ** ToDo **
-
+        r.mapcalc has a "median" function. Thus, just return the pixel
+        modifiers.
         """
-        pass
+        tx_median_expression = 'median({pixel_modifiers})'
+        # print tx_median_expression.format(pixel_modifiers=modifiers)
+
+        return tx_median_expression
 
     def _numerator_for_ratio(self, mean_ti, mean_tj):
         """
@@ -347,9 +351,6 @@ class Column_Water_Vapor():
         Build and return a valid mapcalc expression for deriving a Column
         Water Vapor map from Landsat8's brightness temperature channels
         B10, B11 based on the MSWCVM method (see citation).
-
-        *** ToDo: Why is it different than the step-by-step approach, as
-            implemented in _column_water_vapor_expression() ? ***
         """
         modifiers_ti = self._derive_modifiers(self.ti)
         ti_sum = '(' + ' + '.join(modifiers_ti) + ')'
@@ -384,6 +385,47 @@ class Column_Water_Vapor():
                '\ \n  {c0} + {c1} * (rji) + {c2} * (rji)^2)')
 
         cwv_expression = cwv.format(tim=ti_mean, tjm=tj_mean,
+                                    numerator=numerator,
+                                    denominator=denominator,
+                                    c0=self.c0, c1=self.c1, c2=self.c2)
+
+        return cwv_expression
+    
+    def _big_cwv_expression_median():
+        """
+        Build and return a valid mapcalc expression for deriving a Column
+        Water Vapor map from Landsat8's brightness temperature channels
+        B10, B11 based on the MSWCVM method (see citation).
+        """
+        modifiers_ti = self._derive_modifiers(self.ti)
+        ti_median = 'median({modifiers}'.format(modifiers=modifiers_ti)
+
+        modifiers_tj = self._derive_modifiers(self.tj)
+        tj_median = 'median({modifiers}'.format(modifiers=modifiers_tj)
+
+        string_for_median_ti = 'ti_median'
+        string_for_median_tj = 'tj_median'
+
+        numerator = self._numerator_for_ratio_big(median_ti=string_for_median_ti,
+                                                  median_tj=string_for_median_tj)
+
+        denominator = \
+            self._denominator_for_ratio_big(median_ti=string_for_median_ti)
+
+        cwv = ('eval('
+               '\ \n  ti_median = {tim},'
+               '\ \n'
+               '\ \n  tj_median = {tjm},'
+               '\ \n'
+               '\ \n  numerator = {numerator},'
+               '\ \n'
+               '\ \n  denominator = {denominator},'
+               '\ \n'
+               '\ \n  rji = numerator / denominator,'
+               '\ \n'
+               '\ \n  {c0} + {c1} * (rji) + {c2} * (rji)^2)')
+
+        cwv_expression = cwv.format(tim=ti_median, tjm=tj_median,
                                     numerator=numerator,
                                     denominator=denominator,
                                     c0=self.c0, c1=self.c1, c2=self.c2)
