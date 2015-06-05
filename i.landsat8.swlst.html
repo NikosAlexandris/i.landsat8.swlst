@@ -1,5 +1,5 @@
 <h2 id="description">DESCRIPTION</h2>
-<p><em>i.landsat8.swlst</em> is an implementation of a robust and practical Split-Window (SW) algorithm estimating land surface temperature (LST), from the Thermal Infra-Red Sensor (TIRS) aboard Landsat 8 with an accuracy of better than 1.0 K. [1]</p>
+<p><em>i.landsat8.swlst</em> is an implementation of a robust and practical Slit-Window (SW) algorithm estimating land surface temperature (LST), from the Thermal Infra-Red Sensor (TIRS) aboard Landsat 8 with an accuracy of better than 1.0 K. [1]</p>
 <h3 id="overview">Overview</h3>
 <p>The components of the algorithm estimating LST values are at-satellite brightness temperature (BT); land surface emissivity (LSE); and the coefficients of the main Split-Window equation (SWC).</p>
 <p>LSEs are derived from an established look-up table linking the FROM-GLC classification scheme to average emissivities. The NDVI and the FVC are <em>not</em> computed each time an LST estimation is requested. Read [0] for details.</p>
@@ -132,7 +132,7 @@
 <li><code>Ti,k</code> and <code>Tj,k</code> are top of atmosphere brightness temperatures (K) of bands <code>i</code> and <code>j</code> for the <code>k</code>th pixel;</li>
 <li><code>mean(Ti)</code> and <code>mean(Tj)</code> are the mean (or median -- not implemented yet) brightness temperatures of the <code>N</code> pixels for the two bands.</li>
 </ul>
-<p><strong>Note</strong>, while the CWV estimation accuracy increases with larger windows (up to a certain level), the performance (speed) of the module decreases. Generally recommended window sizes are 5, 7, 9.</p>
+<p>TIRS channels are originally of 100m spatial resolution. However, bands 10 and 11 are resampled, via a cubic convolution filter, to 30m. Consequently, an appropriately sized spatial window is required for a meaningful CWV estimation attempt. The spatial window should be composed by a number of pixels stretching over an area that accounts for several adjacent <em>100m</em>-sized pixels. <strong>Note</strong>, while the CWV estimation accuracy increases with larger windows (up to a certain level), the performance (speed) of the module decreases greatly.</p>
 <p>The regression coefficients:</p>
 <ul>
 <li><code>c0</code> = -9.674</li>
@@ -176,9 +176,9 @@ The shortest call for processing a complete Landsat8 scene normally is:
 <blockquote>
 <p>A small window size n (N = n * n, see equation (1a)) cannot ensure a high correlation between two bands' temperatures due to the instrument noise. In contrast, the size cannot be too large because the variations in the surface and atmospheric conditions become larger as the size increases.</p>
 </blockquote>
-<p>An example instructing a spatial window of size 7^2 is:</p>
+<p>An example instructing a spatial window of size 9^2 is:</p>
 <div class="code">
-<pre><code>i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC window=7</code></pre>
+<pre><code>i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC window=9</code></pre>
 </div>
 <p>In order to restrict the processing in to the currently set computational region, the <strong><code>-k</code></strong> flag can be used:</p>
 <div class="code">
@@ -237,10 +237,10 @@ The shortest call for processing a complete Landsat8 scene normally is:
 <p>The above will print out a description for each individual processing step, as well as the actual mathematical epxressions applied via GRASS GIS' <code>r.mapcalc</code> module.</p>
 <h3 id="example-figures">Example figures</h3>
 <div class="figure">
-<p><img src="lst_window_3.jpg"> <img src="lst_window_5.jpg"> <img src="lst_window_7.jpg"> <img src="lst_window_9.jpg"></p>
+<p><img src="lst_window_7.jpg"> <img src="lst_window_9.jpg"><img src="lst_window_11.jpg"></p>
 </div>
 <div class="figure">
-<p><img src="lst_window_3_detail_500px.jpg"> <img src="lst_window_5_detail_500px.jpg"> <img src="lst_window_7_detail_500px.jpg"> <img src="lst_window_9_detail_500px.jpg"></p>
+<p><img src="lst_window_7_detail_500px.jpg"> <img src="lst_window_9_detail_500px.jpg"> <img src="lst_window_11_detail_500px.jpg"></p>
 </div>
 <h2 id="todo">TODO</h2>
 <ul>

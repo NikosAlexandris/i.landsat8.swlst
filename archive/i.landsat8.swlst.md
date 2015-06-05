@@ -233,7 +233,13 @@ In Equation (3a):
 - `Ti,k` and `Tj,k` are top of atmosphere brightness temperatures (K) of bands `i` and `j` for the `k`th pixel;
 - `mean(Ti)` and `mean(Tj)` are the mean (or median -- not implemented yet) brightness temperatures of the `N` pixels for the two bands.
 
-**Note**, while the CWV estimation accuracy increases with larger windows (up to a certain level), the performance (speed) of the module decreases. Generally recommended window sizes are 5, 7, 9.
+TIRS channels are originally of 100m spatial resolution. However, bands 10 and
+11 are resampled, via a cubic convolution filter, to 30m. Consequently, an
+appropriately sized spatial window is required for a meaningful CWV estimation
+attempt. The spatial window should be composed by a number of pixels stretching
+over an area that accounts for several adjacent *100m*-sized pixels. **Note**,
+while the CWV estimation accuracy increases with larger windows (up to a
+certain level), the performance (speed) of the module decreases greatly.
 
 The regression coefficients:
 
@@ -331,10 +337,10 @@ atmospheric conditions. In [2] it is stated:
 > contrast, the size cannot be too large because the variations in the surface
 > and atmospheric conditions become larger as the size increases.
 
-An example instructing a spatial window of size 7^2 is:
+An example instructing a spatial window of size 9^2 is:
 
 <div class="code">
-    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC window=7
+    i.landsat8.swlst mtl=MTL prefix=B landcover=FROM_GLC window=9
 </div>
 
 
