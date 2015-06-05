@@ -27,7 +27,6 @@
                  red and near-infrared reflectance of the Operational Land
                  Imager (OLI).
 
-               
                The algorithm's flowchart (Figure 3 in the paper [0]) is:
 
                +--------+   +--------------------------+
@@ -106,7 +105,7 @@
 
 #%flag
 #% key: t
-#% description: Time-stamping the output LST map | Applies to the optional CWV output map
+#% description: Time-stamping the output LST (and optional CWV) map
 #%end
 
 #%flag
@@ -299,7 +298,7 @@
 #% key: window
 #% key_desc: integer
 #% description: Odd number n sizing an n^2 spatial window for column water vapor retrieval | Increase to reduce spatial discontinuation in the final LST
-#% answer: 3
+#% answer: 7
 #% required: yes
 #%end
 
@@ -1028,6 +1027,10 @@ def main():
 
     global cwv_output
     cwv_window_size = int(options['window'])
+    assertion_for_cwv_window_size_msg = ('A spatial window of size 5^2 or less is not '
+                                         'recommended. Please select a larger window. '
+                                         'Refer to the manual\'s notes for details.')
+    assert cwv_window_size >= 7, assertion_for_cwv_window_size_msg
     cwv_output = options['cwv']
 
     # optional maps
@@ -1162,8 +1165,9 @@ def main():
     #
     # 4. Modified Split-Window Variance-Covariance Matrix > Column Water Vapor
     #
+    
 
-    if info and cwv_window_size != 3:
+    if info:
         msg = '\n|i Spatial window of size {n} for Column Water Vapor estimation: '
         msg = msg.format(n=cwv_window_size)
         g.message(msg)
