@@ -2,62 +2,12 @@
 algorithm, estimating land surface temperature (LST), from the Thermal Infra-Red
 Sensor (TIRS) aboard Landsat 8 with an accuracy of better than 1.0 K.
 
-Description
-===========
 
-The components of the algorithm estimating LST values are at-satellite
-brightness temperature (BT); land surface emissivities (LSEs); and the coefficients of
-the main Split-Window equation (SWCs).
-
-**LSEs** are derived from an established look-up table linking the FROM-GLC
-classification scheme to average emissivities. The NDVI and the FVC are *not*
-computed each time an LST estimation is requested. Read [0] for details.
-
-The **SWCs** depend on each pixel's column water vapor (CWV). **CWV** values are
-retrieved based on a modified Split-Window Covariance-Variance Matrix Ratio
-method (MSWCVMR) [1, 2]. **Note**, the spatial discontinuity found in the images of
-the retrieved CWV, is attributed to the data gap in the images caused by stray
-light outside of the FOV of the TIRS instrument [2]. In addition, the size of
-the spatial window querying for CWV values in adjacent pixels, is a key
-parameter of the MSWCVMR method. It influences accuracy and performance. In [2]
-it is stated:
-
-> A small window size n (N = n * n, see equation (1a)) cannot ensure a high
-> correlation between two bands' temperatures due to the instrument noise. In
-> contrast, the size cannot be too large because the variations in the surface
-> and atmospheric conditions become larger as the size increases.
-
-At-satellite brightness temperatures are derived from the TIRS channels 10 and 11.
-Prior to any processing, the raw digital numbers are filtered for clouds.
-
-To produce an LST map, the algorithm requires at minimum:
-
-- TIRS bands 10 and 11
-- the acquisition's metadata file (MTL)
-- a Finer Resolution Observation & Monitoring of Global Land Cover (FROM-GLC) product
-
-Installation
-============
-
-## Requirements
----------------
-
-see [GRASS Addons SVN repository, README file, Installation - Code Compilation](https://svn.osgeo.org/grass/grass-addons/README)
-
-## Steps
-
-Making the script `i.lansat8.swlst` available from within any GRASS-GIS ver. 7.x session, may be done via the following steps:
-
-1.  launch a GRASS-GIS’ ver. 7.x session
-
-2.  navigate into the script’s source directory
-
-3.  execute `make MODULE_TOPDIR=$GISBASE`
-
-Usage examples
+Quick examples
 ==============
 
-After installation, from within a GRASS-GIS session, see help details via `i.landsat8.swlst --help`
+After installation (see section *Installation* below), from within a GRASS-GIS
+session, retrieve usage details via `i.landsat8.swlst --help`
 
 The shortest call for processing a complete Landsat8 scene normally is:
 
@@ -93,6 +43,65 @@ processing steps: at-satellite temperatures, cloud and emissivity maps.
   i.landsat8.swlst t10=T10 t11=T11 clouds=Cloud_Map emissivity=Average_Emissivity_Map delta_emissivity=Delta_Emissivity_Map landcover=FROM_GLC -k -c 
 ```
 
+For details and more examples, read the manual.
+
+
+Description
+===========
+
+The components of the algorithm estimating LST values are at-satellite
+brightness temperature (BT); land surface emissivities (LSEs); and the
+coefficients of the main Split-Window equation (SWCs).
+
+**LSEs** are derived from an established look-up table linking the FROM-GLC
+classification scheme to average emissivities. The NDVI and the FVC are *not*
+computed each time an LST estimation is requested. Read [0] for details.
+
+The **SWCs** depend on each pixel's column water vapor (CWV). **CWV** values are
+retrieved based on a modified Split-Window Covariance-Variance Matrix Ratio
+method (MSWCVMR) [1, 2]. **Note**, the spatial discontinuity found in the
+images of the retrieved CWV, is attributed to the data gap in the images caused
+by stray light outside of the FOV of the TIRS instrument [2]. In addition, the
+size of the spatial window querying for CWV values in adjacent pixels, is a key
+parameter of the MSWCVMR method. It influences accuracy and performance. In [2]
+it is stated:
+
+> A small window size n (N = n * n, see equation (1a)) cannot ensure a high
+> correlation between two bands' temperatures due to the instrument noise. In
+> contrast, the size cannot be too large because the variations in the surface
+> and atmospheric conditions become larger as the size increases.
+
+At-satellite brightness temperatures are derived from the TIRS channels 10 and
+11. Prior to any processing, the raw digital numbers are filtered for clouds.
+
+To produce an LST map, the algorithm requires at minimum:
+
+- TIRS bands 10 and 11
+- the acquisition's metadata file (MTL)
+- a Finer Resolution Observation & Monitoring of Global Land Cover (FROM-GLC)
+  product
+
+Installation
+============
+
+## Requirements
+---------------
+
+see [GRASS Addons SVN repository, README file, Installation - Code
+Compilation](https://svn.osgeo.org/grass/grass-addons/README)
+
+## Steps
+
+Making the script `i.lansat8.swlst` available from within any GRASS-GIS ver.
+7.x session, may be done via the following steps:
+
+1.  launch a GRASS-GIS’ ver. 7.x session
+
+2.  navigate into the script’s source directory
+
+3.  execute `make MODULE_TOPDIR=$GISBASE`
+
+
 
 Implementation notes
 ====================
@@ -112,19 +121,23 @@ Implementation notes
 
     - ~~Expression for Column Water Vapor~~
     - ~~CWV output values range -- is it rational?~~ It was not. There is a
-      typo in paper [0]. The correct order of the coefficients is in papers [1, 2].
+      typo in paper [0]. The correct order of the coefficients is in papers [1,
+      2].
     - ~~Expression for Land Surface Temperature~~
     - ~~LST output values range -- is it rational?  At the moment, not!~~
       Fixed. The main Split-Window equation was wrong.
 
 - ~~Why is the LST out of range when using a fixed land cover class?~~ Cloudy
   pixels are, mainly, the reason. Better cloud masking is the solution.
-- ~~Why does the multi-step approach on deriving the CWV map differ from the single big mapcalc expression?~~ **Fixed**
-- ~~Implement direct conversion of B10, B11 to brightness temperature values.~~  **Done**
+- ~~Why does the multi-step approach on deriving the CWV map differ from the
+  single big mapcalc expression?~~ **Fixed**
+- ~~Implement direct conversion of B10, B11 to brightness temperature values.~~
+  **Done**
 - ~~Get the FROM-GLC map,~~ **Found**
 - ~~implement mechanism to read land cover classes from it
   and use'm to retrieve emissivities~~ **Done**
-- ~~How to use the FVC?~~ Don't. Just **use the Look-up table** (see [\*] for details).
+- ~~How to use the FVC?~~ Don't. Just **use the Look-up table** (see [\*] for
+  details).
 - ~~Save average emissivity and delta emissivity maps for caching (re-use in
   subsequent trials, huge time saver!)~~ **Implemented**
 
@@ -141,8 +154,9 @@ Implementation notes
 
 [Low]
 
-- Deduplicate code in split_window_lst class >
-  _build_average_emissivity_mapcalc() and _build_delta_emissivity_mapcalc()
+- Deduplicate code in `split_window_lst` class, in functions
+`_build_average_emissivity_mapcalc()` and
+`_build_delta_emissivity_mapcalc()`
 - Implement a median window filter, as another option in addition to mean.
 - Profiling
 - Implement a complete cloud masking function using the BQA image. Support for
@@ -194,6 +208,5 @@ References
 - StackExchange contributors
 - Sajid Pareeth
 - Georgios Alexandris, Anthoula Alexandri
-
 - Special thanks to author Huazhong Ren for commenting on questions (personal
 communication)
