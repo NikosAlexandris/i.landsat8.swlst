@@ -559,7 +559,7 @@ def tirs_to_at_satellite_temperature(tirs_1x, mtl_file):
         tmp_brightness_temperature = bt_output
         del(bt_output)
 
-        return tmp_brightness_temperature
+    return tmp_brightness_temperature
 
 
 def mask_clouds(qa_band, qa_pixel):
@@ -937,8 +937,13 @@ def estimate_lst(outname, t10, t11, avg_lse_map, delta_lse_map, cwv_map, lst_exp
                                                   out_ti=t10,
                                                   in_tj=DUMMY_MAPCALC_STRING_T11,
                                                   out_tj=t11)
-
-    split_window_equation = equation.format(result=outname,
+    # Convert to Celsius?
+    if celsius:
+        split_window_expression = '({swe}) - 273.15'.format(swe=split_window_expression)
+        split_window_equation = equation.format(result=outname,
+                                            expression=split_window_expression)
+    else:
+        split_window_equation = equation.format(result=outname,
                                             expression=split_window_expression)
 
     grass.mapcalc(split_window_equation, overwrite=True)
@@ -948,26 +953,6 @@ def estimate_lst(outname, t10, t11, avg_lse_map, delta_lse_map, cwv_map, lst_exp
 
     del(split_window_expression)
     del(split_window_equation)
-
-
-def kelvin_to_celsius(outname, lst_map):
-    """
-    Convert Kelvin to Celsius
-    """
-    msg = '\n|i Converting LST output from Kelvin to Celsius degrees'
-    #g.message(msg)
-
-    kelvin_to_celsius_expression = '{lst} - 273.15'.format(lst=lst_map)
-    kelvin_to_celsius_equation = equation.format(result=lst_map,
-            expression=kelvin_to_celsius_expression)
-    grass.mapcalc(kelvin_to_celsius_equation, overwrite=True)
-
-    msg += '\n|i Applying the "Celsius" color table'
-    g.message(msg)
-    run('r.colors', map=lst_map, color='celsius')
-
-    del(kelvin_to_celsius_expression)
-    del(kelvin_to_celsius_equation)
 
 def main():
     """
@@ -986,7 +971,7 @@ def main():
     tmp_avg_lse = tmp_map_name('avg_lse')
     tmp_delta_lse = tmp_map_name('delta_lse')
     tmp_cwv = tmp_map_name('cwv')
-    tmp_lst = tmp_map_name('lst')
+    #tmp_lst = tmp_map_name('lst')
 
     # basic equation for mapcalc
     global equation, citation_lst
@@ -1057,9 +1042,11 @@ def main():
     global info, null
     info = flags['i']
     keep_region = flags['k']
-    celsius = flags['c']
     timestamping = flags['t']
     null = flags['n']
+    
+    global celsius
+    celsius = flags['c']
 
     # ToDo:
     # shell = flags['g']
@@ -1077,11 +1064,11 @@ def main():
         # Improve below!
 
         if b10:
-            run('g.region', rast=b10)
+            run('g.region', rast=b10, align=b10)
             msg = msg.format(name=b10)
 
         elif t10:
-            run('g.region', rast=t10)
+            run('g.region', rast=t10, align=t10)
             msg = msg.format(name=t10)
 
         g.message(msg)
@@ -1187,8 +1174,8 @@ def main():
     cwv = Column_Water_Vapor(cwv_window_size, t10, t11)
     citation_cwv = cwv.citation
     estimate_cwv_big_expression(tmp_cwv, t10, t11, cwv._big_cwv_expression())
-    if options['cwv']:
-        tmp_cwv = options['cwv']
+    if cwv_output:
+        tmp_cwv = cwv_output
 
     #
     # 5. Estimate Land Surface Temperature
@@ -1198,7 +1185,7 @@ def main():
         msg = '\n|* Will pick a random emissivity class!'
         grass.verbose(msg)
 
-    estimate_lst(tmp_lst, t10, t11,
+    estimate_lst(lst_output, t10, t11,
                  tmp_avg_lse, tmp_delta_lse, tmp_cwv,
                  split_window_lst.sw_lst_mapcalc)
 
@@ -1211,18 +1198,17 @@ def main():
 
     # time-stamping
     if timestamping:
-        add_timestamp(mtl_file, tmp_lst)
+        add_timestamp(mtl_file, lst_output)
 
         if cwv_output:
             add_timestamp(mtl_file, cwv_output)
 
-    # convert to celsius and apply color table?
+    # Apply color table
     if celsius:
-        kelvin_to_celsius(tmp_lst, tmp_lst)
-
+        run('r.colors', map=lst_output, color='celsius')
     else:
         # color table for kelvin
-        run('r.colors', map=tmp_lst, color='kelvin')
+        run('r.colors', map=lst_output, color='kelvin')
 
     # ToDo: helper function for r.support
     # strings for metadata
@@ -1245,13 +1231,13 @@ def main():
     source2_lst = landsat8_metadata.origin
 
     # history entry
-    run("r.support", map=tmp_lst, title=title_lst,
+    run("r.support", map=lst_output, title=title_lst,
         units=units_lst, description=description_lst,
         source1=source1_lst, source2=source2_lst,
         history=history_lst)
 
     # (re)name the LST product
-    run("g.rename", rast=(tmp_lst, lst_output))
+    #run("g.rename", rast=(tmp_lst, lst_output))
 
     # restore region
     if not keep_region:
