@@ -350,6 +350,9 @@ def cleanup():
     """
     grass.run_command('g.remove', flags='f', type="rast",
                       pattern='tmp.{pid}*'.format(pid=os.getpid()), quiet=True)
+    
+    if grass.find_file(name='MASK', element='cell')['file']:
+        r.mask(flags='r', verbose=True)
 
 
 def tmp_map_name(name):
@@ -552,10 +555,11 @@ def tirs_to_at_satellite_temperature(tirs_1x, mtl_file):
     # save Brightness Temperature map?
     if brightness_temperature_prefix:
         bt_output = brightness_temperature_prefix + band_number
-        run('g.copy', raster=(tmp_brightness_temperature, bt_output))
-    del(bt_output)
+        run('g.rename', raster=(tmp_brightness_temperature, bt_output))
+        tmp_brightness_temperature = bt_output
+        del(bt_output)
 
-    return tmp_brightness_temperature
+        return tmp_brightness_temperature
 
 
 def mask_clouds(qa_band, qa_pixel):
@@ -575,21 +579,21 @@ def mask_clouds(qa_band, qa_pixel):
            'in the Quality Assessment band.'.format(qap=qa_pixel))
     g.message(msg)
 
-    tmp_cloudmask = tmp_map_name('cloudmask')
-    qabits_expression = 'if({band} == {pixel}, 1, null())'.format(band=qa_band,
-                                                                  pixel=qa_pixel)
+    #tmp_cloudmask = tmp_map_name('cloudmask')
+    #qabits_expression = 'if({band} == {pixel}, 1, null())'.format(band=qa_band,
+    #                                                              pixel=qa_pixel)
 
-    cloud_masking_equation = equation.format(result=tmp_cloudmask,
-                                             expression=qabits_expression)
-    grass.mapcalc(cloud_masking_equation)
+    #cloud_masking_equation = equation.format(result=tmp_cloudmask,
+    #                                         expression=qabits_expression)
+    #grass.mapcalc(cloud_masking_equation)
 
-    r.mask(raster=tmp_cloudmask, flags='i', overwrite=True)
+    r.mask(raster=qa_band, maskcats=qa_pixel, flags='i', overwrite=True)
 
     # save for debuging
     #save_map(tmp_cloudmask)
 
-    del(qabits_expression)
-    del(cloud_masking_equation)
+    #del(qabits_expression)
+    #del(cloud_masking_equation)
 
 
 def replace_dummies(string, *args, **kwargs):
@@ -714,7 +718,7 @@ def determine_average_emissivity(outname, landcover_map, avg_lse_expression):
     
     # save land surface emissivity map?
     if emissivity_output:
-        run('g.copy', raster=(outname, emissivity_output))
+        run('g.rename', raster=(outname, emissivity_output))
 
 
 def determine_delta_emissivity(outname, landcover_map, delta_lse_expression):
@@ -746,7 +750,7 @@ def determine_delta_emissivity(outname, landcover_map, delta_lse_expression):
 
     # save delta land surface emissivity map?
     if delta_emissivity_output:
-        run('g.copy', raster=(outname, delta_emissivity_output))
+        run('g.rename', raster=(outname, delta_emissivity_output))
 
 
 def get_cwv_window_means(outname, t1x, t1x_mean_expression):
@@ -835,7 +839,7 @@ def estimate_column_water_vapor(outname, ratio, cwv_expression):
 
     # save Column Water Vapor map?
     if cwv_output:
-        run('g.copy', raster=(outname, cwv_output))
+        run('g.rename', raster=(outname, cwv_output))
 
     # save for debuging
     #save_map(outname)
@@ -884,7 +888,7 @@ def estimate_cwv_big_expression(outname, t10, t11, cwv_expression):
             source1=source1_cwv, source2=source2_cwv,
             history=history_cwv)
 
-        run('g.copy', raster=(outname, cwv_output))
+        run('g.rename', raster=(outname, cwv_output))
 
     del(cwv_expression)
     del(cwv_equation)
@@ -1023,7 +1027,10 @@ def main():
     
     # save Brightness Temperature maps?
     global brightness_temperature_prefix
-    brightness_temperature_prefix = options['prefix_bt']
+    if options['prefix_bt']:
+        brightness_temperature_prefix = options['prefix_bt']
+    else:
+        brightness_temperature_prefix = None
 
     global cwv_output
     cwv_window_size = int(options['window'])
@@ -1155,12 +1162,17 @@ def main():
         if not average_emissivity_map:
             determine_average_emissivity(tmp_avg_lse, landcover_map,
                                          split_window_lst.average_lse_mapcalc)
+            if options['emissivity_out']:
+                tmp_avg_lse = options['emissivity_out']
+
         if delta_emissivity_map:
             tmp_delta_lse = delta_emissivity_map
 
         if not delta_emissivity_map:
             determine_delta_emissivity(tmp_delta_lse, landcover_map,
                                        split_window_lst.delta_lse_mapcalc)
+            if options['delta_emissivity_out']:
+                tmp_delta_lse = options['delta_emissivity_out']
 
     #
     # 4. Modified Split-Window Variance-Covariance Matrix > Column Water Vapor
@@ -1175,6 +1187,8 @@ def main():
     cwv = Column_Water_Vapor(cwv_window_size, t10, t11)
     citation_cwv = cwv.citation
     estimate_cwv_big_expression(tmp_cwv, t10, t11, cwv._big_cwv_expression())
+    if options['cwv']:
+        tmp_cwv = options['cwv']
 
     #
     # 5. Estimate Land Surface Temperature
