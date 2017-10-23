@@ -32,7 +32,7 @@ processing steps: at-satellite temperatures, cloud and emissivity maps.
 
   * The `clouds` option can be any user-defined map. Essentialy, it applies
     the given map as an inverted mask.
-    
+
   * The emissivity maps, derived by the module itself, can be saved once
     via the `emissivity_out` and `delta_emissivity_out` options and used
     afterwards via the `emissivity` and `delta_emissivity` options. Expert
