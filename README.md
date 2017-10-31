@@ -154,6 +154,7 @@ Implementation notes
 
 [Low]
 
+- Test for too small region?
 - Deduplicate code in `split_window_lst` class, in functions
 `_build_average_emissivity_mapcalc()` and
 `_build_delta_emissivity_mapcalc()`
