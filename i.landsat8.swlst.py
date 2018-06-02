@@ -715,7 +715,7 @@ def determine_average_emissivity(outname, landcover_map, avg_lse_expression):
 
     del(avg_lse_expression)
     del(avg_lse_equation)
-    
+
     # save land surface emissivity map?
     if emissivity_output:
         run('g.rename', raster=(outname, emissivity_output))
@@ -777,7 +777,7 @@ def get_cwv_window_means(outname, t1x, t1x_mean_expression):
 
     del(t1x_mean_expression)
     del(tx_mean_equation)
-    
+ 
     # save for debuging
     #save_map(outname)
 
@@ -1164,7 +1164,6 @@ def main():
     #
     # 4. Modified Split-Window Variance-Covariance Matrix > Column Water Vapor
     #
-    
 
     if info:
         msg = '\n|i Spatial window of size {n} for Column Water Vapor estimation: '

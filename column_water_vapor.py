@@ -398,7 +398,7 @@ class Column_Water_Vapor():
                                     c0=self.c0, c1=self.c1, c2=self.c2)
 
         return cwv_expression
-    
+
     def _big_cwv_expression_median():
         """
         Build and return a valid mapcalc expression for deriving a Column
