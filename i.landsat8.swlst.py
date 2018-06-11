@@ -104,8 +104,13 @@
 #%end
 
 #%flag
+#%  key: r
+#%  description: Round LST output and keep two digits
+#%end
+
+#%flag
 #% key: t
-#% description: Time-stamping the output LST (and optional CWV) map
+#% description: Time-stamp the output LST (and optional CWV) map
 #%end
 
 #%flag
@@ -916,7 +921,6 @@ def estimate_lst(outname, t10, t11, avg_lse_map, delta_lse_map, cwv_map, lst_exp
         msg += '\n'
         print msg
 
-    # replace the "dummy" string...
     if landcover_map:
         split_window_expression = replace_dummies(lst_expression,
                                                   in_avg_lse=DUMMY_MAPCALC_STRING_AVG_LSE,
@@ -937,14 +941,17 @@ def estimate_lst(outname, t10, t11, avg_lse_map, delta_lse_map, cwv_map, lst_exp
                                                   out_ti=t10,
                                                   in_tj=DUMMY_MAPCALC_STRING_T11,
                                                   out_tj=t11)
-    # Convert to Celsius?
+
+    if rounding:
+        split_window_expression = '(round({swe}, 2, 0.5))'.format(swe=split_window_expression)
+
     if celsius:
         split_window_expression = '({swe}) - 273.15'.format(swe=split_window_expression)
-        split_window_equation = equation.format(result=outname,
-                                            expression=split_window_expression)
-    else:
-        split_window_equation = equation.format(result=outname,
-                                            expression=split_window_expression)
+
+
+    # else:
+    split_window_equation = equation.format(result=outname,
+            expression=split_window_expression)
 
     grass.mapcalc(split_window_equation, overwrite=True)
 
@@ -1044,7 +1051,10 @@ def main():
     scene_extent = flags['e']
     timestamping = flags['t']
     null = flags['n']
-    
+
+    global rounding
+    rounding = flags['r']
+
     global celsius
     celsius = flags['c']
 
