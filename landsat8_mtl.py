@@ -264,7 +264,7 @@ def main():
     """
     if set_mtlfile():
         MTLFILE = set_mtlfile()
-        print "| Reading metadata from:", MTLFILE
+        print("| Reading metadata from:", MTLFILE)
     else:
         MTLFILE = ''
 
