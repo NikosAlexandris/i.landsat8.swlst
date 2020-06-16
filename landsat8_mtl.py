@@ -103,7 +103,8 @@ class Landsat8_MTL():
             field_name = line_split[0].strip()
             field_names.append(field_name)
             field_value = line_split[1].strip()
-            field_value = field_value.translate(string.maketrans("", "",), '"')
+            translation_table = str.maketrans('', '', '"')
+            field_value = field_value.translate(translation_table)
             field_values.append(field_value)
 
         # named tuple
