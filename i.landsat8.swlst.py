@@ -326,6 +326,7 @@ import grass.script as grass
 from grass.pygrass.modules.shortcuts import general as g
 from grass.pygrass.modules.shortcuts import raster as r
 # from grass.pygrass.raster.abstract import Info
+import functools
 
 from split_window_lst import *
 from landsat8_mtl import Landsat8_MTL
@@ -690,7 +691,7 @@ def replace_dummies(string, *args, **kwargs):
                        (in_avg_lse, str(out_avg_lse)), \
                        (in_delta_lse, str(out_delta_lse))
 
-    return reduce(lambda alpha, omega: alpha.replace(*omega),
+    return functools.reduce(lambda alpha, omega: alpha.replace(*omega),
                   replacements, string)
 
 
