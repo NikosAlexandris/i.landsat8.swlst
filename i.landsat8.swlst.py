@@ -456,8 +456,6 @@ def add_timestamp(mtl_filename, outname):
 
     run('r.timestamp', map=outname, date=date_time_string)
 
-    del(date_time_string)
-
 
 def digital_numbers_to_radiance(outname, band, radiance_expression):
     """
@@ -489,9 +487,6 @@ def digital_numbers_to_radiance(outname, band, radiance_expression):
         run('r.info', map=outname, flags='r')
         #run('r.univar', map=outname)
 
-    del(radiance_expression)
-    del(radiance_equation)
-
 
 def radiance_to_brightness_temperature(outname, radiance, temperature_expression):
     """
@@ -515,9 +510,6 @@ def radiance_to_brightness_temperature(outname, radiance, temperature_expression
     if info:
         run('r.info', map=outname, flags='r')
         #run('r.univar', map=outname)
-
-    del(temperature_expression)
-    del(temperature_equation)
 
 
 def tirs_to_at_satellite_temperature(tirs_1x, mtl_file):
@@ -555,15 +547,12 @@ def tirs_to_at_satellite_temperature(tirs_1x, mtl_file):
                                        tmp_radiance,
                                        temperature_expression)
 
-    del(radiance_expression)
-    del(temperature_expression)
 
     # save Brightness Temperature map?
     if brightness_temperature_prefix:
         bt_output = brightness_temperature_prefix + band_number
         run('g.rename', raster=(tmp_brightness_temperature, bt_output))
         tmp_brightness_temperature = bt_output
-        del(bt_output)
 
     return tmp_brightness_temperature
 
@@ -597,9 +586,6 @@ def mask_clouds(qa_band, qa_pixel):
 
     # save for debuging
     #save_map(tmp_cloudmask)
-
-    #del(qabits_expression)
-    #del(cloud_masking_equation)
 
 
 def replace_dummies(string, *args, **kwargs):
@@ -719,9 +705,7 @@ def determine_average_emissivity(outname, landcover_map, avg_lse_expression):
     if info:
         run('r.info', map=outname, flags='r')
 
-    del(avg_lse_expression)
-    del(avg_lse_equation)
-    
+
     # save land surface emissivity map?
     if emissivity_output:
         run('g.rename', raster=(outname, emissivity_output))
@@ -751,8 +735,6 @@ def determine_delta_emissivity(outname, landcover_map, delta_lse_expression):
     if info:
         run('r.info', map=outname, flags='r')
 
-    del(delta_lse_expression)
-    del(delta_lse_equation)
 
     # save delta land surface emissivity map?
     if delta_emissivity_output:
@@ -896,9 +878,6 @@ def estimate_cwv_big_expression(outname, t10, t11, cwv_expression):
 
         run('g.rename', raster=(outname, cwv_output))
 
-    del(cwv_expression)
-    del(cwv_equation)
-
 
 def estimate_lst(outname, t10, t11, avg_lse_map, delta_lse_map, cwv_map, lst_expression):
     """
@@ -959,8 +938,6 @@ def estimate_lst(outname, t10, t11, avg_lse_map, delta_lse_map, cwv_map, lst_exp
     if info:
         run('r.info', map=outname, flags='r')
 
-    del(split_window_expression)
-    del(split_window_equation)
 
 def main():
     """
