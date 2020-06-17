@@ -140,7 +140,7 @@ class Column_Water_Vapor():
         # mapcalc modifiers to access neighborhood pixels
         self.modifiers_ti = self._derive_modifiers(self.ti)
         self.modifiers_tj = self._derive_modifiers(self.tj)
-        self.modifiers = zip(self.modifiers_ti, self.modifiers_tj)
+        self.modifiers = list(zip(self.modifiers_ti, self.modifiers_tj))
 
         # mapcalc expression for means
         self.mean_ti_expression = self._mean_tirs_expression(self.modifiers_ti)
