@@ -204,7 +204,7 @@ def csv_to_dictionary(csv):
             cwv.rmse = is_number(elements[10])
             dictionary[key] = dictionary.get(key, cwv)  # feed dictionary
 
-    map(transform, rows)
+    list(map(transform, rows))
     return dictionary
 
 
