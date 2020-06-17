@@ -424,7 +424,7 @@ def random_column_water_vapor_value():
 
 def extract_number_from_string(string):
     """
-    Extract the (integer) number from a string. Meand to be used with band
+    Extract the (integer) number from a string. Meant to be used with band
     names. For example:
 
     print(extract_number_from_string('B10'))
