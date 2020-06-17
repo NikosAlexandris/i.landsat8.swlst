@@ -40,6 +40,7 @@ import sys
 import csv
 from collections import namedtuple
 import random
+import functools
 
 
 # helper functions
@@ -77,7 +78,7 @@ def replace_dot_comma_space(string):
     Source: <http://stackoverflow.com/a/9479972/1172302>
     """
     replacements = ('.', ''), (', ', '_'), (',', '_'), (' ', '_'), ('(', ''), (')', ''), ('/', '_')
-    return reduce(lambda alpha, omega: alpha.replace(*omega),
+    return functools.reduce(lambda alpha, omega: alpha.replace(*omega),
                   replacements, string)
 
 
