@@ -42,7 +42,6 @@ from collections import namedtuple
 import random
 import functools
 
-
 # helper functions
 def set_csvfile():
     """
@@ -67,11 +66,13 @@ def is_number(value):
             return False
     return float(value)
 
+
 def to_tuple(string):
     """
     Convert string to tuple.
     """
     return tuple(map(float, string[1:-1].split(',')))
+
 
 def replace_dot_comma_space(string):
     """
@@ -295,7 +296,7 @@ def test_csvfile(infile):
     print("CSVFILE (global variable) = ", CSVFILE)
 
     print('Test helper and main functions using as input a csv file.')
-    print
+    print()
 
     number = random.randint(1., 10.)
     print(" * Testing helper function 'is_number':", is_number(number))
@@ -306,11 +307,11 @@ def test_csvfile(infile):
         csvfile = infile
 
     print(" * Testing 'csv_reader' on", csvfile, ":\n\n", csv_reader(csvfile))
-    print
+    print()
 
     csvstring = csv_reader(csvfile)
     print(" * Testing 'csv_to_dictionary':\n\n", csv_to_dictionary(csvstring))
-    print
+    print()
 
     d = csv_to_dictionary(csvstring)
     somekey = random.choice(list(d.keys()))
@@ -345,22 +346,22 @@ def test(testdata):
     '''
     number = random.randint(1., 10.)
     print(" * Testing 'is_number':", is_number(number))
-    print
+    print()
 
     '''
     Testing the process...
     '''
     d = csv_to_dictionary(testdata)
     print("Dictionary is:\n", d)
-    print
+    print()
 
     somekey = random.choice(list(d.keys()))
     print("Some random key:", somekey)
-    print
+    print()
 
     fields = d[somekey]._fields
     print("Fields of namedtuple:", fields)
-    print
+    print()
 
     random_field = random.choice(fields)
     print("Some random field:", random_field)
