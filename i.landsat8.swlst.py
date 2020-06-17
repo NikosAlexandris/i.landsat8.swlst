@@ -758,7 +758,7 @@ def estimate_cwv_big_expression(outname, t10, t11, cwv_expression):
                               in_ti=t10, out_ti='T10',
                               in_tj=t11, out_tj='T11')
         msg += '\n'
-        print(msg)
+        g.message(msg)
 
     cwv_equation = equation.format(result=outname, expression=cwv_expression)
     grass.mapcalc(cwv_equation, overwrite=True)
@@ -807,7 +807,7 @@ def estimate_lst(outname, t10, t11, avg_lse_map, delta_lse_map, cwv_map, lst_exp
     if info:
         msg = lst_expression
         msg += '\n'
-        print(msg)
+        g.message(msg)
 
     if landcover_map:
         split_window_expression = replace_dummies(lst_expression,
@@ -1142,7 +1142,7 @@ def main():
 
     # print citation
     if info:
-        print('\nSource: ' + citation_lst)
+        g.message('\nSource: ' + citation_lst)
 
 
 if __name__ == "__main__":
