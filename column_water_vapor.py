@@ -221,8 +221,8 @@ class Column_Water_Vapor():
         # center col indexing
         half_width = (self.window_width - 1) / 2
 
-        return [[col, row] for col in xrange(-half_width + 1, half_width)
-                for row in xrange(-half_height + 1, half_height)]
+        return [[col, row] for col in range(-half_width + 1, half_width)
+                for row in range(-half_height + 1, half_height)]
 
     def _derive_modifiers(self, tx):
         """
