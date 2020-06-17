@@ -115,7 +115,7 @@ def csv_reader(csv_file):
     Barren Land|0.969|0.978
     Snow and ice|0.992|0.998"""
     '''
-    with open(csv_file, 'rb') as csvfile:
+    with open(csv_file, 'r') as csvfile:
         csvreader = csv.reader(csvfile, delimiter="|")  # delimiter?
         string = str()
         for row in csvreader:
