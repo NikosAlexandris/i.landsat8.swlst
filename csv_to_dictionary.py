@@ -313,7 +313,7 @@ def test_csvfile(infile):
     print
 
     d = csv_to_dictionary(csvstring)
-    somekey = random.choice(d.keys())
+    somekey = random.choice(list(d.keys()))
     print("* Some random key:", somekey)
 
     fields = d[somekey]._fields
@@ -354,7 +354,7 @@ def test(testdata):
     print("Dictionary is:\n", d)
     print
 
-    somekey = random.choice(d.keys())
+    somekey = random.choice(list(d.keys()))
     print("Some random key:", somekey)
     print
 
