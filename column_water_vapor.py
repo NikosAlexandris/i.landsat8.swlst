@@ -184,7 +184,6 @@ class Column_Water_Vapor():
         numerator_ji_terms = []
         for ti, tj in zip(tik, tjk):
             numerator_ji_terms.append((ti - ti_mean) * (tj - tj_mean))
-
         numerator_ji = sum(numerator_ji_terms) * 1.0
 
         # denominator:  sum of all (Tik - Tj_mean)^2
@@ -216,10 +215,10 @@ class Column_Water_Vapor():
         [ 1, -1] [ 1, 0] [ 1, 1]
         """
         # center row indexing
-        half_height = (self.window_height - 1) / 2
+        half_height = (self.window_height - 1) // 2
 
         # center col indexing
-        half_width = (self.window_width - 1) / 2
+        half_width = (self.window_width - 1) // 2
 
         return [[col, row] for col in range(-half_width + 1, half_width)
                 for row in range(-half_height + 1, half_height)]
@@ -294,7 +293,6 @@ class Column_Water_Vapor():
                                          Tj=mod_tj,
                                          Tjm=mean_tj)
                            for mod_ti, mod_tj in self.modifiers])
-
         return terms
 
     def _denominator_for_ratio(self, mean_ti):
