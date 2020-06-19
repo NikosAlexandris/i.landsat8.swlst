@@ -581,7 +581,7 @@ def main():
     # 5. Estimate Land Surface Temperature
     #
 
-    if info and emissivity_class == 'Random':
+    if info and landcover_class == 'Random':
         msg = '\n|* Will pick a random emissivity class!'
         grass.verbose(msg)
 
