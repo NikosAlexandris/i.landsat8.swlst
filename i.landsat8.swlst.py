@@ -328,6 +328,7 @@ from grass.pygrass.modules.shortcuts import raster as r
 # from grass.pygrass.raster.abstract import Info
 import functools
 
+from column_water_vapor import estimate_cwv_big_expression
 from split_window_lst import *
 from landsat8_mtl import Landsat8_MTL
 from helpers import cleanup
