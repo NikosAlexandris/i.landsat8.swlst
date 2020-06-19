@@ -19,6 +19,7 @@ from data_validation import check_cwv
 import csv_to_dictionary as coefficients
 EMISSIVITIES = coefficients.get_average_emissivities()
 COLUMN_WATER_VAPOR = coefficients.get_column_water_vapor()
+import random
 
 
 class SplitWindowLST():
