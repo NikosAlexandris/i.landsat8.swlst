@@ -585,10 +585,20 @@ def main():
         msg = '\n|* Will pick a random emissivity class!'
         grass.verbose(msg)
 
-    estimate_lst(lst_output, t10, t11,
-                 tmp_avg_lse, tmp_delta_lse, tmp_cwv,
-                 split_window_lst.sw_lst_mapcalc)
+    estimate_lst(
+            lst_output,
+            t10,
+            t11,
+            landcover_map,
             landcover_class,
+            tmp_avg_lse,
+            tmp_delta_lse,
+            tmp_cwv,
+            split_window_lst.sw_lst_mapcalc,
+            rounding,
+            celsius,
+            quiet=info,
+    )
 
     #
     # Post-production actions
