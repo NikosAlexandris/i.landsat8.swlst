@@ -592,16 +592,6 @@ class SplitWindowLST():
         ToDo: Review and Improve the mechanism which selects emissivities from
         either a fixed land cover class  OR  a land cover map.
         """
-        formula = ('{b0} + '
-                   '({b1} + '
-                   '({b2}) * ((1 - {ae}) / {ae}^2) + '
-                   '({b3}) * ({de}/{ae}^2)) * (({DUMMY_T10}+{DUMMY_T11})/2) + '
-                   '({b4} + '
-                   '({b5}) * ((1 - {ae}) / {ae}) + '
-                   '({b6}) * ({de}/{ae}^2)) * (({DUMMY_T10}-{DUMMY_T11})/2) + '
-                   '({b7}) * ({DUMMY_T10} - {DUMMY_T11})^2')
-
-
         try:
             if self.landcover_class:
                 # print "Fixed land cover class"
@@ -621,21 +611,21 @@ class SplitWindowLST():
             avg_lse = DUMMY_MAPCALC_STRING_AVG_LSE
             delta_lse = DUMMY_MAPCALC_STRING_DELTA_LSE
 
-        coefficients = self._retrieve_cwv_coefficients(subrange)
-        b0, b1, b2, b3, b4, b5, b6, b7 = coefficients
-
-        mapcalc = formula.format(b0=b0,
-                                 b1=b1,
-                                 b2=b2,
-                                 ae=avg_lse,
-                                 de=delta_lse,
-                                 b3=b3,
-                                 b4=b4,
-                                 b5=b5,
-                                 b6=b6,
-                                 b7=b7,
-                                 DUMMY_T10=DUMMY_MAPCALC_STRING_T10,
-                                 DUMMY_T11=DUMMY_MAPCALC_STRING_T11)
+        b0, b1, b2, b3, b4, b5, b6, b7 = self._retrieve_cwv_coefficients(subrange)
+        mapcalc = LST_FORMULA.format(
+                    b0=b0,
+                    b1=b1,
+                    b2=b2,
+                    ae=avg_lse,
+                    de=delta_lse,
+                    b3=b3,
+                    b4=b4,
+                    b5=b5,
+                    b6=b6,
+                    b7=b7,
+                    DUMMY_T10=DUMMY_MAPCALC_STRING_T10,
+                    DUMMY_T11=DUMMY_MAPCALC_STRING_T11,
+                )
 
         return mapcalc
 
