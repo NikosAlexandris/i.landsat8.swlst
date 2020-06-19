@@ -352,6 +352,7 @@ from constants import DUMMY_Ti_MEAN
 from constants import DUMMY_Tj_MEAN
 from constants import DUMMY_Rji
 from constants import EQUATION as equation
+from column_water_vapor import Column_Water_Vapor
 from emissivity import determine_average_emissivity
 from emissivity import determine_delta_emissivity
 from dummy_mapcalc_strings import replace_dummies
