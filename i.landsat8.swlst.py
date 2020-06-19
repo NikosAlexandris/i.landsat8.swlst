@@ -384,7 +384,6 @@ def main():
     tmp_cwv = tmp_map_name('cwv')
     #tmp_lst = tmp_map_name('lst')
 
-    equation = "{result} = {expression}"
 
     # user input
     mtl_file = options['mtl']
