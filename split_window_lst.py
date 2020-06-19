@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+
 """
 A class for the Split Window Algorithm for Land Surface Temperature estimation
-@author: nik | Created on Wed Mar 18 11:28:45 2015
+@author: nik | Created on Wed Mar 18 11:28:45 2015 | Updated on June 2020
 """
 
 from constants import BARREN_LAND_CLASS_STRING
@@ -146,8 +147,8 @@ class SplitWindowLST():
             # if no fixed land cover class requested
             self.landcover_class = False
 
-            # use mapcalc expressions instead, containing DUMMY strings for map
-            # names
+            # use mapcalc expressions instead,
+            # containing DUMMY strings for map names
             self.average_lse_mapcalc = self._build_average_emissivity_mapcalc()
             self.delta_lse_mapcalc = self._build_delta_emissivity_mapcalc()
 
@@ -159,13 +160,6 @@ class SplitWindowLST():
         Return a string representation of the basic Split Window LST equation
         """
         equation = ' > The algorithm\'s basic equation: ' + self._equation
-
-        #if self.model:
-        #    model = ' > The model: ' + self.model
-
-        #else:
-        #    model = ' > The models:\n ' + '  a: ' + self._model_a + '\n ' + '  b: ' + self._model_b + '\n'
-
         return equation #+ '\n' + model
 
     def _landcover_string_validity(self, string):
@@ -354,11 +348,17 @@ class SplitWindowLST():
     def compute_lst(self, t10, t11, coefficients):
         """
         Compute Land Surface Temperature based on the Split-Window algorithm.
-        Inputs are brightness temperatures measured in channels  i(~11.0 μm)
+        Inputs are brightness temperatures measured in channels i (~11.0 μm)
         and j (~12.0 μm).
 
         *Note*, this is a single value computation function and does not read
         or return a map.
+
+        LST = b0 +
+            + (b1 + b2 * ((1-ae)/ae) + b3 * (de/ae^2)) * ((t10 + t11)/2) +
+            + (b4 + b5 * ((1-ae)/ae) + b6 * (de/ae^2)) * ((t10 - t11)/2) +
+
+        or over 'Barren land':
 
         LST = b0 +
             + (b1 + b2 * ((1-ae)/ae) + b3 * (de/ae^2)) * ((t10 + t11)/2) +
@@ -389,7 +389,6 @@ class SplitWindowLST():
         c = c1 * c2
         d = b7 * (t10 - t11)**2
 
-        # land surface temperature
         lst = a + b + c + d
         return lst
 
@@ -574,7 +573,6 @@ class SplitWindowLST():
         ToDo: Review and Improve the mechanism which selects emissivities from
         either a fixed land cover class  OR  a land cover map.
         """
-        # formula = '{c0} + {c1}*{dummy} + {c2}*{dummy}^2'
         formula = ('{b0} + '
                    '({b1} + '
                    '({b2}) * ((1 - {ae}) / {ae}^2) + '
@@ -584,7 +582,6 @@ class SplitWindowLST():
                    '({b6}) * ({de}/{ae}^2)) * (({DUMMY_T10}-{DUMMY_T11})/2) + '
                    '({b7}) * ({DUMMY_T10} - {DUMMY_T11})^2')
 
-        # Implement mechanism to either select
 
         try:
             if self.landcover_class:
@@ -600,11 +597,8 @@ class SplitWindowLST():
             pass
 
         if not self.landcover_class:
-
             # This is required for when a fixed emissivity_class is used,
             # instead of a FROM-GLC (landcover) map.
-
-            # print "Using the FROM-GLC map"
             avg_lse = DUMMY_MAPCALC_STRING_AVG_LSE
             delta_lse = DUMMY_MAPCALC_STRING_DELTA_LSE
 
