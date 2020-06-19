@@ -14,11 +14,9 @@ from constants import DUMMY_MAPCALC_STRING_CWV
 from constants import FROM_GLC_CODES
 from constants import FROM_GLC_LEGEND
 from constants import LST_FORMULA
-# import average emissivities
-import random
+from data_validation import check_t1x_range
+from data_validation import check_cwv
 import csv_to_dictionary as coefficients
-from column_water_vapor import Column_Water_Vapor
-
 EMISSIVITIES = coefficients.get_average_emissivities()
 COLUMN_WATER_VAPOR = coefficients.get_column_water_vapor()
 
