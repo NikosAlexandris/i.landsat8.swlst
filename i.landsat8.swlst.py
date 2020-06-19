@@ -437,9 +437,6 @@ def main():
     rounding = flags['r']
     celsius = flags['c']
 
-    # ToDo:
-    # shell = flags['g']
-
     #
     # Pre-production actions
     #
@@ -484,10 +481,8 @@ def main():
     #
 
     if mtl_file:
-
         # if MTL and b10 given, use it to compute at-satellite temperature t10
         if b10:
-            # convert DNs to at-satellite temperatures
             t10 = tirs_to_at_satellite_temperature(
                     b10,
                     mtl_file,
@@ -498,7 +493,6 @@ def main():
 
         # likewise for b11 -> t11
         if b11:
-            # convert DNs to at-satellite temperatures
             t11 = tirs_to_at_satellite_temperature(
                     b11,
                     mtl_file,
@@ -669,10 +663,8 @@ def main():
         description=description_lst,
         source1=source1_lst,
         source2=source2_lst,
-        history=history_lst)
-
-    # (re)name the LST product
-    #run("g.rename", rast=(tmp_lst, lst_output))
+        history=history_lst,
+    )
 
     # restore region
     if scene_extent:
