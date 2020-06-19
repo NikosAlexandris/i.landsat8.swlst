@@ -13,6 +13,10 @@ from constants import DUMMY_Tj_MEAN
 from constants import DUMMY_Rji
 from constants import EQUATION
 from randomness import random_adjacent_pixel_values
+from grass.pygrass.modules.shortcuts import general as g
+from dummy_mapcalc_strings import replace_dummies
+import grass.script as grass
+from helpers import run
 
 class Column_Water_Vapor():
     """
