@@ -1,11 +1,11 @@
-#!/usr/bin/python\<nl>\
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 """
 Determining atmospheric column water vapor based on
 Huazhong Ren, Chen Du, Qiming Qin, Rongyuan Liu, Jinjie Meng, Jing Li
 
-@author nik | 2015-04-18 03:48:20
+@author nik | Created on 2015-04-18 03:48:20 | Updated on June 2020
 """
 
 from constants import DUMMY_Ti_MEAN
@@ -159,8 +159,7 @@ class Column_Water_Vapor():
         The object's self string
         """
         msg = '- Window size: ' + str(self.window_size) + " by " + str(self.window_size)
-        msg += '\n'
-        msg += '  - Expression for r.mapcalc to determine column water vapor: '
+        msg += '\n      - Expression for r.mapcalc to determine column water vapor: '
         return msg + str(self.column_water_vapor_expression)
 
     def compute_column_water_vapor(self, tik, tjk):
@@ -232,7 +231,6 @@ class Column_Water_Vapor():
         tx_mean_expression = '{sum_of_tx} / {length_of_tx}'
         tx_sum = '(' + ' + '.join(modifiers) + ')'
         tx_length = len(modifiers)
-
         return tx_mean_expression.format(sum_of_tx=tx_sum,
                                          length_of_tx=tx_length)
 
@@ -246,7 +244,6 @@ class Column_Water_Vapor():
         """
         tx_median_expression = 'median({pixel_modifiers})'
         # print tx_median_expression.format(pixel_modifiers=modifiers)
-
         return tx_median_expression
 
     def _numerator_for_ratio(self, mean_ti, mean_tj):
@@ -391,7 +388,7 @@ class Column_Water_Vapor():
                                     c0=self.c0, c1=self.c1, c2=self.c2)
 
         return cwv_expression
-    
+
     def _big_cwv_expression_median():
         """
         Build and return a valid mapcalc expression for deriving a Column
@@ -432,6 +429,7 @@ class Column_Water_Vapor():
                                     c0=self.c0, c1=self.c1, c2=self.c2)
 
         return cwv_expression
+
 
 def estimate_cwv_big_expression(
         outname,
