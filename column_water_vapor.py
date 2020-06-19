@@ -429,6 +429,63 @@ class Column_Water_Vapor():
 
         return cwv_expression
 
+def estimate_cwv_big_expression(
+        outname,
+        cwv_output,
+        t10,
+        t11,
+        cwv_expression,
+        quiet=True,
+    ):
+    """
+    Derive a column water vapor map using a single mapcalc expression based on
+    eval.
+
+            *** To Do: evaluate -- does it work correctly? *** !
+    """
+    msg = "\n|i Estimating atmospheric column water vapor "
+    if quiet:
+        msg += '| Expression:\n'
+    g.message(msg)
+
+    if quiet:
+        msg = replace_dummies(cwv_expression,
+                              in_ti=t10, out_ti='T10',
+                              in_tj=t11, out_tj='T11')
+        msg += '\n'
+        g.message(msg)
+
+    cwv_equation = EQUATION.format(result=outname, expression=cwv_expression)
+    grass.mapcalc(cwv_equation, overwrite=True)
+
+    if quiet:
+        run('r.info', map=outname, flags='r')
+
+    # save Column Water Vapor map?
+    if cwv_output:
+
+        # strings for metadata
+        history_cwv = 'FixMe -- Column Water Vapor model: '
+        history_cwv += 'FixMe -- Add equation?'
+        title_cwv = 'Column Water Vapor'
+        description_cwv = 'Column Water Vapor'
+        units_cwv = 'g/cm^2'
+        source1_cwv = 'FixMe'
+        source2_cwv = 'FixMe'
+
+        # history entry
+        run("r.support",
+            map=outname,
+            title=title_cwv,
+            units=units_cwv,
+            description=description_cwv,
+            source1=source1_cwv,
+            source2=source2_cwv,
+            history=history_cwv,
+           )
+        run('g.rename', raster=(outname, cwv_output))
+
+
 # reusable & stand-alone
 if __name__ == "__main__":
     print ('Atmpspheric column water vapor retrieval '
