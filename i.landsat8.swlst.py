@@ -366,24 +366,11 @@ if "GISBASE" not in os.environ:
     sys.exit(1)
 
 def main():
-    """
-    Main program
-    """
-
     # Temporary filenames
-
-    # The following three are meant for a test step-by-step cwv estimation, see
-    # unused functions!
-
-    # tmp_ti_mean = tmp_map_name('ti_mean')  # for cwv
-    # tmp_tj_mean = tmp_map_name('tj_mean')  # for cwv
-    # tmp_ratio = tmp_map_name('ratio')  # for cwv
-
     tmp_avg_lse = tmp_map_name('avg_lse')
     tmp_delta_lse = tmp_map_name('delta_lse')
     tmp_cwv = tmp_map_name('cwv')
     #tmp_lst = tmp_map_name('lst')
-
 
     # user input
     mtl_file = options['mtl']
@@ -438,7 +425,6 @@ def main():
     # output for in-between maps?
     emissivity_output = options['emissivity_out']
     delta_emissivity_output = options['delta_emissivity_out']
-
     landcover_map = options['landcover']
     landcover_class = options['landcover_class']
 
@@ -566,7 +552,6 @@ def main():
     #
     # 4. Modified Split-Window Variance-Covariance Matrix > Column Water Vapor
     #
-    
 
     if info:
         msg = '\n|i Spatial window of size {n} for Column Water Vapor estimation: '
