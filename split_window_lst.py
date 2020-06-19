@@ -422,7 +422,6 @@ class SplitWindowLST():
         """
         ToDo: shorten the following!
         """
-        # average emissivities
         e10_t10, e10_t11 = self._retrieve_average_emissivities('Cropland')
         avg_e10 = self._compute_average_emissivity(e10_t10, e10_t11)
 
@@ -496,7 +495,6 @@ class SplitWindowLST():
         """
         ToDo: shorten the following!
         """
-        # delta emissivities
         e10_t10, e10_t11 = self._retrieve_average_emissivities('Cropland')
         delta_e10 = self._compute_delta_emissivity(e10_t10, e10_t11)
 
