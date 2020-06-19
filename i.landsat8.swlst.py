@@ -530,6 +530,10 @@ def main():
             msg = "\n|! Random emissivity class selected > " + \
                 split_window_lst.landcover_class + ' '
 
+        if landcover_class == 'Barren_Land':
+            msg = "\n|! For barren land, the last quadratic term of the Split-Window algorithm will be set to 0" + \
+                split_window_lst.landcover_class + ' '
+
         else:
             msg = '\n|! Retrieving average emissivities *only* for {eclass} '
 
