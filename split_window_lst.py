@@ -172,6 +172,15 @@ class SplitWindowLST():
         Check whether the given string belongs to the list (keys) of known land
         cover class names (to the FROM-GLC classification scheme) or is
         identical to 'Random' and return, accordingly, True or False.
+
+        Parameters
+        ----------
+        string
+            A string among the set of FROM-GLC land cover class strings
+
+        Returns
+        -------
+        A boolean whether the given string exists or not
         """
         if string in FROM_GLC_LEGEND.keys():
             return True
