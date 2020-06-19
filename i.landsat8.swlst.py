@@ -523,7 +523,7 @@ def main():
 
         if split_window_lst.landcover_class is False:
             # replace with meaningful error
-            g.warning('Unknown land cover class string! Note, this string '
+            grass.warning('Unknown land cover class string! Note, this string '
                       'input option is case sensitive.')
 
         if landcover_class == 'Random':
