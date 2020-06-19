@@ -120,13 +120,13 @@ class SplitWindowLST():
         if landcover in EMISSIVITIES.keys() or landcover == 'Random':
 
             # a fixed land cover class requested
+            assert self._landcover_string_validity(landcover_class), \
+                "Unknown land cover class name!"
             self.landcover_class = landcover
 
-            # retrieve average emissivities for this class
+            # retrieve & set avg emissivities for channels t10, t11
             emissivity_b10, emissivity_b11 = \
                 self._retrieve_average_emissivities(landcover)
-
-            # split avg emissivities of/for channels t10, t11
             self.emissivity_t10 = float(emissivity_b10)
             self.emissivity_t11 = float(emissivity_b11)
 
