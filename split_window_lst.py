@@ -213,17 +213,19 @@ class SplitWindowLST():
 
         return (emissivity_b10, emissivity_b11)
 
-    def _compute_average_emissivity(self, emissivity_t10, emissivity_t11):
+    def _compute_average_emissivity(self, landcover_class):
         """
         Return the average emissivity value for channels T10, T11.
         """
+        emissivity_t10, emissivity_t11 = self._retrieve_average_emissivities(landcover_class)
         average = float(0.5 * (emissivity_t10 + emissivity_t11))
         return average
 
-    def _compute_delta_emissivity(self, emissivity_t10, emissivity_t11):
+    def _compute_delta_emissivity(self, landcover_class):
         """
         Return the difference of emissivity values for channels T10, T11.
         """
+        emissivity_t10, emissivity_t11 = self._retrieve_average_emissivities(landcover_class)
         delta = float(emissivity_t10 - emissivity_t11)
         return delta
 
@@ -422,102 +424,63 @@ class SplitWindowLST():
         """
         ToDo: shorten the following!
         """
-        e10_t10, e10_t11 = self._retrieve_average_emissivities('Cropland')
-        avg_e10 = self._compute_average_emissivity(e10_t10, e10_t11)
-
-        e20_t10, e20_t11 = self._retrieve_average_emissivities('Forest')
-        avg_e20 = self._compute_average_emissivity(e20_t10, e20_t11)
-
-        e30_t10, e30_t11 = self._retrieve_average_emissivities('Grasslands')
-        avg_e30 = self._compute_average_emissivity(e30_t10, e30_t11)
-
-        e40_t10, e40_t11 = self._retrieve_average_emissivities('Shrublands')
-        avg_e40 = self._compute_average_emissivity(e40_t10, e40_t11)
-
-        e60_t10, e60_t11 = self._retrieve_average_emissivities('Waterbodies')
-        avg_e60 = self._compute_average_emissivity(e60_t10, e60_t11)
-
-        e80_t10, e80_t11 = self._retrieve_average_emissivities('Impervious')
-        avg_e80 = self._compute_average_emissivity(e80_t10, e80_t11)
-
-        e90_t10, e90_t11 = self._retrieve_average_emissivities('Barren_Land')
-        avg_e90 = self._compute_average_emissivity(e90_t10, e90_t11)
-
-        e100_t10, e100_t11 = self._retrieve_average_emissivities('Snow_and_ice')
-        avg_e100 = self._compute_average_emissivity(e100_t10, e100_t11)
+        landcover = DUMMY_MAPCALC_STRING_FROM_GLC
+        average_e10 = self._compute_average_emissivity('Cropland')
+        average_e20 = self._compute_average_emissivity('Forest')
+        average_e30 = self._compute_average_emissivity('Grasslands')
+        average_e40 = self._compute_average_emissivity('Shrublands')
+        average_e60 = self._compute_average_emissivity('Waterbodies')
+        average_e80 = self._compute_average_emissivity('Impervious')
+        average_e90 = self._compute_average_emissivity('Barren_Land')
+        average_e100 = self._compute_average_emissivity('Snow_and_ice')
 
         expression = (# Cropland: (10, 11, 12, 13)
-                      'eval( class_10 = {landcover} >= 10 && {landcover} < 20,'
+                      f'eval( class_10 = {landcover} >= 10 && {landcover} < 20,'
                       # Forest: (20, 21, 22, 23, 24)
-                      '\ \n class_20 = {landcover} >= 20 && {landcover} < 30,'
+                      f'\ \n class_20 = {landcover} >= 20 && {landcover} < 30,'
                       # Grasslands: (30, 31, 32, 51, 72)
-                      '\ \n class_30 = {landcover} == 51 || {landcover} == 72 || {landcover} >= 30 && {landcover} < 40,'
+                      f'\ \n class_30 = {landcover} == 51 || {landcover} == 72 || {landcover} >= 30 && {landcover} < 40,'
                       # Shrublands: (40, 71)
-                      '\ \n class_40 = {landcover} == 71 || {landcover} >= 40 && {landcover} < 50,'
+                      f'\ \n class_40 = {landcover} == 71 || {landcover} >= 40 && {landcover} < 50,'
                       # Wetlands: 50  --  Assigned below the 'average_60'
-                      '\ \n class_50 = {landcover} >= 50 && {landcover} < 52,'
+                      f'\ \n class_50 = {landcover} >= 50 && {landcover} < 52,'
                       # Waterbodies: (50, 60, 61, 62, 63)
-                      '\ \n class_60 = {landcover} >= 60 && {landcover} < 70,'
+                      f'\ \n class_60 = {landcover} >= 60 && {landcover} < 70,'
                       # Tundra: 70  --  Assigned belot the 'average_40'
-                      '\ \n class_70 = {landcover} >= 70 && {landcover} < 72,'
+                      f'\ \n class_70 = {landcover} >= 70 && {landcover} < 72,'
                       # Impervious: (80, 81, 82)
-                      '\ \n class_80 = {landcover} >= 80 && {landcover} < 90,'
+                      f'\ \n class_80 = {landcover} >= 80 && {landcover} < 90,'
                       # Barren Land: (90, 52, 91, 92, 93, 94, 95, 96)
-                      '\ \n class_90 = {landcover} == 52 || {landcover} >= 90 && {landcover} < 100,'
+                      f'\ \n class_90 = {landcover} == 52 || {landcover} >= 90 && {landcover} < 100,'
                       # Snow and ice: (100, 101, 102)
-                      '\ \n class_100 = {landcover} >= 100 && {landcover} < 120,'
+                      f'\ \n class_100 = {landcover} >= 100 && {landcover} < 120,'
                       # Cloud: (120) -- Should be masked, thus not included
-                      '\ \n if( class_10, {average_10},'
-                      '\ \n if( class_20, {average_20},'
-                      '\ \n if( class_30, {average_30},'
-                      '\ \n if( class_40, {average_40},'
-                      '\ \n if( class_50, {average_60},'
-                      '\ \n if( class_60, {average_60},'
-                      '\ \n if( class_70, {average_40},'
-                      '\ \n if( class_80, {average_80},'
-                      '\ \n if( class_90, {average_90},'
-                      '\ \n if( class_100, {average_100},'
+                      f'\ \n if( class_10, {average_10},'
+                      f'\ \n if( class_20, {average_20},'
+                      f'\ \n if( class_30, {average_30},'
+                      f'\ \n if( class_40, {average_40},'
+                      f'\ \n if( class_50, {average_60},'
+                      f'\ \n if( class_60, {average_60},'
+                      f'\ \n if( class_70, {average_40},'
+                      f'\ \n if( class_80, {average_80},'
+                      f'\ \n if( class_90, {average_90},'
+                      f'\ \n if( class_100, {average_100},'
                       ' null() )))))))))))')
 
-        mapcalc = expression.format(landcover=DUMMY_MAPCALC_STRING_FROM_GLC,
-                                    average_10=avg_e10,
-                                    average_20=avg_e20,
-                                    average_30=avg_e30,
-                                    average_40=avg_e40,
-                                    average_60=avg_e60,
-                                    average_80=avg_e80,
-                                    average_90=avg_e90,
-                                    average_100=avg_e100)
-
-        return mapcalc
+        return expression
 
     def _build_delta_emissivity_mapcalc(self):
         """
         ToDo: shorten the following!
         """
-        e10_t10, e10_t11 = self._retrieve_average_emissivities('Cropland')
-        delta_e10 = self._compute_delta_emissivity(e10_t10, e10_t11)
-
-        e20_t10, e20_t11 = self._retrieve_average_emissivities('Forest')
-        delta_e20 = self._compute_delta_emissivity(e20_t10, e20_t11)
-
-        e30_t10, e30_t11 = self._retrieve_average_emissivities('Grasslands')
-        delta_e30 = self._compute_delta_emissivity(e30_t10, e30_t11)
-
-        e40_t10, e40_t11 = self._retrieve_average_emissivities('Shrublands')
-        delta_e40 = self._compute_delta_emissivity(e40_t10, e40_t11)
-
-        e60_t10, e60_t11 = self._retrieve_average_emissivities('Waterbodies')
-        delta_e60 = self._compute_delta_emissivity(e60_t10, e60_t11)
-
-        e80_t10, e80_t11 = self._retrieve_average_emissivities('Impervious')
-        delta_e80 = self._compute_delta_emissivity(e80_t10, e80_t11)
-
-        e90_t10, e90_t11 = self._retrieve_average_emissivities('Barren_Land')
-        delta_e90 = self._compute_delta_emissivity(e90_t10, e90_t11)
-
-        e100_t10, e100_t11 = self._retrieve_average_emissivities('Snow_and_ice')
-        delta_e100 = self._compute_delta_emissivity(e100_t10, e100_t11)
+        delta_e10 = self._compute_delta_emissivity('Cropland')
+        delta_e20 = self._compute_delta_emissivity('Forest')
+        delta_e30 = self._compute_delta_emissivity('Grasslands')
+        delta_e40 = self._compute_delta_emissivity('Shrublands')
+        delta_e60 = self._compute_delta_emissivity('Waterbodies')
+        delta_e80 = self._compute_delta_emissivity('Impervious')
+        delta_e90 = self._compute_delta_emissivity('Barren_Land')
+        delta_e100 = self._compute_delta_emissivity('Snow_and_ice')
 
         expression = (# Cropland: (10, 11, 12, 13)
                       'eval( class_10 = {landcover} >= 10 && {landcover} < 20,'
