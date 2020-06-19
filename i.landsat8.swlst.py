@@ -279,16 +279,16 @@
 #%end
 
 #%option
-#% key: emissivity_class
+#% key: landcover_class
 #% key_desc: string
 #% description: Retrieve average emissivities only for a single land cover class (case sensitive) | Expert use
-#% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren, Snow, Random
+#% options: Cropland, Forest, Grasslands, Shrublands, Wetlands, Waterbodies, Tundra, Impervious, Barren_Land, Snow_and_ice, Random
 #% required : no
 #%end
 
 #%rules
-#% required: landcover, emissivity_class
-#% exclusive: landcover, emissivity_class
+#% required: landcover, landcover_class
+#% exclusive: landcover, landcover_class
 #%end
 
 #%option G_OPT_R_OUTPUT
@@ -798,9 +798,8 @@ def main():
     emissivity_output = options['emissivity_out']
     delta_emissivity_output = options['delta_emissivity_out']
 
-    global landcover_map, emissivity_class
     landcover_map = options['landcover']
-    emissivity_class = options['emissivity_class']
+    landcover_class = options['landcover_class']
 
     # flags
     global info, null
@@ -885,14 +884,14 @@ def main():
     #
 
     # use given fixed class?
-    if emissivity_class:
+    if landcover_class:
 
         if split_window_lst.landcover_class is False:
             # replace with meaningful error
             g.warning('Unknown land cover class string! Note, this string '
                       'input option is case sensitive.')
 
-        if emissivity_class == 'Random':
+        if landcover_class == 'Random':
             msg = "\n|! Random emissivity class selected > " + \
                 split_window_lst.landcover_class + ' '
 
@@ -955,6 +954,7 @@ def main():
     estimate_lst(lst_output, t10, t11,
                  tmp_avg_lse, tmp_delta_lse, tmp_cwv,
                  split_window_lst.sw_lst_mapcalc)
+            landcover_class,
 
     #
     # Post-production actions

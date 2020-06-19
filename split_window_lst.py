@@ -205,44 +205,32 @@ class SplitWindowLST():
         else:
             return False
 
-    def _retrieve_average_emissivities(self, emissivity_class):
+    def _retrieve_average_emissivities(self, landcover_class):
         """
-        Get land surface average emissivities from an emissivity look-up table.
+        Get land surface average emissivities for the requested landcover class
+        from a look-up table.
+
+        Parameters
+        ----------
+        landcover_class
+            Input is one of the standard FROM-GLC land cover classes
+            (see CSV file: average_emissivity.csv)
+
+            For testing purposes, the string "Random" is accepted to select a
+            random land surface emissivity class.
+
+        Returns
+        -------
         This helper function returns a tuple.
-
-        Input is either one of the standard FROM-GLC land cover classes (...),
-        or one of its corresponding land cover class codes (...).
-
-        For testing purposes, the string "Random" is accepted to select a
-        random land surface emissivity class.
         """
+        # Random?
+        if landcover_class == 'Random':
+            landcover_class = random.choice(list(EMISSIVITIES.keys()))
+            self.landcover_class = landcover_class  # use the 'random' class
 
-        # land cover class code (integer)
-        if self.landcover_class and type(emissivity_class) == int:
-
-            assert self._landcover_string_validity(self.landcover_class), \
-                "Unknown land cover class name!"
-
-            if int(emissivity_class) in FROM_GLC_CODES:
-                landcover_code = int(emissivity_class)
-
-                # retrieving emissivity based on land cover class code
-                emissivity_class = [key for key in FROM_GLC_LEGEND
-                                    if landcover_code
-                                    in FROM_GLC_LEGEND[key]][0]
-
-            elif not int(emissivity_class) in FROM_GLC_LEGEND:
-                print ('The given land cover class code is not present in '
-                       'FROM-GLC map\'s legend!')
-
-        # random?
-        if type(emissivity_class) == str and emissivity_class == 'Random':
-            emissivity_class = random.choice(EMISSIVITIES.keys())
-            self.landcover_class = emissivity_class
-
-        # fields = EMISSIVITIES[emissivity_class]._fields
-        emissivity_b10 = EMISSIVITIES[emissivity_class].TIRS10
-        emissivity_b11 = EMISSIVITIES[emissivity_class].TIRS11
+        # fields = EMISSIVITIES[landcover_class]._fields
+        emissivity_b10 = EMISSIVITIES[landcover_class].TIRS10
+        emissivity_b11 = EMISSIVITIES[landcover_class].TIRS11
 
         return (emissivity_b10, emissivity_b11)
 
