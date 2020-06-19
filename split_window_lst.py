@@ -444,7 +444,7 @@ class SplitWindowLST():
         e90_t10, e90_t11 = self._retrieve_average_emissivities('Barren_Land')
         avg_e90 = self._compute_average_emissivity(e90_t10, e90_t11)
 
-        e100_t10, e100_t11 = self._retrieve_average_emissivities('Cropland')
+        e100_t10, e100_t11 = self._retrieve_average_emissivities('Snow_and_ice')
         avg_e100 = self._compute_average_emissivity(e100_t10, e100_t11)
 
         expression = (# Cropland: (10, 11, 12, 13)
@@ -518,7 +518,7 @@ class SplitWindowLST():
         e90_t10, e90_t11 = self._retrieve_average_emissivities('Barren_Land')
         delta_e90 = self._compute_delta_emissivity(e90_t10, e90_t11)
 
-        e100_t10, e100_t11 = self._retrieve_average_emissivities('Cropland')
+        e100_t10, e100_t11 = self._retrieve_average_emissivities('Snow_and_ice')
         delta_e100 = self._compute_delta_emissivity(e100_t10, e100_t11)
 
         expression = (# Cropland: (10, 11, 12, 13)
