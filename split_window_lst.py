@@ -298,7 +298,6 @@ class SplitWindowLST():
             b7 = COLUMN_WATER_VAPOR[subrange].b7
         else:
             b7 = 0
-
         cwv_coefficients = (b0,
                             b1,
                             b2,
@@ -307,7 +306,6 @@ class SplitWindowLST():
                             b5,
                             b6,
                             b7)
-
         return cwv_coefficients
 
     def _set_cwv_coefficients(self, subrange):
@@ -388,7 +386,6 @@ class SplitWindowLST():
         c2 = (t10 - t11) / 2
         c = c1 * c2
         d = b7 * (t10 - t11)**2
-
         lst = a + b + c + d
         return lst
 
@@ -452,8 +449,8 @@ class SplitWindowLST():
 
         expression = ('eval( class_10 = {landcover} >= 10 && {landcover} < 20,'
                       '\ \n class_20 = {landcover} >= 20 && {landcover} < 30,'
-                      '\ \n class_30 = {landcover} == 72 || {landcover} >= 30 && {landcover} < 40,'
-                      '\ \n class_40 = {landcover} >= 40 && {landcover} < 50,'
+                      '\ \n class_30 = {landcover} == 51 || {landcover} == 72 || {landcover} >= 30 && {landcover} < 40,'
+                      '\ \n class_40 = {landcover} == 71 || {landcover} >= 40 && {landcover} < 50,'
                       '\ \n class_50 = {landcover} >= 50 && {landcover} < 52,'
                       '\ \n class_60 = {landcover} >= 60 && {landcover} < 70,'
                       '\ \n class_70 = {landcover} >= 70 && {landcover} < 72,'
@@ -515,8 +512,8 @@ class SplitWindowLST():
 
         expression = ('eval( class_10 = {landcover} >= 10 && {landcover} < 20,'
                       '\ \n class_20 = {landcover} >= 20 && {landcover} < 30,'
-                      '\ \n class_30 = {landcover} == 72 || {landcover} >= 30 && {landcover} < 40,'
-                      '\ \n class_40 = {landcover} >= 40 && {landcover} < 50,'
+                      '\ \n class_30 = {landcover} == 51 || {landcover} == 72 || {landcover} >= 30 && {landcover} < 40,'
+                      '\ \n class_40 = {landcover} == 71 || {landcover} >= 40 && {landcover} < 50,'
                       '\ \n class_50 = {landcover} >= 50 && {landcover} < 52,'
                       '\ \n class_60 = {landcover} >= 60 && {landcover} < 70,'
                       '\ \n class_70 = {landcover} >= 70 && {landcover} < 72,'
