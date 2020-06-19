@@ -593,15 +593,17 @@ class SplitWindowLST():
         either a fixed land cover class  OR  a land cover map.
         """
         try:
-            if self.landcover_class:
-                # print "Fixed land cover class"
+            if self.landcover_class:  # Fixed land cover class
                 emissivity_t10 = float(self.emissivity_t10)
                 emissivity_t11 = float(self.emissivity_t11)
-                avg_lse = self._compute_delta_emissivity(emissivity_t10,
-                                                         emissivity_t11)
-                delta_lse = \
-                    self._compute_delta_emissivity(emissivity_t10,
-                                                   emissivity_t11)
+                avg_lse = self._compute_average_emissivity(
+                        emissivity_t10,
+                        emissivity_t11,
+                        )
+                delta_lse = self._compute_delta_emissivity(
+                        emissivity_t10,
+                        emissivity_t11,
+                        )
         except:
             pass
 
