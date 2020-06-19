@@ -548,8 +548,13 @@ def main():
             tmp_avg_lse = average_emissivity_map
 
         if not average_emissivity_map:
-            determine_average_emissivity(tmp_avg_lse, landcover_map,
-                                         split_window_lst.average_lse_mapcalc)
+            determine_average_emissivity(
+                    tmp_avg_lse,
+                    emissivity_output,
+                    landcover_map,
+                    split_window_lst.average_lse_mapcalc,
+                    quiet=info,
+            )
             if options['emissivity_out']:
                 tmp_avg_lse = options['emissivity_out']
 
@@ -557,8 +562,13 @@ def main():
             tmp_delta_lse = delta_emissivity_map
 
         if not delta_emissivity_map:
-            determine_delta_emissivity(tmp_delta_lse, landcover_map,
-                                       split_window_lst.delta_lse_mapcalc)
+            determine_delta_emissivity(
+                    tmp_delta_lse,
+                    delta_emissivity_output,
+                    landcover_map,
+                    split_window_lst.delta_lse_mapcalc,
+                    quiet=info,
+            )
             if options['delta_emissivity_out']:
                 tmp_delta_lse = options['delta_emissivity_out']
 
