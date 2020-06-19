@@ -12,16 +12,7 @@ from constants import DUMMY_Ti_MEAN
 from constants import DUMMY_Tj_MEAN
 from constants import DUMMY_Rji
 from constants import EQUATION
-
-
-# helper functions
-def random_adjacent_pixel_values(pixel_modifiers):
-    """
-    """
-    import random
-    return [random.randint(250, 350) for dummy_idx in
-            range(len(pixel_modifiers))]
-
+from randomness import random_adjacent_pixel_values
 
 class Column_Water_Vapor():
     """
