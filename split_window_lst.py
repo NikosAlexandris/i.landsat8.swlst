@@ -57,8 +57,18 @@ class SplitWindowLST():
 
     LST = b0 +
         + ( b1 + b2 * ( 1 - ae ) / ae + b3 * de / ae^2 ) * ( t10 + t11 ) / 2 +
+        + ( b4 + b5 * ( 1 - ae ) / ae + b6 * de / ae^2 ) * ( t10 - t11 ) / 2
+
+    or for barren land, add another quadratic term:
+
+    LST = b0 +
+        + ( b1 + b2 * ( 1 - ae ) / ae + b3 * de / ae^2 ) * ( t10 + t11 ) / 2 +
         + ( b4 + b5 * ( 1 - ae ) / ae + b6 * de / ae^2 ) * ( t10 - t11 ) / 2 +
         + b7 * ( t10 - t11 )^2
+
+
+    Note, the last quadratic term is meant to be applied only on bare soil
+    surfaces!
 
     To reduce the influence of the CWV error on the LST, for a CWV within the
     overlap of two adjacent CWV sub-ranges, the coefficients for the two
