@@ -8,21 +8,10 @@
 # required librairies
 import random
 from column_water_vapor import *
-
+from randomness import random_window_size
+from randomness import random_adjacent_pixel_values
 
 # helper functions
-def random_window_size():
-    """
-    """
-    return random.randint(7, 21)
-
-def random_adjacent_pixel_values(pixel_modifiers):
-    """
-    """
-    return [random.randint(250, 350) for dummy_idx in
-            range(len(pixel_modifiers))]
-
-
 def test_column_water_vapor():
 
     print('Equations for Column Water Vapor retrieval based on...')

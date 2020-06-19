@@ -337,6 +337,9 @@ from helpers import save_map
 from helpers import extract_number_from_string
 from helpers import add_timestamp
 from helpers import mask_clouds
+from randomness import random_digital_numbers
+from randomness import random_column_water_vapor_subrange
+from randomness import random_column_water_vapor_value
 from constants import DUMMY_MAPCALC_STRING_RADIANCE
 from constants import DUMMY_MAPCALC_STRING_DN
 from constants import DUMMY_MAPCALC_STRING_T10
@@ -354,41 +357,6 @@ if "GISBASE" not in os.environ:
     print("You must be in GRASS GIS to run this program.")
     sys.exit(1)
 
-
-
-def random_digital_numbers(count=2):
-    """
-    Return a user-requested amount of random Digital Number values for testing
-    purposes ranging in 12-bit
-    """
-    digital_numbers = []
-
-    for dn in range(0, count):
-        digital_numbers.append(random.randint(1, 2**12))
-
-    if count == 1:
-        return digital_numbers[0]
-
-    return digital_numbers
-
-
-def random_column_water_vapor_subrange():
-    """
-    Helper function, while coding and testing, returning a random column water
-    vapor key to assist in testing the module.
-    """
-    cwvkey = random.choice(COLUMN_WATER_VAPOUR.keys())
-    # COLUMN_WATER_VAPOUR[cwvkey].subrange
-    # COLUMN_WATER_VAPOUR[cwvkey].rmse
-    return cwvkey
-
-
-def random_column_water_vapor_value():
-    """
-    Helper function, while coding and testing, returning a random value for
-    column water vapor.
-    """
-    return random.uniform(0.0, 6.3)
 
 
 def digital_numbers_to_radiance(outname, band, radiance_expression):
