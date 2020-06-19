@@ -447,16 +447,27 @@ class SplitWindowLST():
         e100_t10, e100_t11 = self._retrieve_average_emissivities('Cropland')
         avg_e100 = self._compute_average_emissivity(e100_t10, e100_t11)
 
-        expression = ('eval( class_10 = {landcover} >= 10 && {landcover} < 20,'
+        expression = (# Cropland: (10, 11, 12, 13)
+                      'eval( class_10 = {landcover} >= 10 && {landcover} < 20,'
+                      # Forest: (20, 21, 22, 23, 24)
                       '\ \n class_20 = {landcover} >= 20 && {landcover} < 30,'
+                      # Grasslands: (30, 31, 32, 51, 72)
                       '\ \n class_30 = {landcover} == 51 || {landcover} == 72 || {landcover} >= 30 && {landcover} < 40,'
+                      # Shrublands: (40, 71)
                       '\ \n class_40 = {landcover} == 71 || {landcover} >= 40 && {landcover} < 50,'
+                      # Wetlands: 50  --  Assigned below the 'average_60'
                       '\ \n class_50 = {landcover} >= 50 && {landcover} < 52,'
+                      # Waterbodies: (50, 60, 61, 62, 63)
                       '\ \n class_60 = {landcover} >= 60 && {landcover} < 70,'
+                      # Tundra: 70  --  Assigned belot the 'average_40'
                       '\ \n class_70 = {landcover} >= 70 && {landcover} < 72,'
+                      # Impervious: (80, 81, 82)
                       '\ \n class_80 = {landcover} >= 80 && {landcover} < 90,'
+                      # Barren Land: (90, 52, 91, 92, 93, 94, 95, 96)
                       '\ \n class_90 = {landcover} == 52 || {landcover} >= 90 && {landcover} < 100,'
+                      # Snow and ice: (100, 101, 102)
                       '\ \n class_100 = {landcover} >= 100 && {landcover} < 120,'
+                      # Cloud: (120) -- Should be masked, thus not included
                       '\ \n if( class_10, {average_10},'
                       '\ \n if( class_20, {average_20},'
                       '\ \n if( class_30, {average_30},'
@@ -510,16 +521,27 @@ class SplitWindowLST():
         e100_t10, e100_t11 = self._retrieve_average_emissivities('Cropland')
         delta_e100 = self._compute_delta_emissivity(e100_t10, e100_t11)
 
-        expression = ('eval( class_10 = {landcover} >= 10 && {landcover} < 20,'
+        expression = (# Cropland: (10, 11, 12, 13)
+                      'eval( class_10 = {landcover} >= 10 && {landcover} < 20,'
+                      # Forest: (20, 21, 22, 23, 24)
                       '\ \n class_20 = {landcover} >= 20 && {landcover} < 30,'
+                      # Grasslands: (30, 31, 32, 51, 72)
                       '\ \n class_30 = {landcover} == 51 || {landcover} == 72 || {landcover} >= 30 && {landcover} < 40,'
+                      # Shrublands: (40, 71)
                       '\ \n class_40 = {landcover} == 71 || {landcover} >= 40 && {landcover} < 50,'
+                      # Wetlands: 50  -- Assigned below the 'delta_60'
                       '\ \n class_50 = {landcover} >= 50 && {landcover} < 52,'
+                      # Waterbodies: (50, 60, 61, 62, 63)
                       '\ \n class_60 = {landcover} >= 60 && {landcover} < 70,'
+                      # Tundra: 70  --  Assigned belot the 'delta_40'
                       '\ \n class_70 = {landcover} >= 70 && {landcover} < 72,'
+                      # Impervious: (80, 81, 82)
                       '\ \n class_80 = {landcover} >= 80 && {landcover} < 90,'
+                      # Barren Land: (90, 52, 91, 92, 93, 94, 95, 96)
                       '\ \n class_90 = {landcover} == 52 || {landcover} >= 90 && {landcover} < 100,'
+                      # Snow and ice: (100, 101, 102)
                       '\ \n class_100 = {landcover} >= 100 && {landcover} < 120,'
+                      # Cloud: (120) -- Should be masked, thus not included
                       '\ \n if( class_10, {delta_10},'
                       '\ \n if( class_20, {delta_20},'
                       '\ \n if( class_30, {delta_30},'
