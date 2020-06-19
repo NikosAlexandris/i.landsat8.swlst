@@ -583,7 +583,13 @@ def main():
 
     cwv = Column_Water_Vapor(cwv_window_size, t10, t11)
     citation_cwv = cwv.citation
-    estimate_cwv_big_expression(tmp_cwv, t10, t11, cwv._big_cwv_expression())
+    estimate_cwv_big_expression(
+            tmp_cwv,
+            cwv_output,
+            t10,
+            t11,
+            cwv._big_cwv_expression(),
+    )
     if cwv_output:
         tmp_cwv = cwv_output
 
