@@ -384,8 +384,6 @@ def main():
     tmp_cwv = tmp_map_name('cwv')
     #tmp_lst = tmp_map_name('lst')
 
-    # basic equation for mapcalc
-    global equation, citation_lst
     equation = "{result} = {expression}"
 
     # user input
@@ -422,13 +420,11 @@ def main():
     lst_output = options['lst']
 
     # save Brightness Temperature maps?
-    global brightness_temperature_prefix
     if options['prefix_bt']:
         brightness_temperature_prefix = options['prefix_bt']
     else:
         brightness_temperature_prefix = None
 
-    global cwv_output
     cwv_window_size = int(options['window'])
     assertion_for_cwv_window_size_msg = ('A spatial window of size 5^2 or less is not '
                                          'recommended. Please select a larger window. '
@@ -441,7 +437,6 @@ def main():
     delta_emissivity_map = options['delta_emissivity']
 
     # output for in-between maps?
-    global emissivity_output, delta_emissivity_output
     emissivity_output = options['emissivity_out']
     delta_emissivity_output = options['delta_emissivity_out']
 
@@ -449,16 +444,11 @@ def main():
     landcover_class = options['landcover_class']
 
     # flags
-    global info, null
     info = flags['i']
     scene_extent = flags['e']
     timestamping = flags['t']
     null = flags['n']
-
-    global rounding
     rounding = flags['r']
-
-    global celsius
     celsius = flags['c']
 
     # ToDo:
