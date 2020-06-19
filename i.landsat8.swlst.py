@@ -352,6 +352,8 @@ from constants import DUMMY_Ti_MEAN
 from constants import DUMMY_Tj_MEAN
 from constants import DUMMY_Rji
 from constants import EQUATION as equation
+from emissivity import determine_average_emissivity
+from emissivity import determine_delta_emissivity
 from radiance import digital_numbers_to_radiance
 from radiance import radiance_to_brightness_temperature
 from temperature import tirs_to_at_satellite_temperature
