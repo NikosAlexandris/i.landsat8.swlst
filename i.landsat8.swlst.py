@@ -660,7 +660,7 @@ def main():
     # Initialise a SplitWindowLST object
     #
 
-    split_window_lst = SplitWindowLST(emissivity_class)
+    split_window_lst = SplitWindowLST(landcover_class)
     citation_lst = split_window_lst.citation
 
     #
