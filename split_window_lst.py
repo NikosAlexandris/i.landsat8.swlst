@@ -300,7 +300,10 @@ class SplitWindowLST():
         b4 = COLUMN_WATER_VAPOR[subrange].b4
         b5 = COLUMN_WATER_VAPOR[subrange].b5
         b6 = COLUMN_WATER_VAPOR[subrange].b6
-        b7 = COLUMN_WATER_VAPOR[subrange].b7
+        if self.landcover_class == 'Barren_Land':
+            b7 = COLUMN_WATER_VAPOR[subrange].b7
+        else:
+            b7 = 0
 
         cwv_coefficients = (b0,
                             b1,
