@@ -488,12 +488,24 @@ def main():
         # if MTL and b10 given, use it to compute at-satellite temperature t10
         if b10:
             # convert DNs to at-satellite temperatures
-            t10 = tirs_to_at_satellite_temperature(b10, mtl_file)
+            t10 = tirs_to_at_satellite_temperature(
+                    b10,
+                    mtl_file,
+                    brightness_temperature_prefix,
+                    null,
+                    quiet=info,
+            )
 
         # likewise for b11 -> t11
         if b11:
             # convert DNs to at-satellite temperatures
-            t11 = tirs_to_at_satellite_temperature(b11, mtl_file)
+            t11 = tirs_to_at_satellite_temperature(
+                    b11,
+                    mtl_file,
+                    brightness_temperature_prefix,
+                    null,
+                    quiet=info,
+            )
 
     #
     # Initialise a SplitWindowLST object
