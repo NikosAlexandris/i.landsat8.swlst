@@ -454,66 +454,6 @@ def replace_dummies(string, *args, **kwargs):
                   replacements, string)
 
 
-def determine_average_emissivity(outname, landcover_map, avg_lse_expression):
-    """
-    Produce an average emissivity map based on FROM-GLC map covering the region
-    of interest.
-    """
-    msg = ('\n|i Determining average land surface emissivity based on a '
-           'look-up table ')
-    if info:
-        msg += ('| Expression:\n\n {exp}')
-        msg = msg.format(exp=avg_lse_expression)
-    g.message(msg)
-
-    avg_lse_expression = replace_dummies(avg_lse_expression,
-                                         instring=DUMMY_MAPCALC_STRING_FROM_GLC,
-                                         outstring=landcover_map)
-
-    avg_lse_equation = equation.format(result=outname,
-                                       expression=avg_lse_expression)
-
-    grass.mapcalc(avg_lse_equation, overwrite=True)
-
-    if info:
-        run('r.info', map=outname, flags='r')
-
-
-    # save land surface emissivity map?
-    if emissivity_output:
-        run('g.rename', raster=(outname, emissivity_output))
-
-
-def determine_delta_emissivity(outname, landcover_map, delta_lse_expression):
-    """
-    Produce a delta emissivity map based on the FROM-GLC map covering the
-    region of interest.
-    """
-    msg = ('\n|i Determining delta land surface emissivity based on a '
-           'look-up table ')
-    if info:
-        msg += ('| Expression:\n\n {exp}')
-        msg = msg.format(exp=delta_lse_expression)
-    g.message(msg)
-
-    delta_lse_expression = replace_dummies(delta_lse_expression,
-                                           instring=DUMMY_MAPCALC_STRING_FROM_GLC,
-                                           outstring=landcover_map)
-
-    delta_lse_equation = equation.format(result=outname,
-                                         expression=delta_lse_expression)
-
-    grass.mapcalc(delta_lse_equation, overwrite=True)
-
-    if info:
-        run('r.info', map=outname, flags='r')
-
-
-    # save delta land surface emissivity map?
-    if delta_emissivity_output:
-        run('g.rename', raster=(outname, delta_emissivity_output))
-
-
 def estimate_cwv_big_expression(outname, t10, t11, cwv_expression):
     """
     Derive a column water vapor map using a single mapcalc expression based on
