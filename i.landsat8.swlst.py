@@ -658,9 +658,13 @@ def main():
     source2_lst = landsat8_metadata.origin
 
     # history entry
-    run("r.support", map=lst_output, title=title_lst,
-        units=units_lst, description=description_lst,
-        source1=source1_lst, source2=source2_lst,
+    run("r.support",
+        map=lst_output,
+        title=title_lst,
+        units=units_lst,
+        description=description_lst,
+        source1=source1_lst,
+        source2=source2_lst,
         history=history_lst)
 
     # (re)name the LST product
