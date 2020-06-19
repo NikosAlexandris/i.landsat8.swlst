@@ -4,44 +4,23 @@ A class for the Split Window Algorithm for Land Surface Temperature estimation
 @author: nik | Created on Wed Mar 18 11:28:45 2015
 """
 
+from constants import BARREN_LAND_CLASS_STRING
+from constants import DUMMY_MAPCALC_STRING_T10
+from constants import DUMMY_MAPCALC_STRING_T11
+from constants import DUMMY_MAPCALC_STRING_AVG_LSE
+from constants import DUMMY_MAPCALC_STRING_DELTA_LSE
+from constants import DUMMY_MAPCALC_STRING_FROM_GLC
+from constants import DUMMY_MAPCALC_STRING_CWV
+from constants import FROM_GLC_CODES
+from constants import FROM_GLC_LEGEND
+from constants import LST_FORMULA
 # import average emissivities
 import random
 import csv_to_dictionary as coefficients
 from column_water_vapor import Column_Water_Vapor
 
-# globals
 EMISSIVITIES = coefficients.get_average_emissivities()
 COLUMN_WATER_VAPOR = coefficients.get_column_water_vapor()
-DUMMY_MAPCALC_STRING_T10 = 'Input_T10'
-DUMMY_MAPCALC_STRING_T11 = 'Input_T11'
-DUMMY_MAPCALC_STRING_AVG_LSE = 'Input_AVG_LSE'
-DUMMY_MAPCALC_STRING_DELTA_LSE = 'Input_DELTA_LSE'
-DUMMY_MAPCALC_STRING_FROM_GLC = 'Input_FROMGLC'
-DUMMY_MAPCALC_STRING_CWV = 'Input_CWV'
-
-# Remove from here, improve and use named tuples!
-FROM_GLC_CODES = [10, 11, 12, 13,
-                  20, 21, 22, 23, 24,
-                  30, 31, 32,
-                  51, 72,
-                  40, 71,
-                  60, 61, 62, 63,
-                  80, 81, 82,
-                  90, 52, 91, 92, 93, 94, 95, 96,
-                  100, 101, 102]
-
-FROM_GLC_LEGEND = {'Cropland': (10, 11, 12, 13),
-                   'Forest': (20, 21, 22, 23, 24),
-                   'Grasslands': (30, 31, 32, 51, 72),
-                   'Shrublands': (40, 71),
-                   'Waterbodies': (60, 61, 62, 63),
-                   'Tundra': (70,),
-                   'Impervious': (80, 81, 82),
-                   'Barren_Land': (90, 52, 91, 92, 93, 94, 95, 96),
-                   'Snow_and_ice': (100, 101, 102),
-                   'Cloud': (120,)}
-
-
 # helper functions
 def check_t1x_range(number):
     """

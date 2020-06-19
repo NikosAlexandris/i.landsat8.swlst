@@ -8,10 +8,10 @@ Huazhong Ren, Chen Du, Qiming Qin, Rongyuan Liu, Jinjie Meng, Jing Li
 @author nik | 2015-04-18 03:48:20
 """
 
-# globals
-DUMMY_Ti_MEAN = 'Mean_Ti'
-DUMMY_Tj_MEAN = 'Mean_Tj'
-DUMMY_Rji = 'Ratio_ji'
+from constants import DUMMY_Ti_MEAN
+from constants import DUMMY_Tj_MEAN
+from constants import DUMMY_Rji
+from constants import EQUATION
 
 
 # helper functions

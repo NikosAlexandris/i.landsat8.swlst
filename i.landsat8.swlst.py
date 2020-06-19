@@ -330,23 +330,23 @@ import functools
 
 from split_window_lst import *
 from landsat8_mtl import Landsat8_MTL
+from constants import DUMMY_MAPCALC_STRING_RADIANCE
+from constants import DUMMY_MAPCALC_STRING_DN
+from constants import DUMMY_MAPCALC_STRING_T10
+from constants import DUMMY_MAPCALC_STRING_T11
+from constants import DUMMY_MAPCALC_STRING_AVG_LSE
+from constants import DUMMY_MAPCALC_STRING_DELTA_LSE
+from constants import DUMMY_MAPCALC_STRING_FROM_GLC
+from constants import DUMMY_MAPCALC_STRING_CWV
+from constants import DUMMY_Ti_MEAN
+from constants import DUMMY_Tj_MEAN
+from constants import DUMMY_Rji
+from constants import EQUATION as equation
 
 if "GISBASE" not in os.environ:
     print("You must be in GRASS GIS to run this program.")
     sys.exit(1)
 
-# globals
-DUMMY_MAPCALC_STRING_RADIANCE = 'Radiance'
-DUMMY_MAPCALC_STRING_DN = 'DigitalNumber'
-DUMMY_MAPCALC_STRING_T10 = 'Input_T10'
-DUMMY_MAPCALC_STRING_T11 = 'Input_T11'
-DUMMY_MAPCALC_STRING_AVG_LSE = 'Input_AVG_LSE'
-DUMMY_MAPCALC_STRING_DELTA_LSE = 'Input_DELTA_LSE'
-DUMMY_MAPCALC_STRING_FROM_GLC = 'Input_FROMGLC'
-DUMMY_MAPCALC_STRING_CWV = 'Input_CWV'
-DUMMY_Ti_MEAN = 'Mean_Ti'
-DUMMY_Tj_MEAN = 'Mean_Tj'
-DUMMY_Rji = 'Ratio_ji'
 
 
 # helper functions
