@@ -132,6 +132,15 @@ def csv_to_dictionary(csv):
 
     Also, fix the re-definition of the function transform(). See
     <http://stackoverflow.com/q/30204197/1172302>
+
+    Parameters
+    ----------
+    csv
+
+    Returns
+    -------
+    A dictionary with named tuples
+
     '''
     # split input in rows
     rows = csv.split('\n')
@@ -334,10 +343,10 @@ def test_csvfile(infile):
                                             'b7', d[somekey].b7,
                                             'rmse', d[somekey].rmse))
 
-#test_using_file(CSVFILE)  # Ucomment to run test function!
-#CSVFILE = "cwv_coefficients.csv"
-#test_csvfile("cwv_coefficients.csv")
-#CSVFILE = ''
+# test_using_file(CSVFILE)  # Ucomment to run test function!
+# CSVFILE = "cwv_coefficients.csv"
+# test_csvfile("cwv_coefficients.csv")
+# CSVFILE = ''
 
 
 def test(testdata):
@@ -379,7 +388,7 @@ Impervious|0.973|0.981
 Barren_Land|0.969|0.978
 Snow_and_Ice|0.992|0.998'''
 
-#test(testdata)  # Ucomment to run the test function!
+# test(testdata)  # Ucomment to run the test function!
 
 ''' Output ------------------------------
 {'Wetlands': <class '__main__.Wetlands'>,
