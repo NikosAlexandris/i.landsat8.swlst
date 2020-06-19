@@ -462,7 +462,7 @@ def main():
 
         g.message(msg)
 
-    elif scene_extent:
+    elif not scene_extent:
         grass.warning(_('Operating on current region'))
 
     #
