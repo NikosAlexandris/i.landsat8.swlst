@@ -347,18 +347,17 @@ class SplitWindowLST():
 
     def _build_average_emissivity_mapcalc(self):
         """
-        ToDo: shorten the following!
+        Build average emissivity expression for GRASS GIS' mapcalc
         """
         landcover = DUMMY_MAPCALC_STRING_FROM_GLC
-        average_e10 = self._compute_average_emissivity('Cropland')
-        average_e20 = self._compute_average_emissivity('Forest')
-        average_e30 = self._compute_average_emissivity('Grasslands')
-        average_e40 = self._compute_average_emissivity('Shrublands')
-        average_e60 = self._compute_average_emissivity('Waterbodies')
-        average_e80 = self._compute_average_emissivity('Impervious')
-        average_e90 = self._compute_average_emissivity('Barren_Land')
-        average_e100 = self._compute_average_emissivity('Snow_and_ice')
-
+        average_10 = self._compute_average_emissivity('Cropland')
+        average_20 = self._compute_average_emissivity('Forest')
+        average_30 = self._compute_average_emissivity('Grasslands')
+        average_40 = self._compute_average_emissivity('Shrublands')
+        average_60 = self._compute_average_emissivity('Waterbodies')
+        average_80 = self._compute_average_emissivity('Impervious')
+        average_90 = self._compute_average_emissivity('Barren_Land')
+        average_100 = self._compute_average_emissivity('Snow_and_ice')
         expression = (# Cropland: (10, 11, 12, 13)
                       f'eval( class_10 = {landcover} >= 10 && {landcover} < 20,'
                       # Forest: (20, 21, 22, 23, 24)
@@ -391,66 +390,54 @@ class SplitWindowLST():
                       f'\ \n if( class_90, {average_90},'
                       f'\ \n if( class_100, {average_100},'
                       ' null() )))))))))))')
-
         return expression
 
     def _build_delta_emissivity_mapcalc(self):
         """
-        ToDo: shorten the following!
+        Build delta emissivity expression for GRASS GIS' mapcalc
         """
-        delta_e10 = self._compute_delta_emissivity('Cropland')
-        delta_e20 = self._compute_delta_emissivity('Forest')
-        delta_e30 = self._compute_delta_emissivity('Grasslands')
-        delta_e40 = self._compute_delta_emissivity('Shrublands')
-        delta_e60 = self._compute_delta_emissivity('Waterbodies')
-        delta_e80 = self._compute_delta_emissivity('Impervious')
-        delta_e90 = self._compute_delta_emissivity('Barren_Land')
-        delta_e100 = self._compute_delta_emissivity('Snow_and_ice')
-
+        landcover = DUMMY_MAPCALC_STRING_FROM_GLC
+        delta_10 = self._compute_delta_emissivity('Cropland')
+        delta_20 = self._compute_delta_emissivity('Forest')
+        delta_30 = self._compute_delta_emissivity('Grasslands')
+        delta_40 = self._compute_delta_emissivity('Shrublands')
+        delta_60 = self._compute_delta_emissivity('Waterbodies')
+        delta_80 = self._compute_delta_emissivity('Impervious')
+        delta_90 = self._compute_delta_emissivity('Barren_Land')
+        delta_100 = self._compute_delta_emissivity('Snow_and_ice')
         expression = (# Cropland: (10, 11, 12, 13)
-                      'eval( class_10 = {landcover} >= 10 && {landcover} < 20,'
+                      f'eval( class_10 = {landcover} >= 10 && {landcover} < 20,'
                       # Forest: (20, 21, 22, 23, 24)
-                      '\ \n class_20 = {landcover} >= 20 && {landcover} < 30,'
+                      f'\ \n class_20 = {landcover} >= 20 && {landcover} < 30,'
                       # Grasslands: (30, 31, 32, 51, 72)
-                      '\ \n class_30 = {landcover} == 51 || {landcover} == 72 || {landcover} >= 30 && {landcover} < 40,'
+                      f'\ \n class_30 = {landcover} == 51 || {landcover} == 72 || {landcover} >= 30 && {landcover} < 40,'
                       # Shrublands: (40, 71)
-                      '\ \n class_40 = {landcover} == 71 || {landcover} >= 40 && {landcover} < 50,'
+                      f'\ \n class_40 = {landcover} == 71 || {landcover} >= 40 && {landcover} < 50,'
                       # Wetlands: 50  -- Assigned below the 'delta_60'
-                      '\ \n class_50 = {landcover} >= 50 && {landcover} < 52,'
+                      f'\ \n class_50 = {landcover} >= 50 && {landcover} < 52,'
                       # Waterbodies: (50, 60, 61, 62, 63)
-                      '\ \n class_60 = {landcover} >= 60 && {landcover} < 70,'
+                      f'\ \n class_60 = {landcover} >= 60 && {landcover} < 70,'
                       # Tundra: 70  --  Assigned belot the 'delta_40'
-                      '\ \n class_70 = {landcover} >= 70 && {landcover} < 72,'
+                      f'\ \n class_70 = {landcover} >= 70 && {landcover} < 72,'
                       # Impervious: (80, 81, 82)
-                      '\ \n class_80 = {landcover} >= 80 && {landcover} < 90,'
+                      f'\ \n class_80 = {landcover} >= 80 && {landcover} < 90,'
                       # Barren Land: (90, 52, 91, 92, 93, 94, 95, 96)
-                      '\ \n class_90 = {landcover} == 52 || {landcover} >= 90 && {landcover} < 100,'
+                      f'\ \n class_90 = {landcover} == 52 || {landcover} >= 90 && {landcover} < 100,'
                       # Snow and ice: (100, 101, 102)
-                      '\ \n class_100 = {landcover} >= 100 && {landcover} < 120,'
+                      f'\ \n class_100 = {landcover} >= 100 && {landcover} < 120,'
                       # Cloud: (120) -- Should be masked, thus not included
-                      '\ \n if( class_10, {delta_10},'
-                      '\ \n if( class_20, {delta_20},'
-                      '\ \n if( class_30, {delta_30},'
-                      '\ \n if( class_40, {delta_40},'
-                      '\ \n if( class_50, {delta_60},'
-                      '\ \n if( class_60, {delta_60},'
-                      '\ \n if( class_70, {delta_40},'
-                      '\ \n if( class_80, {delta_80},'
-                      '\ \n if( class_90, {delta_90},'
-                      '\ \n if( class_100, {delta_100},'
+                      f'\ \n if( class_10, {delta_10},'
+                      f'\ \n if( class_20, {delta_20},'
+                      f'\ \n if( class_30, {delta_30},'
+                      f'\ \n if( class_40, {delta_40},'
+                      f'\ \n if( class_50, {delta_60},'
+                      f'\ \n if( class_60, {delta_60},'
+                      f'\ \n if( class_70, {delta_40},'
+                      f'\ \n if( class_80, {delta_80},'
+                      f'\ \n if( class_90, {delta_90},'
+                      f'\ \n if( class_100, {delta_100},'
                       ' null() )))))))))))')
-
-        mapcalc = expression.format(landcover=DUMMY_MAPCALC_STRING_FROM_GLC,
-                                    delta_10=delta_e10,
-                                    delta_20=delta_e20,
-                                    delta_30=delta_e30,
-                                    delta_40=delta_e40,
-                                    delta_60=delta_e60,
-                                    delta_80=delta_e80,
-                                    delta_90=delta_e90,
-                                    delta_100=delta_e100)
-
-        return mapcalc
+        return expression
 
     def _build_model(self, coefficients):
         """
