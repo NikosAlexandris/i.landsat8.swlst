@@ -133,13 +133,11 @@ class SplitWindowLST():
 
             # average emissivity
             self.average_emissivity = \
-                self._compute_average_emissivity(self.emissivity_t10,
-                                                 self.emissivity_t11)
+                self._compute_average_emissivity(self.landcover_class)
 
             # delta emissivity
             self.delta_emissivity = \
-                self._compute_delta_emissivity(self.emissivity_t10,
-                                               self.emissivity_t11)
+                self._compute_delta_emissivity(self.landcover_class)
 
         else:
 
@@ -468,20 +466,14 @@ class SplitWindowLST():
             if self.landcover_class:  # Fixed land cover class
                 emissivity_t10 = float(self.emissivity_t10)
                 emissivity_t11 = float(self.emissivity_t11)
-                avg_lse = self._compute_average_emissivity(
-                        emissivity_t10,
-                        emissivity_t11,
-                        )
-                delta_lse = self._compute_delta_emissivity(
-                        emissivity_t10,
-                        emissivity_t11,
-                        )
+                avg_lse = self._compute_average_emissivity(self.landcover_class)
+                delta_lse = self._compute_delta_emissivity(self.landcover_class)
         except:
             pass
 
+        # Following required when using a fixed landcover_class
+        # instead of a FROM-GLC (landcover) map.
         if not self.landcover_class:
-            # This is required for when a fixed emissivity_class is used,
-            # instead of a FROM-GLC (landcover) map.
             avg_lse = DUMMY_MAPCALC_STRING_AVG_LSE
             delta_lse = DUMMY_MAPCALC_STRING_DELTA_LSE
 
