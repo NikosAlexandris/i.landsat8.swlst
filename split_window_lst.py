@@ -12,7 +12,6 @@ from constants import DUMMY_MAPCALC_STRING_AVG_LSE
 from constants import DUMMY_MAPCALC_STRING_DELTA_LSE
 from constants import DUMMY_MAPCALC_STRING_FROM_GLC
 from constants import DUMMY_MAPCALC_STRING_CWV
-from constants import FROM_GLC_CODES
 from constants import FROM_GLC_LEGEND
 from constants import LST_FORMULA
 from data_validation import check_t1x_range
