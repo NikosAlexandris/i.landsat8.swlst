@@ -121,7 +121,7 @@ class SplitWindowLST():
         if landcover in EMISSIVITIES.keys() or landcover == 'Random':
 
             # a fixed land cover class requested
-            assert self._landcover_string_validity(landcover_class), \
+            assert self._landcover_string_validity(landcover), \
                 "Unknown land cover class name!"
             self.landcover_class = landcover
 
