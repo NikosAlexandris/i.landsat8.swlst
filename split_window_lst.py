@@ -243,7 +243,6 @@ class SplitWindowLST():
 
         # get all but the last -- using a list, after all!
         subranges = list(key_subrange_generator)
-        # print " * Subranges:", subranges
 
         # cwv in one or two subranges?
         result = [range_x for range_x, (low, high) in subranges[:5]
@@ -261,9 +260,8 @@ class SplitWindowLST():
             # self._cwv_subrange_a, self._cwv_subrange_b = tuple(result)
             return result[0], result[1]
 
-        # what if it fails? -> subrange6
+        # if the above fail, use complete CWV range [0, 6.3] (subrange 6)
         else:
-            # print " * Using the complete CWV range [0, 6.3]"
             return subranges[5][0]
 
     def _set_adjacent_cwv_subranges(self, column_water_vapor):
@@ -491,8 +489,7 @@ class SplitWindowLST():
                     b7=b7,
                     DUMMY_T10=DUMMY_MAPCALC_STRING_T10,
                     DUMMY_T11=DUMMY_MAPCALC_STRING_T11,
-                )
-
+                  )
         return mapcalc
 
     def _build_swlst_mapcalc(self):
@@ -500,40 +497,34 @@ class SplitWindowLST():
         Build and return a valid expression for GRASS GIS' r.mapcalc to
         determine LST.
         """
-        # subrange limits, low, high
+        DUMMY_CWV = DUMMY_MAPCALC_STRING_CWV
         low_1, high_1 = COLUMN_WATER_VAPOR['Range_1'].subrange
         low_2, high_2 = COLUMN_WATER_VAPOR['Range_2'].subrange
         low_3, high_3 = COLUMN_WATER_VAPOR['Range_3'].subrange
         low_4, high_4 = COLUMN_WATER_VAPOR['Range_4'].subrange
         low_5, high_5 = COLUMN_WATER_VAPOR['Range_5'].subrange
         low_6, high_6 = COLUMN_WATER_VAPOR['Range_6'].subrange  # unused
-
-        # build mapcalc expression for each subrange
         expression_range_1 = self._build_subrange_mapcalc('Range_1')
         expression_range_2 = self._build_subrange_mapcalc('Range_2')
         expression_range_3 = self._build_subrange_mapcalc('Range_3')
         expression_range_4 = self._build_subrange_mapcalc('Range_4')
         expression_range_5 = self._build_subrange_mapcalc('Range_5')
-
-        # complete range
-        expression_range_6 = self._build_subrange_mapcalc('Range_6')
-
-        # build one big expression using mighty eval
-        expression = ('eval( sw_lst_1 = {exp_1},'
-                      '\ \n sw_lst_2 = {exp_2},'
-                      '\ \n sw_lst_12 = (sw_lst_1 + sw_lst_2) / 2,'
-                      '\ \n sw_lst_3 = {exp_3},'
-                      '\ \n sw_lst_23 = (sw_lst_2 + sw_lst_3) / 2,'
-                      '\ \n sw_lst_4 = {exp_4},'
-                      '\ \n sw_lst_34 = (sw_lst_3 + sw_lst_4) / 2,'
-                      '\ \n sw_lst_5 = {exp_5},'
-                      '\ \n sw_lst_45 = (sw_lst_4 + sw_lst_5) / 2,'
-                      '\ \n sw_lst_6 = {exp_6},'
-                      '\ \n in_range_1 = {low_1} < {DUMMY_CWV} && {DUMMY_CWV} < {high_1},'
-                      '\ \n in_range_2 = {low_2} < {DUMMY_CWV} && {DUMMY_CWV} < {high_2},'
-                      '\ \n in_range_3 = {low_3} < {DUMMY_CWV} && {DUMMY_CWV} < {high_3},'
-                      '\ \n in_range_4 = {low_4} < {DUMMY_CWV} && {DUMMY_CWV} < {high_4},'
-                      '\ \n in_range_5 = {low_5} < {DUMMY_CWV} && {DUMMY_CWV} < {high_5},'
+        expression_range_6 = self._build_subrange_mapcalc('Range_6')  # complete range
+        expression = (f'eval( sw_lst_1 = {expression_range_1},'
+                      f'\ \n sw_lst_2 = {expression_range_2},'
+                      f'\ \n sw_lst_12 = (sw_lst_1 + sw_lst_2) / 2,'
+                      f'\ \n sw_lst_3 = {expression_range_3},'
+                      f'\ \n sw_lst_23 = (sw_lst_2 + sw_lst_3) / 2,'
+                      f'\ \n sw_lst_4 = {expression_range_4},'
+                      f'\ \n sw_lst_34 = (sw_lst_3 + sw_lst_4) / 2,'
+                      f'\ \n sw_lst_5 = {expression_range_5},'
+                      f'\ \n sw_lst_45 = (sw_lst_4 + sw_lst_5) / 2,'
+                      f'\ \n sw_lst_6 = {expression_range_6},'
+                      f'\ \n in_range_1 = {low_1} < {DUMMY_CWV} && {DUMMY_CWV} < {high_1},'
+                      f'\ \n in_range_2 = {low_2} < {DUMMY_CWV} && {DUMMY_CWV} < {high_2},'
+                      f'\ \n in_range_3 = {low_3} < {DUMMY_CWV} && {DUMMY_CWV} < {high_3},'
+                      f'\ \n in_range_4 = {low_4} < {DUMMY_CWV} && {DUMMY_CWV} < {high_4},'
+                      f'\ \n in_range_5 = {low_5} < {DUMMY_CWV} && {DUMMY_CWV} < {high_5},'
                       '\ \n if( in_range_1 && in_range_2, sw_lst_12,'
                       '\ \n if( in_range_2 && in_range_3, sw_lst_23,'
                       '\ \n if( in_range_3 && in_range_4, sw_lst_34,'
@@ -544,26 +535,10 @@ class SplitWindowLST():
                       '\ \n if( in_range_4, sw_lst_4,'
                       '\ \n if( in_range_5, sw_lst_5,'
                       ' sw_lst_6 ))))))))))')  # ' null() ))))))))))')
-
-        # replace keywords appropriately
-        swlst_expression = expression.format(exp_1=expression_range_1,
-                                             low_1=low_1,
-                                             DUMMY_CWV=DUMMY_MAPCALC_STRING_CWV,
-                                             high_1=high_1,
-                                             exp_2=expression_range_2,
-                                             low_2=low_2, high_2=high_2,
-                                             exp_3=expression_range_3,
-                                             low_3=low_3, high_3=high_3,
-                                             exp_4=expression_range_4,
-                                             low_4=low_4, high_4=high_4,
-                                             exp_5=expression_range_5,
-                                             low_5=low_5, high_5=high_5,
-                                             exp_6=expression_range_6)
-
-        return swlst_expression
+        return expression
 
 # reusable & stand-alone
 if __name__ == "__main__":
-    print ('Split-Window Algorithm for Estimating Land Surface Temperature '
+    print('Split-Window Algorithm for Estimating Land Surface Temperature '
            'from Landsat8 OLI/TIRS imagery.'
            ' (Running as stand-alone tool?)\n')
