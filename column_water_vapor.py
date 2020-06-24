@@ -371,7 +371,7 @@ class Column_Water_Vapor():
                f'\ \n  {self.c0} + {self.c1} * (rji) + {self.c2} * (rji)^2)')
         return cwv_expression
 
-    def _big_cwv_expression_median():
+    def _big_cwv_expression_median(self):
         """
         Build and return a valid mapcalc expression for deriving a Column
         Water Vapor map from Landsat8's brightness temperature channels
