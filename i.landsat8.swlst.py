@@ -432,6 +432,7 @@ def main():
     # output for in-between maps?
     emissivity_output = options['emissivity_out']
     delta_emissivity_output = options['delta_emissivity_out']
+
     landcover_map = options['landcover']
     landcover_class = options['landcover_class']
 
@@ -519,7 +520,6 @@ def main():
     # 3. Land Surface Emissivities
     #
 
-    # use given fixed class?
     if landcover_class:
 
         if split_window_lst.landcover_class is False:
@@ -588,6 +588,7 @@ def main():
 
     cwv = Column_Water_Vapor(cwv_window_size, t10, t11)
     citation_cwv = cwv.citation
+
     if median:
         cwv_expression = cwv._big_cwv_expression_median()
     else:
