@@ -595,10 +595,10 @@ def main():
     print("HERE:", cwv_expression)
 
     estimate_cwv_big_expression(
-            tmp_cwv,
-            cwv_output,
-            t10,
-            t11,
+            outname=tmp_cwv,
+            cwv_output=cwv_output,
+            t10=t10,
+            t11=t11,
             cwv_expression=cwv_expression,
     )
     if cwv_output:
