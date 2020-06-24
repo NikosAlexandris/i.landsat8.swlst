@@ -228,11 +228,10 @@ class Column_Water_Vapor():
         Return mapcalc expression for window means based on the given mapcalc
         pixel modifiers.
         """
-        tx_mean_expression = '{sum_of_tx} / {length_of_tx}'
         tx_sum = '(' + ' + '.join(modifiers) + ')'
         tx_length = len(modifiers)
-        return tx_mean_expression.format(sum_of_tx=tx_sum,
-                                         length_of_tx=tx_length)
+        tx_mean_expression = f'{tx_sum} / {tx_length}'
+        return tx_mean_expression
 
     def _median_tirs_expression(self, modifiers):
         """
@@ -242,8 +241,7 @@ class Column_Water_Vapor():
         r.mapcalc has a "median" function. Thus, just return the pixel
         modifiers.
         """
-        tx_median_expression = 'median({pixel_modifiers})'
-        # print tx_median_expression.format(pixel_modifiers=modifiers)
+        tx_median_expression = f'median({modifiers})'
         return tx_median_expression
 
     def _numerator_for_ratio(self, mean_ti, mean_tj):
@@ -325,12 +323,8 @@ class Column_Water_Vapor():
         """
         rji_numerator = self._numerator_for_ratio(mean_ti=DUMMY_Ti_MEAN,
                                                   mean_tj=DUMMY_Tj_MEAN)
-
         rji_denominator = self._denominator_for_ratio(mean_ti=DUMMY_Ti_MEAN)
-
-        rji = '( {numerator} ) / ( {denominator} )'
-        rji = rji.format(numerator=rji_numerator, denominator=rji_denominator)
-
+        rji = f'( {rji_numerator} ) / ( {rji_denominator} )'
         return rji
 
     def _column_water_vapor_expression(self):
@@ -339,10 +333,9 @@ class Column_Water_Vapor():
         water vapor from within the main code (main function) of the module
         i.landsat8.swlst
         """
-        cwv_expression = '({c0}) + ({c1}) * ({Rji}) + ({c2}) * ({Rji})^2'
-
-        return cwv_expression.format(c0=self.c0, c1=self.c1,
-                                     Rji=DUMMY_Rji, c2=self.c2)
+        Rji = DUMMY_Rji
+        cwv_expression = f'({self.c0}) + ({self.c1}) * ({Rji}) + ({self.c2}) * ({Rji})^2'
+        return cwv_expression
 
     def _big_cwv_expression(self):
         """
@@ -351,42 +344,31 @@ class Column_Water_Vapor():
         B10, B11 based on the MSWCVM method (see citation).
         """
         modifiers_ti = self._derive_modifiers(self.ti)
-        ti_sum = '(' + ' + '.join(modifiers_ti) + ')'
-        ti_length = len(modifiers_ti)
-        ti_mean = '{sum} / {length}'.format(sum=ti_sum, length=ti_length)
+        ti_mean = self._mean_tirs_expression(modifiers_ti)
+        string_for_mean_ti = 'ti_mean'
 
         modifiers_tj = self._derive_modifiers(self.tj)
-        tj_sum = '(' + ' + '.join(modifiers_tj) + ')'
-        tj_length = len(modifiers_tj)
-        tj_mean = '{sum} / {length}'.format(sum=tj_sum, length=tj_length)
-
-        string_for_mean_ti = 'ti_mean'
+        tj_mean = self._mean_tirs_expression(modifiers_tj)
         string_for_mean_tj = 'tj_mean'
 
-        numerator = self._numerator_for_ratio_big(mean_ti=string_for_mean_ti,
-                                                  mean_tj=string_for_mean_tj)
+        numerator = self._numerator_for_ratio_big(
+                        mean_ti=string_for_mean_ti,
+                        mean_tj=string_for_mean_tj,
+                    )
+        denominator = self._denominator_for_ratio_big(mean_ti=string_for_mean_ti)
 
-        denominator = \
-            self._denominator_for_ratio_big(mean_ti=string_for_mean_ti)
-
-        cwv = ('eval('
-               '\ \n  ti_mean = {tim},'
+        cwv_expression = ('eval('
+               f'\ \n  ti_mean = {ti_mean},'
                '\ \n'
-               '\ \n  tj_mean = {tjm},'
+               f'\ \n  tj_mean = {tj_mean},'
                '\ \n'
-               '\ \n  numerator = {numerator},'
+               f'\ \n  numerator = {numerator},'
                '\ \n'
-               '\ \n  denominator = {denominator},'
+               f'\ \n  denominator = {denominator},'
                '\ \n'
                '\ \n  rji = numerator / denominator,'
                '\ \n'
-               '\ \n  {c0} + {c1} * (rji) + {c2} * (rji)^2)')
-
-        cwv_expression = cwv.format(tim=ti_mean, tjm=tj_mean,
-                                    numerator=numerator,
-                                    denominator=denominator,
-                                    c0=self.c0, c1=self.c1, c2=self.c2)
-
+               f'\ \n  {self.c0} + {self.c1} * (rji) + {self.c2} * (rji)^2)')
         return cwv_expression
 
     def _big_cwv_expression_median():
@@ -396,38 +378,31 @@ class Column_Water_Vapor():
         B10, B11 based on the MSWCVM method (see citation).
         """
         modifiers_ti = self._derive_modifiers(self.ti)
-        ti_median = 'median({modifiers}'.format(modifiers=modifiers_ti)
+        ti_median = 'median({modifiers_ti)'
 
         modifiers_tj = self._derive_modifiers(self.tj)
-        tj_median = 'median({modifiers}'.format(modifiers=modifiers_tj)
+        tj_median = 'median({modifiers_tj)'
 
         string_for_median_ti = 'ti_median'
         string_for_median_tj = 'tj_median'
 
         numerator = self._numerator_for_ratio_big(median_ti=string_for_median_ti,
                                                   median_tj=string_for_median_tj)
-
         denominator = \
             self._denominator_for_ratio_big(median_ti=string_for_median_ti)
 
-        cwv = ('eval('
-               '\ \n  ti_median = {tim},'
+        cwv_expression = ('eval('
+               f'\ \n  ti_median = {ti_median},'
                '\ \n'
-               '\ \n  tj_median = {tjm},'
+               f'\ \n  tj_median = {tj_median},'
                '\ \n'
-               '\ \n  numerator = {numerator},'
+               f'\ \n  numerator = {numerator},'
                '\ \n'
-               '\ \n  denominator = {denominator},'
+               f'\ \n  denominator = {denominator},'
                '\ \n'
                '\ \n  rji = numerator / denominator,'
                '\ \n'
-               '\ \n  {c0} + {c1} * (rji) + {c2} * (rji)^2)')
-
-        cwv_expression = cwv.format(tim=ti_median, tjm=tj_median,
-                                    numerator=numerator,
-                                    denominator=denominator,
-                                    c0=self.c0, c1=self.c1, c2=self.c2)
-
+               f'\ \n  {self.c0} + {self.c1} * (rji) + {self.c2} * (rji)^2)')
         return cwv_expression
 
 
