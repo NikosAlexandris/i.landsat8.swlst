@@ -104,6 +104,11 @@
 #%end
 
 #%flag
+#%  key: m
+#%  description: Median based column water vapor estimation based on the MSWCVM method
+#%end
+
+#%flag
 #%  key: r
 #%  description: Round LST output and keep two digits
 #%end
@@ -435,6 +440,7 @@ def main():
     scene_extent = flags['e']
     timestamping = flags['t']
     null = flags['n']
+    median = flags['m']
     rounding = flags['r']
     celsius = flags['c']
 
@@ -582,12 +588,17 @@ def main():
 
     cwv = Column_Water_Vapor(cwv_window_size, t10, t11)
     citation_cwv = cwv.citation
+    if median:
+        cwv_expression = cwv._big_cwv_expression_median()
+    else:
+        cwv_expression = cwv._big_cwv_expression()
+
     estimate_cwv_big_expression(
             tmp_cwv,
             cwv_output,
             t10,
             t11,
-            cwv._big_cwv_expression(),
+            cwv_expression=cwv._big_cwv_expression(),
     )
     if cwv_output:
         tmp_cwv = cwv_output
