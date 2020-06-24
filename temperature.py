@@ -154,11 +154,10 @@ def estimate_lst(
                                                   out_tj=t11)
 
     if rounding:
-        split_window_expression = '(round({swe}, 2, 0.5))'.format(swe=split_window_expression)
+        split_window_expression = f'(round({split_window_expression}, 2, 0.5))'
 
     if celsius:
-        split_window_expression = '({swe}) - 273.15'.format(swe=split_window_expression)
-
+        split_window_expression = f'({split_window_expression}) - 273.15'
 
     split_window_equation = EQUATION.format(
             result=outname,
