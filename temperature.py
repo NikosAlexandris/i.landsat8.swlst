@@ -155,9 +155,11 @@ def estimate_lst(
 
     if rounding:
         split_window_expression = f'(round({split_window_expression}, 2, 0.5))'
+        print("HERE:", split_window_expression)
 
     if celsius:
         split_window_expression = f'({split_window_expression}) - 273.15'
+        print("AND HERE:", split_window_expression)
 
     split_window_equation = EQUATION.format(
             result=outname,
