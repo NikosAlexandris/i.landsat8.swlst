@@ -276,12 +276,22 @@ class Column_Water_Vapor():
         """
         mean_ti = kwargs.get('mean_ti', 'ti_mean')
         mean_tj = kwargs.get('mean_tj', 'tj_mean')
-
-        terms = '({Ti} - {Tim}) * ({Tj} - {Tjm})'
-        terms = ' + '.join([terms.format(Ti=mod_ti,
+        if mean_ti and mean_tj:
+            terms = '({Ti} - {Tim}) * ({Tj} - {Tjm})'
+            terms = ' + '.join([terms.format(Ti=mod_ti,
                                          Tim=mean_ti,
                                          Tj=mod_tj,
                                          Tjm=mean_tj)
+                           for mod_ti, mod_tj in self.modifiers])
+
+        median_ti = kwargs.get('median_ti', 'ti_median')
+        median_tj = kwargs.get('median_tj', 'tj_median')
+        if median_ti and median_tj:
+            terms = '({Ti} - {Tim}) * ({Tj} - {Tjm})'
+            terms = ' + '.join([terms.format(Ti=mod_ti,
+                                         Tim=median_ti,
+                                         Tj=mod_tj,
+                                         Tjm=median_tj)
                            for mod_ti, mod_tj in self.modifiers])
         return terms
 
