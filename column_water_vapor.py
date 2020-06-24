@@ -379,17 +379,17 @@ class Column_Water_Vapor():
         """
         modifiers_ti = self._derive_modifiers(self.ti)
         ti_median = 'median({modifiers_ti)'
+        string_for_median_ti = 'ti_median'
 
         modifiers_tj = self._derive_modifiers(self.tj)
         tj_median = 'median({modifiers_tj)'
-
-        string_for_median_ti = 'ti_median'
         string_for_median_tj = 'tj_median'
 
-        numerator = self._numerator_for_ratio_big(median_ti=string_for_median_ti,
-                                                  median_tj=string_for_median_tj)
-        denominator = \
-            self._denominator_for_ratio_big(median_ti=string_for_median_ti)
+        numerator = self._numerator_for_ratio_big(
+                        median_ti=string_for_median_ti,
+                        median_tj=string_for_median_tj,
+                    )
+        denominator = self._denominator_for_ratio_big(median_ti=string_for_median_ti)
 
         cwv_expression = ('eval('
                f'\ \n  ti_median = {ti_median},'
