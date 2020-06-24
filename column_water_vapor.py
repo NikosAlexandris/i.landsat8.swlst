@@ -378,11 +378,11 @@ class Column_Water_Vapor():
         B10, B11 based on the MSWCVM method (see citation).
         """
         modifiers_ti = self._derive_modifiers(self.ti)
-        ti_median = 'median({modifiers_ti)'
+        ti_median = self._median_tirs_expression(modifiers_ti)
         string_for_median_ti = 'ti_median'
 
         modifiers_tj = self._derive_modifiers(self.tj)
-        tj_median = 'median({modifiers_tj)'
+        tj_median = self._median_tirs_expression(modifiers_tj)
         string_for_median_tj = 'tj_median'
 
         numerator = self._numerator_for_ratio_big(
