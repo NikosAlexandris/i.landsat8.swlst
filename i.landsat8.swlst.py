@@ -592,6 +592,7 @@ def main():
         cwv_expression = cwv._big_cwv_expression_median()
     else:
         cwv_expression = cwv._big_cwv_expression()
+    print("HERE:", cwv_expression)
 
     estimate_cwv_big_expression(
             tmp_cwv,
