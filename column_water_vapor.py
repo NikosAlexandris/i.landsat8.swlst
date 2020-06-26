@@ -55,15 +55,15 @@ class Column_Water_Vapor():
     - Ti,k and Tj,k are Top of Atmosphere brightness temperatures (K) of
     bands i and j for the kth pixel;
 
-    - mean(Ti) and mean(Tj) are the mean or median brightness temperatures of
-    the N pixels for the two bands.
+    - mean(Ti) and mean(Tj) or median(Ti) and median(Tj) are the mean or median
+      brightness temperatures of the N pixels for the two bands
 
 
     The regression coefficients:
 
     ==================================================================
 
-    * NOTE, there is a typo in the paper 
+    * NOTE, there is a typo in the paper!
 
     [0] Du, Chen; Ren, Huazhong; Qin, Qiming; Meng, Jinjie; Zhao,
     Shaohua. 2015. "A Practical Split-Window Algorithm for Estimating
@@ -137,15 +137,11 @@ class Column_Water_Vapor():
         self.modifiers_tj = self._derive_modifiers(self.tj)
         self.modifiers = list(zip(self.modifiers_ti, self.modifiers_tj))
 
-        # mapcalc expression for means
+        # mapcalc expression for means; medians
         self.mean_ti_expression = self._mean_tirs_expression(self.modifiers_ti)
         self.mean_tj_expression = self._mean_tirs_expression(self.modifiers_tj)
-
-        # mapcalc expression for medians  --  ToDo
-        self.median_ti_expression = \
-            self._median_tirs_expression(self.modifiers_ti)
-        self.median_tj_expression = \
-            self._median_tirs_expression(self.modifiers_tj)
+        self.median_ti_expression = self._median_tirs_expression(self.modifiers_ti)
+        self.median_tj_expression = self._median_tirs_expression(self.modifiers_tj)
 
         # mapcalc expression for ratio ji
         self.ratio_ji_expression = self._ratio_ji_expression()
@@ -235,12 +231,19 @@ class Column_Water_Vapor():
 
     def _median_tirs_expression(self, modifiers):
         """
-        Return mapcalc expression for window medians based on the given mapcalc
-        pixel modifiers.
+        Parameters
+        ----------
+        modifiers
+            Pixel modifiers to access adjacent pixels using GRASS GIS' mapcalc
+            syntax
 
-        r.mapcalc has a "median" function. Thus, just return the pixel
-        modifiers.
+        Returns
+        -------
+        tx_mean_expression
+            A mapcalc expression for window medians based on the given mapcalc
+            pixel modifiers.
         """
+        modifiers = ', '.join(modifiers)
         tx_median_expression = f'median({modifiers})'
         return tx_median_expression
 
