@@ -57,16 +57,19 @@ def determine_delta_emissivity(
         msg += (f'\n   Expression:\n\n {delta_lse_expression}')
     g.message(msg)
 
-    delta_lse_expression = replace_dummies(delta_lse_expression,
-                                           instring=DUMMY_MAPCALC_STRING_FROM_GLC,
-                                           outstring=landcover_map)
-    delta_lse_equation = EQUATION.format(result=outname,
-                                         expression=delta_lse_expression)
+    delta_lse_expression = replace_dummies(
+            delta_lse_expression,
+            instring=DUMMY_MAPCALC_STRING_FROM_GLC,
+            outstring=landcover_map,
+    )
+    delta_lse_equation = EQUATION.format(
+            result=outname,
+            expression=delta_lse_expression,
+    )
     grass.mapcalc(delta_lse_equation, overwrite=True)
 
     if info:
         run('r.info', map=outname, flags='r')
-
 
     # save delta land surface emissivity map?
     if delta_emissivity_output:
