@@ -387,6 +387,7 @@ class Column_Water_Vapor():
 
         return denominator_ij
 
+    def _ratio_ji_expression(self, statistic):
         """
         Returns a mapcalc expression for the Ratio ji, part of the column water
         vapor retrieval model.
@@ -403,20 +404,34 @@ class Column_Water_Vapor():
                     tj_m=DUMMY_Tj_MEDIAN,
             )
             rji_denominator = self._denominator_for_ratio_ji(ti_m=DUMMY_Ti_MEDIAN)
+
         rji = f'( {rji_numerator} ) / ( {rji_denominator} )'
+        self.ratio_ji_expression = rji
         return rji
 
-    def _column_water_vapor_expression(self):
+    def _ratio_ij_expression(self, statistic):
         """
-        Use this function for the step-by-step approach to estimate the column
-        water vapor from within the main code (main function) of the module
-        i.landsat8.swlst
+        Returns a mapcalc expression for the Ratio ij, part of the column water
+        vapor retrieval model.
         """
-        Rji = DUMMY_Rji
-        cwv_expression = f'({self.c0}) + ({self.c1}) * ({Rji}) + ({self.c2}) * ({Rji})^2'
-        return cwv_expression
+        if 'mean' in statistic:
+            rij_numerator = self._numerator_for_ratio(
+                    ti_m=DUMMY_Ti_MEAN,
+                    tj_m=DUMMY_Tj_MEAN,
+            )
+            rij_denominator = self._denominator_for_ratio_ij(tj_m=DUMMY_Tj_MEAN)
 
-    def _big_cwv_expression(self):
+        if 'median' in statistic:
+            rij_numerator = self._numerator_for_ratio(
+                    ti_m=DUMMY_Ti_MEDIAN,
+                    tj_m=DUMMY_Tj_MEDIAN,
+            )
+            rij_denominator = self._denominator_for_ratio_ij(tj_m=DUMMY_Tj_MEDIAN)
+
+        rij = f'( {rij_numerator} ) / ( {rij_denominator} )'
+        self.ratio_ij_expression = rij
+        return rij
+
         """
         Build and return a valid mapcalc expression for deriving a Column
         Water Vapor map from Landsat8's brightness temperature channels
