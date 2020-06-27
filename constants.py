@@ -31,14 +31,6 @@ FROM_GLC_LEGEND = {'Cropland': (10, 11, 12, 13),
                    'Barren_Land': (90, 52, 91, 92, 93, 94, 95, 96),
                    'Snow_and_ice': (100, 101, 102),
                    'Cloud': (120,)}
-# LST_FORMULA = ('{b0} + '
-#                '({b1} + '
-#                '({b2}) * ((1 - {ae}) / {ae}^2) + '
-#                '({b3}) * ({de}/{ae}^2)) * (({DUMMY_T10}+{DUMMY_T11})/2) + '
-#                '({b4} + '
-#                '({b5}) * ((1 - {ae}) / {ae}) + '
-#                '({b6}) * ({de}/{ae}^2)) * (({DUMMY_T10}-{DUMMY_T11})/2)')
-# LST_FORMULA_BARREN_LAND = 
 LST_FORMULA = ('{b0} + '
                '({b1} + '
                '({b2}) * ((1 - {ae}) / {ae}^2) + '
