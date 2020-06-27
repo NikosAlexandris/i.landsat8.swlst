@@ -9,6 +9,8 @@ DUMMY_MAPCALC_STRING_FROM_GLC = 'Input_FROMGLC'
 DUMMY_MAPCALC_STRING_CWV = 'Input_CWV'
 DUMMY_Ti_MEAN = 'Mean_Ti'
 DUMMY_Tj_MEAN = 'Mean_Tj'
+DUMMY_Ti_MEDIAN = 'Median_Ti'
+DUMMY_Tj_MEDIAN = 'Median_Tj'
 DUMMY_Rji = 'Ratio_ji'
 EQUATION = "{result} = {expression}"
 FROM_GLC_CODES = [10, 11, 12, 13,
