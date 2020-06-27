@@ -18,27 +18,35 @@ def digital_numbers_to_radiance(
     class.  Zero (0) DNs set to NULL here (not via the class' function).
     """
     if null:
-        msg = "\n|i Setting zero (0) Digital Numbers in {band} to NULL"
-        msg = msg.format(band=band)
+        msg = f'\n|i Setting zero (0) Digital Numbers in {band} to NULL'
         g.message(msg)
-        run('r.null', map=band, setnull=0)
+        run('r.null',
+                map=band,
+                setnull=0,
+        )
 
-    msg = "\n|i Rescaling {band} digital numbers to spectral radiance "
-    msg = msg.format(band=band)
+    msg = f'\n|i Rescaling {band} digital numbers to spectral radiance'
 
     if info:
-        msg += '| Expression: '
-        msg += radiance_expression
+        msg += f'\n   {radiance_expression}'
+
     g.message(msg)
-    radiance_expression = replace_dummies(radiance_expression,
-                                          instring=DUMMY_MAPCALC_STRING_DN,
-                                          outstring=band)
-    radiance_equation = EQUATION.format(result=outname,
-                                        expression=radiance_expression)
+    radiance_expression = replace_dummies(
+            radiance_expression,
+            instring=DUMMY_MAPCALC_STRING_DN,
+            outstring=band,
+    )
+    radiance_equation = EQUATION.format(
+            result=outname,
+            expression=radiance_expression,
+    )
     grass.mapcalc(radiance_equation, overwrite=True)
 
     if info:
-        run('r.info', map=outname, flags='r')
+        run('r.info',
+                map=outname,
+                flags='r',
+        )
 
 
 def radiance_to_brightness_temperature(
@@ -51,19 +59,26 @@ def radiance_to_brightness_temperature(
     Convert Spectral Radiance to At-Satellite Brightness Temperature. For
     details see Landsat8 class.
     """
-    temperature_expression = replace_dummies(temperature_expression,
-                                             instring=DUMMY_MAPCALC_STRING_RADIANCE,
-                                             outstring=radiance)
+    temperature_expression = replace_dummies(
+            temperature_expression,
+            instring=DUMMY_MAPCALC_STRING_RADIANCE,
+            outstring=radiance,
+    )
 
-    msg = "\n|i Converting spectral radiance to at-satellite temperature "
+    msg = "\n|i Converting spectral radiance to at-satellite temperature"
     if info:
-        msg += "| Expression: " + str(temperature_expression)
+        msg += f'\n   {temperature_expression}'
     g.message(msg)
 
-    temperature_equation = EQUATION.format(result=outname,
-                                           expression=temperature_expression)
+    temperature_equation = EQUATION.format(
+            result=outname,
+            expression=temperature_expression,
+    )
 
     grass.mapcalc(temperature_equation, overwrite=True)
 
     if info:
-        run('r.info', map=outname, flags='r')
+        run('r.info',
+                map=outname,
+                flags='r',
+        )
