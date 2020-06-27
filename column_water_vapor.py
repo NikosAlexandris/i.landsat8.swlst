@@ -41,7 +41,7 @@ class Column_Water_Vapor():
     - cwv  =  c0  +  c1  *  (tj / ti)  +  c2  *  (tj / ti)^2
 
     - tj/ti ~ Rji = SUM [ ( Tik - Ti_mean ) * ( Tjk - Tj_mean ) ] /
-                    SUM [ ( Tik - Tj_mean )^2 ]
+                    SUM [ ( Tik - Ti_mean )^2 ]
 
     In Equation (3a):
 
@@ -159,8 +159,8 @@ class Column_Water_Vapor():
         """
         The object's self string
         """
-        msg = '- Window size: ' + str(self.window_size) + " by " + str(self.window_size)
-        msg += '\n      - Expression for r.mapcalc to determine column water vapor: '
+        msg = (f'- Window size: {self.window_size} by + {self.window_size}'
+        '- Expression for r.mapcalc to determine column water vapor: ')
         return msg + str(self.column_water_vapor_expression)
 
     # def compute_column_water_vapor(self, tik, tjk):
@@ -206,14 +206,17 @@ class Column_Water_Vapor():
         # center col indexing
         half_width = (self.window_width - 1) // 2
 
-        return [[col, row] for col in range(-half_width + 1, half_width)
+        return [[col, row]
+                for col in range(-half_width + 1, half_width)
                 for row in range(-half_height + 1, half_height)]
 
     def _derive_modifiers(self, tx):
         """
         Return mapcalc map modifiers for adjacent pixels for the input map tx
         """
-        return [tx + str(pixel) for pixel in self.adjacent_pixels]
+        return [tx + str(pixel)
+                for pixel
+                in self.adjacent_pixels]
 
     def _mean_tirs_expression(self, modifiers):
         """
@@ -368,15 +371,10 @@ class Column_Water_Vapor():
 
         cwv_expression = ('eval('
                f'\ \n  ti_mean = {ti_mean},'
-               '\ \n'
                f'\ \n  tj_mean = {tj_mean},'
-               '\ \n'
                f'\ \n  numerator = {numerator},'
-               '\ \n'
                f'\ \n  denominator = {denominator},'
-               '\ \n'
                '\ \n  rji = numerator / denominator,'
-               '\ \n'
                f'\ \n  {self.c0} + {self.c1} * (rji) + {self.c2} * (rji)^2)')
         return cwv_expression
 
@@ -402,15 +400,10 @@ class Column_Water_Vapor():
 
         cwv_expression = ('eval('
                f'\ \n  ti_median = {ti_median},'
-               '\ \n'
                f'\ \n  tj_median = {tj_median},'
-               '\ \n'
                f'\ \n  numerator = {numerator},'
-               '\ \n'
                f'\ \n  denominator = {denominator},'
-               '\ \n'
                '\ \n  rji = numerator / denominator,'
-               '\ \n'
                f'\ \n  {self.c0} + {self.c1} * (rji) + {self.c2} * (rji)^2)')
         return cwv_expression
 
@@ -447,10 +440,8 @@ def estimate_cwv_big_expression(
     if quiet:
         run('r.info', map=outname, flags='r')
 
-    # save Column Water Vapor map?
     if cwv_output:
 
-        # strings for metadata
         history_cwv = 'FixMe -- Column Water Vapor model: '
         history_cwv += 'FixMe -- Add equation?'
         title_cwv = 'Column Water Vapor'
@@ -458,8 +449,6 @@ def estimate_cwv_big_expression(
         units_cwv = 'g/cm^2'
         source1_cwv = 'FixMe'
         source2_cwv = 'FixMe'
-
-        # history entry
         run("r.support",
             map=outname,
             title=title_cwv,
@@ -468,7 +457,7 @@ def estimate_cwv_big_expression(
             source1=source1_cwv,
             source2=source2_cwv,
             history=history_cwv,
-           )
+        )
         run('g.rename', raster=(outname, cwv_output))
 
 
