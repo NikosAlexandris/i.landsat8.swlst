@@ -17,8 +17,6 @@ def determine_average_emissivity(
     of interest.
     """
     msg = ('\n|i Determining average land surface emissivity based on a look-up table ')
-        msg += ('| Expression:\n\n {exp}')
-        msg = msg.format(exp=avg_lse_expression)
     if info:
         msg += (f'\n   Expression:\n\n {avg_lse_expression}')
     g.message(msg)
@@ -56,17 +54,14 @@ def determine_delta_emissivity(
     msg = ('\n|i Determining delta land surface emissivity based on a '
            'look-up table ')
     if info:
-        msg += ('| Expression:\n\n {exp}')
-        msg = msg.format(exp=delta_lse_expression)
+        msg += (f'\n   Expression:\n\n {delta_lse_expression}')
     g.message(msg)
 
     delta_lse_expression = replace_dummies(delta_lse_expression,
                                            instring=DUMMY_MAPCALC_STRING_FROM_GLC,
                                            outstring=landcover_map)
-
     delta_lse_equation = EQUATION.format(result=outname,
                                          expression=delta_lse_expression)
-
     grass.mapcalc(delta_lse_equation, overwrite=True)
 
     if info:

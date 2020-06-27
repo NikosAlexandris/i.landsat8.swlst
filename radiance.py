@@ -55,7 +55,7 @@ def radiance_to_brightness_temperature(
                                              instring=DUMMY_MAPCALC_STRING_RADIANCE,
                                              outstring=radiance)
 
-    msg = "\n|i Converting spectral radiance to at-Satellite Temperature "
+    msg = "\n|i Converting spectral radiance to at-satellite temperature "
     if info:
         msg += "| Expression: " + str(temperature_expression)
     g.message(msg)
