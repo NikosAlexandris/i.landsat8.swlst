@@ -132,7 +132,6 @@ class Column_Water_Vapor():
         assert window_size % 2 != 0, "Window size should be an even number!"
         assert window_size >= 7, "Window size should be equal to/larger than 7."
         self.window_size = window_size
-
         self.window_height = self.window_size
         self.window_width = self.window_size
         self.adjacent_pixels = self._derive_adjacent_pixels()
@@ -153,8 +152,10 @@ class Column_Water_Vapor():
         self.median_tj_expression = self._median_tirs_expression(self.modifiers_tj)
 
         # mapcalc expression for ratio ji
-        self.ratio_ji_expression = self._ratio_ji_expression()
+        self.ratio_ji_expression = str()
+        self.ratio_ij_expression = str()
 
+        self.retrieval_accuracy = float()
 
     def __str__(self):
         """
