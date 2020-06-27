@@ -308,9 +308,7 @@ class Column_Water_Vapor():
 
     def _denominator_for_ratio_ij(self, tj_m):
         """
-        Denominator for Ratio ij. Note that Use this function for the step-by-step
-        approach to estimate the column water vapor from within the main code
-        (main function) of the module i.landsat8.swlst
+        Denominator for Ratio ij.
         """
         denominator_ij = ' + '.join([DENOMINATOR_Tj.format(Tj=modifier_tj,
                                         Tjm=tj_m)
