@@ -363,7 +363,7 @@ class Column_Water_Vapor():
         self.ratio_ij_expression = rij
         return rij
 
-    def _big_cwv_expression_mean(self):
+    def _cwv_expression_mean(self):
         """
         Build and return a valid mapcalc expression for deriving a Column
         Water Vapor map from Landsat8's brightness temperature channels
@@ -390,7 +390,7 @@ class Column_Water_Vapor():
                f'\ \n  {self.c0} + {self.c1} * (rji) + {self.c2} * (rji)^2)')
         return cwv_expression
 
-    def _big_cwv_expression_mean_ij(self):
+    def _cwv_expression_mean_ij(self):
         """
         Build and return a valid mapcalc expression for deriving a Column
         Water Vapor map from Landsat8's brightness temperature channels
@@ -417,7 +417,7 @@ class Column_Water_Vapor():
                f'\ \n  {self.c0} + {self.c1} * (rji) + {self.c2} * (rji)^2)')
         return cwv_expression
 
-    def _big_cwv_expression_median(self):
+    def _cwv_expression_median(self):
         """
         Build and return a valid mapcalc expression for deriving a Column
         Water Vapor map from Landsat8's brightness temperature channels
@@ -444,7 +444,7 @@ class Column_Water_Vapor():
                f'\ \n  {self.c0} + {self.c1} * (rji) + {self.c2} * (rji)^2)')
         return cwv_expression
 
-    def _big_cwv_expression_median_ij(self):
+    def _cwv_expression_median_ij(self):
         """
         Build and return a valid mapcalc expression for deriving a Column
         Water Vapor map from Landsat8's brightness temperature channels
@@ -499,18 +499,18 @@ class Column_Water_Vapor():
 
         return ratio_ji * ratio_ij
 
-    def _big_retrieval_accuracy_expression_mean():
+    def _retrieval_accuracy_expression_mean():
         """
         """
-        ratio_ji = self._big_cwv_expression_mean()
-        ratio_ij = self._big_cwv_expression_mean_ij
+        ratio_ji = self._cwv_expression_mean()
+        ratio_ij = self._cwv_expression_mean_ij
         return ratio_ji * ratio_ij
 
-    def _big_retrieval_accuracy_expression_median():
+    def _retrieval_accuracy_expression_median():
         """
         """
-        ratio_ji = self._big_cwv_expression_median()
-        ratio_ij = self._big_cwv_expression_median_ij
+        ratio_ji = self._cwv_expression_median()
+        ratio_ij = self._cwv_expression_median_ij
         return ratio_ji * ratio_ij
 
 def estimate_cwv(
@@ -531,15 +531,15 @@ def estimate_cwv(
     cwv = Column_Water_Vapor(window_size, t10, t11)
 
     if median:
-        cwv_expression = cwv._big_cwv_expression_median()
+        cwv_expression = cwv._cwv_expression_median()
     else:
-        cwv_expression = cwv._big_cwv_expression_mean()
+        cwv_expression = cwv._cwv_expression_mean()
 
     # if accuracy:
     #     if median:
-    #         accuracy_expression = cwv._big_accuracy_expression_median()
+    #         accuracy_expression = cwv._accuracy_expression_median()
     #     else:
-    #         accuracy_expression = cwv._big_accuracy_expression_mean()
+    #         accuracy_expression = cwv._accuracy_expression_mean()
     # else:
     #     accuracy_expression = str()
 
