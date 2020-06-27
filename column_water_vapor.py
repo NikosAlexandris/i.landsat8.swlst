@@ -287,35 +287,29 @@ class Column_Water_Vapor():
 
     def _numerator_for_ratio_big(self, **kwargs):
         """
-        Numerator for Ratio ji. Requires two strings, one to represent the mean
-        of 'Ti's ('mean_ti') and one for the mean of 'Tj's ('mean_tj'). Use
-        this function for the big mapcalc expression.
+        Build the numerator for Ratio ji (or ij) which is:
+        Sum( (Tik - Ti_mean) * (Tjk - Tj_mean) ).
+        Note that 'Ratio_ji' =~ 'Ratio_ij'.
 
-        Example:
-                _numerator_for_ratio_big(mean_ti='Some_String',
-                                        mean_tj='Another_String')
-        """
-        mean_ti = kwargs.get('mean_ti', 'ti_mean')
-        mean_tj = kwargs.get('mean_tj', 'tj_mean')
-        if mean_ti and mean_tj:
-            terms = '({Ti} - {Tim}) * ({Tj} - {Tjm})'
-            terms = ' + '.join([terms.format(Ti=mod_ti,
-                                         Tim=mean_ti,
-                                         Tj=mod_tj,
-                                         Tjm=mean_tj)
-                           for mod_ti, mod_tj in self.modifiers])
+        Use this function for the big mapcalc expression.
 
-        median_ti = kwargs.get('median_ti', 'ti_median')
-        median_tj = kwargs.get('median_tj', 'tj_median')
-        if median_ti and median_tj:
-            terms = '({Ti} - {Tim}) * ({Tj} - {Tjm})'
-            terms = ' + '.join([terms.format(Ti=mod_ti,
-                                         Tim=median_ti,
-                                         Tj=mod_tj,
-                                         Tjm=median_tj)
-                           for mod_ti, mod_tj in self.modifiers])
-        return terms
+        Parameters
+        ----------
+        mean_ti
+            A string 'mean_ti' to represent the mean of 'Ti's
 
+        mean_tj
+            A string 'mean_tj' to represent the mean of 'Tj's
+
+        Returns
+        -------
+        terms
+            A string representing a GRASS GIS mapcalc compatible expression of
+            the numerator for ratio ji
+
+        Example
+        -------
+         _numerator_for_ratio_big(mean_ti='Some_String', mean_tj='Another_String')
     def _denominator_for_ratio(self, mean_ti):
         """
         Denominator for Ratio ji. Use this function for the step-by-step
