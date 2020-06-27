@@ -128,7 +128,6 @@ def estimate_lst(
         msg += f'\n   Expression:\n {lst_expression}'
     g.message(msg)
 
-
     if landcover_map:
         split_window_expression = replace_dummies(lst_expression,
                                                   in_avg_lse=DUMMY_MAPCALC_STRING_AVG_LSE,
@@ -152,11 +151,9 @@ def estimate_lst(
 
     if rounding:
         split_window_expression = f'(round({split_window_expression}, 2, 0.5))'
-        print("HERE:", split_window_expression)
 
     if celsius:
         split_window_expression = f'({split_window_expression}) - 273.15'
-        print("AND HERE:", split_window_expression)
 
     split_window_equation = EQUATION.format(
             result=outname,
