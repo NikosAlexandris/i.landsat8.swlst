@@ -363,6 +363,17 @@ from constants import DUMMY_Ti_MEAN
 from constants import DUMMY_Tj_MEAN
 from constants import DUMMY_Rji
 from constants import EQUATION as equation
+from messages import DESCRIPTION_LST
+from messages import MSG_ASSERTION_WINDOW_SIZE
+from messages import MSG_REGION_MATCHING
+from messages import MSG_CURRENT_REGION
+from messages import MSG_REGION_RESTORING
+from messages import MSG_UNKNOWN_LANDCOVER_CLASS
+from messages import MSG_RANDOM_EMISSIVITY_CLASS
+from messages import MSG_BARREN_LAND
+from messages import MSG_AVERAGE_EMISSIVITIES
+from messages import MSG_PICK_RANDOM_CLASS
+# from messages import MSG_CLOUD_MASK
 from column_water_vapor import Column_Water_Vapor
 from emissivity import determine_average_emissivity
 from emissivity import determine_delta_emissivity
@@ -424,9 +435,7 @@ def main():
         brightness_temperature_prefix = None
 
     cwv_window_size = int(options['window'])
-    assertion_for_cwv_window_size_msg = ('A spatial window of size 5^2 or less is not '
-                                         'recommended. Please select a larger window. '
-                                         'Refer to the manual\'s notes for details.')
+    assertion_for_cwv_window_size_msg = MSG_ASSERTION_WINDOW_SIZE
     assert cwv_window_size >= 7, assertion_for_cwv_window_size_msg
     cwv_output = options['cwv']
 
@@ -457,7 +466,7 @@ def main():
     # Set Region
     if scene_extent:
         grass.use_temp_region()  # safely modify the region
-        msg = "\n|! Matching region extent to map {name}"
+        msg = REGION_MATCHING
 
         # ToDo: check if extent-B10 == extent-B11? Unnecessary?
         # Improve below!
@@ -473,14 +482,14 @@ def main():
         g.message(msg)
 
     elif not scene_extent:
-        grass.warning(_('Operating on current region'))
+        grass.warning(_(MSG_CURRENT_REGION))
 
     #
     # 1. Mask clouds
     #
 
     if cloud_map:
-        msg = '\n|i Using {cmap} as a MASK'.format(cmap=cloud_map)
+        msg = f'\n|i Using user defined \'{cloud_map}\' as a MASK'
         g.message(msg)
         r.mask(raster=cloud_map, flags='i', overwrite=True)
 
@@ -528,26 +537,24 @@ def main():
 
         if split_window_lst.landcover_class is False:
             # replace with meaningful error
-            grass.warning('Unknown land cover class string! Note, this string '
-                      'input option is case sensitive.')
+            grass.warning(MSG_UNKNOWN_LANDCOVER_CLASS)
 
         if landcover_class == 'Random':
-            msg = "\n|! Random emissivity class selected > " + \
+            msg = MSG_RANDOM_EMISSIVITY_CLASS + \
                 split_window_lst.landcover_class + ' '
 
         if landcover_class == 'Barren_Land':
-            msg = "\n|! For barren land, the last quadratic term of the Split-Window algorithm will be set to 0" + \
+            msg = MSG_BARREN_LAND + \
                 split_window_lst.landcover_class + ' '
 
         else:
-            msg = '\n|! Retrieving average emissivities *only* for {eclass} '
+            msg = MSG_SINGLE_CLASS_AVERAGE_EMISSIVITY + f'{eclass} '
 
         if info:
-            msg += '| Average emissivities (channels 10, 11): '
+            msg += MSG_AVERAGE_EMISSIVITIES
             msg += str(split_window_lst.emissivity_t10) + ', ' + \
                 str(split_window_lst.emissivity_t11)
 
-        msg = msg.format(eclass=split_window_lst.landcover_class)
         g.message(msg)
 
     # use the FROM-GLC map
@@ -611,7 +618,7 @@ def main():
     #
 
     if info and landcover_class == 'Random':
-        msg = '\n|* Will pick a random emissivity class!'
+        msg = MSG_PICK_RANDOM_CLASS
         grass.verbose(msg)
 
     estimate_lst(
@@ -656,7 +663,7 @@ def main():
     history_lst += '\n\n' + citation_cwv
     history_lst += '\n\nSplit-Window model: '
     history_lst += split_window_lst._equation  # :wsw_lst_mapcalc
-    description_lst = ('Land Surface Temperature derived from a split-window algorithm. ')
+    description_lst = DESCRIPTION_LST
 
     if celsius:
         title_lst = 'Land Surface Temperature (C)'
@@ -681,7 +688,7 @@ def main():
 
     if scene_extent:
         grass.del_temp_region()  # restoring previous region settings
-        g.message("|! Original Region restored")
+        g.message(MSG_REGION_RESTORING)
 
     if info:
         g.message('\nSource: ' + citation_lst)
