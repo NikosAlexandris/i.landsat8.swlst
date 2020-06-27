@@ -311,6 +311,23 @@ class Column_Water_Vapor():
         -------
          _numerator_for_ratio_big(mean_ti='Some_String', mean_tj='Another_String')
         """
+        if 'mean_ti' and 'mean_tj' in kwargs:
+            mean_ti = kwargs.get('mean_ti', 'ti_mean')
+            mean_tj = kwargs.get('mean_tj', 'tj_mean')
+            numerator = self._numerator_for_ratio(
+                    ti_m = mean_ti,
+                    tj_m = mean_tj,
+            )
+
+        if 'median_ti' and 'median_tj' in kwargs:
+            median_ti = kwargs.get('median_ti', 'ti_median')
+            median_tj = kwargs.get('median_tj', 'tj_median')
+            numerator = self._numerator_for_ratio(
+                    ti_m = median_ti,
+                    tj_m = median_tj,
+            )
+        return numerator
+
     def _denominator_for_ratio_ji(self, ti_m):
         """
         Denominator for Ratio ji which is:
