@@ -13,6 +13,9 @@ from constants import DUMMY_Ti_MEAN
 from constants import DUMMY_Tj_MEAN
 from constants import DUMMY_Rji
 from constants import EQUATION
+from constants import NUMERATOR
+from constants import DENOMINATOR_Ti
+from constants import DENOMINATOR_Tj
 from randomness import random_adjacent_pixel_values
 from grass.pygrass.modules.shortcuts import general as g
 from dummy_mapcalc_strings import replace_dummies
