@@ -4,9 +4,8 @@ MSG_ASSERTION_WINDOW_SIZE = (
     'recommended. Please select a larger window. '
     'Refer to the manual\'s notes for details.'
 )
-MSG_REGION_MATCHING = "\n|! Matching region extent to map {name}"
-MSG_CURRENT_REGION = 'Operating on current region'
-MSG_REGION_RESTORING = '|! Original Region restored'
+WARNING_REGION_MATCHING = 'Matching computational region to extent of \'{name}\''
+WARNING_REGION_RESTORING = 'Original computational region restored'
 MSG_UNKNOWN_LANDCOVER_CLASS = (
     'Unknown land cover class string! Note, this string '
     'input option is case sensitive.'

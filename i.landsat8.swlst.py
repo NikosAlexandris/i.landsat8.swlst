@@ -367,9 +367,8 @@ from constants import DUMMY_Rji
 from constants import EQUATION as equation
 from messages import DESCRIPTION_LST
 from messages import MSG_ASSERTION_WINDOW_SIZE
-from messages import MSG_REGION_MATCHING
-from messages import MSG_CURRENT_REGION
-from messages import MSG_REGION_RESTORING
+from messages import WARNING_REGION_MATCHING
+from messages import WARNING_REGION_RESTORING
 from messages import MSG_UNKNOWN_LANDCOVER_CLASS
 from messages import MSG_RANDOM_EMISSIVITY_CLASS
 from messages import MSG_BARREN_LAND
@@ -466,14 +465,11 @@ def main():
     # Pre-production actions
     #
 
-    # Set Region
     if scene_extent:
-        grass.use_temp_region()  # safely modify the region
-        msg = REGION_MATCHING
+        grass.use_temp_region()  # safely modify the region, restore at end
+        msg = WARNING_REGION_MATCHING
 
-        # ToDo: check if extent-B10 == extent-B11? Unnecessary?
-        # Improve below!
-
+        # TODO: Check if extent-B10 == extent-B11? #
         if b10:
             run('g.region', rast=b10, align=b10)
             msg = msg.format(name=b10)
@@ -481,11 +477,9 @@ def main():
         elif t10:
             run('g.region', rast=t10, align=t10)
             msg = msg.format(name=t10)
+        # ---------------------------------------- #
 
-        g.message(msg)
-
-    elif not scene_extent:
-        grass.warning(_(MSG_CURRENT_REGION))
+        grass.warning(_(msg))
 
     #
     # 1. Mask clouds
@@ -525,14 +519,10 @@ def main():
             )
 
     #
-    # Initialise a SplitWindowLST object
+    # 3. Land Surface Emissivities
     #
 
     split_window_lst = SplitWindowLST(landcover_class)
-
-    #
-    # 3. Land Surface Emissivities
-    #
 
     if landcover_class:
 
@@ -602,6 +592,7 @@ def main():
             median=median,
             info=info,
     )
+
     if cwv_output:
         tmp_cwv = cwv_output
 
@@ -635,22 +626,19 @@ def main():
     # remove MASK
     r.mask(flags='r', verbose=True)
 
-    # time-stamping
     if timestamping:
         add_timestamp(mtl_file, lst_output)
 
         if cwv_output:
             add_timestamp(mtl_file, cwv_output)
 
-    # Apply color table
     if celsius:
         run('r.colors', map=lst_output, color='celsius')
+
     else:
-        # color table for kelvin
         run('r.colors', map=lst_output, color='kelvin')
 
-    # ToDo: helper function for r.support
-    # strings for metadata
+    # metadata
 
     history_lst = '\n' + CITATION_SPLIT_WINDOW
     history_lst += '\n\n' + CITATION_COLUMN_WATER_VAPOR
@@ -677,8 +665,8 @@ def main():
     )
 
     if scene_extent:
-        grass.del_temp_region()  # restoring previous region settings
-        g.message(MSG_REGION_RESTORING)
+        grass.del_temp_region()  # restoring previous region
+        grass.warning(WARNING_REGION_RESTORING)
 
     if info:
         g.message('\nSource: ' + CITATION_SPLIT_WINDOW)
