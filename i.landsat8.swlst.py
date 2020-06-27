@@ -340,7 +340,7 @@ import functools
 
 from citations import CITATION_COLUMN_WATER_VAPOR
 from citations import CITATION_SPLIT_WINDOW
-from column_water_vapor import estimate_cwv_big_expression
+from column_water_vapor import estimate_cwv
 from split_window_lst import *
 from landsat8_mtl import Landsat8_MTL
 from helpers import cleanup
@@ -594,20 +594,13 @@ def main():
     #
 
 
-    cwv = Column_Water_Vapor(cwv_window_size, t10, t11)
-
-    if median:
-        cwv_expression = cwv._big_cwv_expression_median()
-    else:
-        cwv_expression = cwv._big_cwv_expression()
-    print("HERE:", cwv_expression)
-
-    estimate_cwv_big_expression(
-            outname=tmp_cwv,
-            cwv_output=cwv_output,
+    estimate_cwv(
+            temporary_map=tmp_cwv,
+            cwv_map=cwv_output,
             t10=t10,
             t11=t11,
-            cwv_expression=cwv_expression,
+            window_size=cwv_window_size,
+            median=median,
             info=info,
     )
     if cwv_output:
