@@ -590,13 +590,14 @@ class Column_Water_Vapor():
         ratio_ij = self._big_cwv_expression_median_ij
         return ratio_ji * ratio_ij
 
-def estimate_cwv_big_expression(
-        outname,
-        cwv_output,
+def estimate_cwv(
+        temporary_map,
+        cwv_map,
         t10,
         t11,
-        cwv_expression,
-        quiet=True,
+        window_size,
+        median=False,
+        info=False,
     ):
     """
     Derive a column water vapor map using a single mapcalc expression based on
@@ -604,9 +605,13 @@ def estimate_cwv_big_expression(
 
             *** To Do: evaluate -- does it work correctly? *** !
     """
-    msg = "\n|i Estimating atmospheric column water vapor "
-    if quiet:
-        msg += '| Expression:\n'
+    cwv = Column_Water_Vapor(window_size, t10, t11)
+
+    if median:
+        cwv_expression = cwv._big_cwv_expression_median()
+    else:
+        cwv_expression = cwv._big_cwv_expression_mean()
+
     # if accuracy:
     #     if median:
     #         accuracy_expression = cwv._big_accuracy_expression_median()
@@ -614,34 +619,39 @@ def estimate_cwv_big_expression(
     #         accuracy_expression = cwv._big_accuracy_expression_mean()
     # else:
     #     accuracy_expression = str()
+
+    msg = "\n|i Estimating atmospheric column water vapor"
+    if info:
+        msg += '\n   Expression:\n'
+        msg = replace_dummies(
+                cwv_expression,
+                in_ti=t10, out_ti='T10',
+                in_tj=t11, out_tj='T11',
+        )
     g.message(msg)
 
-    if quiet:
-        msg = replace_dummies(cwv_expression,
-                              in_ti=t10, out_ti='T10',
-                              in_tj=t11, out_tj='T11')
-        msg += '\n'
-        g.message(msg)
-
-    cwv_equation = EQUATION.format(result=outname, expression=cwv_expression)
+    cwv_equation = EQUATION.format(
+            result=temporary_map,
+            expression=cwv_expression,
+    )
     grass.mapcalc(cwv_equation, overwrite=True)
 
     # accuracy_equation = EQUATION.format(result=outname, expression=accuracy_expression)
     # grass.mapcalc(accuracy_equation, overwrite=True)
-    if quiet:
-        run('r.info', map=outname, flags='r')
 
-    if cwv_output:
+    if info:
+        run('r.info', map=temporary_map, flags='r')
 
-        history_cwv = 'FixMe -- Column Water Vapor model: '
-        history_cwv += 'FixMe -- Add equation?'
+    if cwv_map:
+        history_cwv = f'\nColumn Water Vapor model: {cwv._equation}'
+        history_cwv += f'\nSpatial window of size: {cwv.window_size}'
         title_cwv = 'Column Water Vapor'
-        description_cwv = 'Column Water Vapor'
+        description_cwv = 'Column Water Vapor based on MSWVCM'
         units_cwv = 'g/cm^2'
         source1_cwv = cwv.citation
         source2_cwv = 'FixMe'
         run("r.support",
-            map=outname,
+            map=temporary_map,
             title=title_cwv,
             units=units_cwv,
             description=description_cwv,
@@ -649,7 +659,7 @@ def estimate_cwv_big_expression(
             source2=source2_cwv,
             history=history_cwv,
         )
-        run('g.rename', raster=(outname, cwv_output))
+        run('g.rename', raster=(temporary_map, cwv_map))
 
 
 # reusable & stand-alone
