@@ -19,7 +19,7 @@ def tirs_to_at_satellite_temperature(
         mtl_file,
         brightness_temperature_prefix=None,
         null=False,
-        quiet=True):
+        info=False):
     """
     Helper function to convert TIRS bands 10 or 11 in to at-satellite
     temperatures.
@@ -51,7 +51,7 @@ def tirs_to_at_satellite_temperature(
             tirs_1x,
             radiance_expression,
             null,
-            quiet,
+            info,
     )
 
     # convert spectral radiance to at-satellite temperature
@@ -60,7 +60,7 @@ def tirs_to_at_satellite_temperature(
             tmp_brightness_temperature,
             tmp_radiance,
             temperature_expression,
-            quiet,
+            info,
     )
 
     # save Brightness Temperature map?
@@ -84,7 +84,7 @@ def estimate_lst(
         lst_expression,
         rounding,
         celsius,
-        quiet=True,
+        info=False,
     ):
     """
     Produce a Land Surface Temperature map based on a mapcalc expression
@@ -114,7 +114,7 @@ def estimate_lst(
 
     celsius
 
-    quiet
+    info
 
     Inputs are:
 
@@ -124,13 +124,10 @@ def estimate_lst(
     - a valid mapcalc expression
     """
     msg = '\n|i Estimating land surface temperature '
+    if info:
+        msg += f'\n   Expression:\n {lst_expression}'
     g.message(msg)
 
-    if not quiet:
-        msg += "| Expression:\n"
-        msg = lst_expression
-        msg += '\n'
-        g.message(msg)
 
     if landcover_map:
         split_window_expression = replace_dummies(lst_expression,
@@ -169,5 +166,5 @@ def estimate_lst(
             split_window_equation,
             overwrite=True,
     )
-    if not quiet:
+    if info:
         run('r.info', map=outname, flags='r')

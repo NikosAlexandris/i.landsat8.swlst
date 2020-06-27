@@ -10,16 +10,17 @@ def determine_average_emissivity(
         emissivity_output,
         landcover_map,
         avg_lse_expression,
-        quiet=True,
-        ):
+        info=False,
+    ):
     """
     Produce an average emissivity map based on FROM-GLC map covering the region
     of interest.
     """
     msg = ('\n|i Determining average land surface emissivity based on a look-up table ')
-    if not quiet:
         msg += ('| Expression:\n\n {exp}')
         msg = msg.format(exp=avg_lse_expression)
+    if info:
+        msg += (f'\n   Expression:\n\n {avg_lse_expression}')
     g.message(msg)
     avg_lse_expression = replace_dummies(
             avg_lse_expression,
@@ -32,7 +33,7 @@ def determine_average_emissivity(
     )
     grass.mapcalc(avg_lse_equation, overwrite=True)
 
-    if not quiet:
+    if info:
         run('r.info', map=outname, flags='r')
 
 
@@ -46,7 +47,7 @@ def determine_delta_emissivity(
         delta_emissivity_output,
         landcover_map,
         delta_lse_expression,
-        quiet=True,
+        info=False,
     ):
     """
     Produce a delta emissivity map based on the FROM-GLC map covering the
@@ -54,7 +55,7 @@ def determine_delta_emissivity(
     """
     msg = ('\n|i Determining delta land surface emissivity based on a '
            'look-up table ')
-    if not quiet:
+    if info:
         msg += ('| Expression:\n\n {exp}')
         msg = msg.format(exp=delta_lse_expression)
     g.message(msg)
@@ -68,7 +69,7 @@ def determine_delta_emissivity(
 
     grass.mapcalc(delta_lse_equation, overwrite=True)
 
-    if not quiet:
+    if info:
         run('r.info', map=outname, flags='r')
 
 

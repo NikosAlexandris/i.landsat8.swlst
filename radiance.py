@@ -11,7 +11,7 @@ def digital_numbers_to_radiance(
         band,
         radiance_expression,
         null=False,
-        quiet=False,
+        info=False,
     ):
     """
     Convert Digital Number values to TOA Radiance. For details, see in Landsat8
@@ -26,7 +26,7 @@ def digital_numbers_to_radiance(
     msg = "\n|i Rescaling {band} digital numbers to spectral radiance "
     msg = msg.format(band=band)
 
-    if not quiet:
+    if info:
         msg += '| Expression: '
         msg += radiance_expression
     g.message(msg)
@@ -37,7 +37,7 @@ def digital_numbers_to_radiance(
                                         expression=radiance_expression)
     grass.mapcalc(radiance_equation, overwrite=True)
 
-    if not quiet:
+    if info:
         run('r.info', map=outname, flags='r')
 
 
@@ -45,7 +45,7 @@ def radiance_to_brightness_temperature(
         outname,
         radiance,
         temperature_expression,
-        quiet=False,
+        info=False,
     ):
     """
     Convert Spectral Radiance to At-Satellite Brightness Temperature. For
@@ -56,7 +56,7 @@ def radiance_to_brightness_temperature(
                                              outstring=radiance)
 
     msg = "\n|i Converting spectral radiance to at-Satellite Temperature "
-    if not quiet:
+    if info:
         msg += "| Expression: " + str(temperature_expression)
     g.message(msg)
 
@@ -65,5 +65,5 @@ def radiance_to_brightness_temperature(
 
     grass.mapcalc(temperature_equation, overwrite=True)
 
-    if not quiet:
+    if info:
         run('r.info', map=outname, flags='r')

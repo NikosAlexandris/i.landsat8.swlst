@@ -495,7 +495,7 @@ def main():
                     mtl_file,
                     brightness_temperature_prefix,
                     null,
-                    quiet=info,
+                    info=info,
             )
 
         # likewise for b11 -> t11
@@ -505,7 +505,7 @@ def main():
                     mtl_file,
                     brightness_temperature_prefix,
                     null,
-                    quiet=info,
+                    info=info,
             )
 
     #
@@ -557,7 +557,7 @@ def main():
                     emissivity_output,
                     landcover_map,
                     split_window_lst.average_lse_mapcalc,
-                    quiet=info,
+                    info=info,
             )
             if options['emissivity_out']:
                 tmp_avg_lse = options['emissivity_out']
@@ -571,7 +571,7 @@ def main():
                     delta_emissivity_output,
                     landcover_map,
                     split_window_lst.delta_lse_mapcalc,
-                    quiet=info,
+                    info=info,
             )
             if options['delta_emissivity_out']:
                 tmp_delta_lse = options['delta_emissivity_out']
@@ -580,10 +580,6 @@ def main():
     # 4. Estimate Column Water Vapor
     #
 
-    if info:
-        msg = '\n|i Spatial window of size {n} for Column Water Vapor estimation: '
-        msg = msg.format(n=cwv_window_size)
-        g.message(msg)
 
     cwv = Column_Water_Vapor(cwv_window_size, t10, t11)
     citation_cwv = cwv.citation
@@ -600,6 +596,7 @@ def main():
             t10=t10,
             t11=t11,
             cwv_expression=cwv_expression,
+            info=info,
     )
     if cwv_output:
         tmp_cwv = cwv_output
@@ -624,7 +621,7 @@ def main():
             split_window_lst.sw_lst_mapcalc,
             rounding,
             celsius,
-            quiet=info,
+            info=info,
     )
 
     #
