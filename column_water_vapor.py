@@ -119,6 +119,14 @@ class Column_Water_Vapor():
         self.c1 = 0.653
         self.c0 = 9.087
 
+        self._equation = ('c0  + '
+                          'c1 * (tj / ti)  + '
+                          'c2 * (tj / ti)^2')
+
+        self._model = ('{c0} + '
+                       '{c1} * ({tj} / {ti}) + '
+                       '{c2} * ({tj} / {ti})^2')
+
         # window of N (= n by n) pixels, adjacent pixels
         assert window_size % 2 != 0, "Window size should be an even number!"
         assert window_size >= 7, "Window size should be equal to/larger than 7."
