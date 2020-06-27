@@ -338,6 +338,8 @@ from grass.pygrass.modules.shortcuts import raster as r
 # from grass.pygrass.raster.abstract import Info
 import functools
 
+from citations import CITATION_COLUMN_WATER_VAPOR
+from citations import CITATION_SPLIT_WINDOW
 from column_water_vapor import estimate_cwv_big_expression
 from split_window_lst import *
 from landsat8_mtl import Landsat8_MTL
@@ -527,7 +529,6 @@ def main():
     #
 
     split_window_lst = SplitWindowLST(landcover_class)
-    citation_lst = split_window_lst.citation
 
     #
     # 3. Land Surface Emissivities
@@ -594,7 +595,6 @@ def main():
 
 
     cwv = Column_Water_Vapor(cwv_window_size, t10, t11)
-    citation_cwv = cwv.citation
 
     if median:
         cwv_expression = cwv._big_cwv_expression_median()
@@ -659,8 +659,9 @@ def main():
 
     # ToDo: helper function for r.support
     # strings for metadata
-    history_lst = '\n' + citation_lst
-    history_lst += '\n\n' + citation_cwv
+
+    history_lst = '\n' + CITATION_SPLIT_WINDOW
+    history_lst += '\n\n' + CITATION_COLUMN_WATER_VAPOR
     history_lst += '\n\nSplit-Window model: '
     history_lst += split_window_lst._equation  # :wsw_lst_mapcalc
     description_lst = DESCRIPTION_LST
@@ -691,7 +692,7 @@ def main():
         g.message(MSG_REGION_RESTORING)
 
     if info:
-        g.message('\nSource: ' + citation_lst)
+        g.message('\nSource: ' + CITATION_SPLIT_WINDOW)
 
 
 if __name__ == "__main__":
