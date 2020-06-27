@@ -11,6 +11,8 @@ Huazhong Ren, Chen Du, Qiming Qin, Rongyuan Liu, Jinjie Meng, Jing Li
 from citations import CITATION_COLUMN_WATER_VAPOR
 from constants import DUMMY_Ti_MEAN
 from constants import DUMMY_Tj_MEAN
+from constants import DUMMY_Ti_MEDIAN
+from constants import DUMMY_Tj_MEDIAN
 from constants import DUMMY_Rji
 from constants import EQUATION
 from constants import NUMERATOR
@@ -369,15 +371,13 @@ class Column_Water_Vapor():
         """
         modifiers_ti = self._derive_modifiers(self.ti)
         ti_mean = self._mean_tirs_expression(modifiers_ti)
-        string_for_mean_ti = 'ti_mean'
 
         modifiers_tj = self._derive_modifiers(self.tj)
         tj_mean = self._mean_tirs_expression(modifiers_tj)
-        string_for_mean_tj = 'tj_mean'
 
         numerator = self._numerator_for_ratio(
-                        mean_ti=string_for_mean_ti,
-                        mean_tj=string_for_mean_tj,
+                        ti_m=DUMMY_Ti_MEAN,
+                        tj_m=DUMMY_Tj_MEAN,
                     )
         denominator = self._denominator_for_ratio_ji(ti_m=DUMMY_Ti_MEAN)
 
@@ -398,15 +398,13 @@ class Column_Water_Vapor():
         """
         modifiers_ti = self._derive_modifiers(self.ti)
         ti_mean = self._mean_tirs_expression(modifiers_ti)
-        string_for_mean_ti = 'ti_mean'
 
         modifiers_tj = self._derive_modifiers(self.tj)
         tj_mean = self._mean_tirs_expression(modifiers_tj)
-        string_for_mean_tj = 'tj_mean'
 
         numerator = self._numerator_for_ratio(
-                        mean_ti=string_for_mean_ti,
-                        mean_tj=string_for_mean_tj,
+                        ti_m=DUMMY_Ti_MEAN,
+                        tj_m=DUMMY_Tj_MEAN,
                     )
         denominator = self._denominator_for_ratio_ij(tj_m=DUMMY_Tj_MEAN)
 
@@ -427,15 +425,13 @@ class Column_Water_Vapor():
         """
         modifiers_ti = self._derive_modifiers(self.ti)
         ti_median = self._median_tirs_expression(modifiers_ti)
-        string_for_median_ti = 'ti_median'
 
         modifiers_tj = self._derive_modifiers(self.tj)
         tj_median = self._median_tirs_expression(modifiers_tj)
-        string_for_median_tj = 'tj_median'
 
         numerator = self._numerator_for_ratio(
-                        median_ti=string_for_median_ti,
-                        median_tj=string_for_median_tj,
+                        ti_m=DUMMY_Ti_MEDIAN,
+                        tj_m=DUMMY_Tj_MEDIAN,
                     )
         denominator = self._denominator_for_ratio_ji(ti_m=DUMMY_Ti_MEDIAN)
 
@@ -456,15 +452,13 @@ class Column_Water_Vapor():
         """
         modifiers_ti = self._derive_modifiers(self.ti)
         ti_median = self._median_tirs_expression(modifiers_ti)
-        string_for_median_ti = 'ti_median'
 
         modifiers_tj = self._derive_modifiers(self.tj)
         tj_median = self._median_tirs_expression(modifiers_tj)
-        string_for_median_tj = 'tj_median'
 
         numerator = self._numerator_for_ratio(
-                        median_ti=string_for_median_ti,
-                        median_tj=string_for_median_tj,
+                        ti_m=DUMMY_Ti_MEDIAN,
+                        tj_m=DUMMY_Tj_MEDIAN,
                     )
         denominator = self._denominator_for_ratio_ij(tj_m=DUMMY_Tj_MEDIAN)
 
@@ -482,21 +476,21 @@ class Column_Water_Vapor():
         """
         if 'mean' in kwargs:
             numerator_ji = self._numerator_for_ratio(
-                            mean_ti=string_for_mean_ti,
-                            mean_tj=string_for_mean_tj,
+                            ti_m=DUMMY_Ti_MEAN,
+                            tj_m=DUMMY_Tj_MEAN,
                         )
             numerator_ij = numerator_ji
-            denominator_ji = self._denominator_for_ratio_ji(ti_m=string_for_mean_ti)
-            denominator_ij = self._denominator_for_ratio_ij(tj_m=string_for_mean_tj)
+            denominator_ji = self._denominator_for_ratio_ji(ti_m=DUMMY_Ti_MEAN)
+            denominator_ij = self._denominator_for_ratio_ij(tj_m=DUMMY_Tj_MEAN)
 
         if 'median' in kwargs:
             numerator_ji = self._numerator_for_ratio(
-                            median_ti=string_for_median_ti,
-                            median_tj=string_for_median_tj,
+                            ti_m=DUMMY_Ti_MEDIAN,
+                            tj_m=DUMMY_Tj_MEDIAN,
                         )
             numerator_ij = numerator_ji
-            denominator_ji = self._denominator_for_ratio_ji(ti_m=string_for_median_ti)
-            denominator_ij = self._denominator_for_ratio_ij(tj_m=string_for_median_tj)
+            denominator_ji = self._denominator_for_ratio_ji(ti_m=DUMMY_Ti_MEDIAN)
+            denominator_ij = self._denominator_for_ratio_ij(tj_m=DUMMY_Tj_MEDIAN)
 
         ratio_ji = numerator_ji / denominator_ji
         ratio_ij = numerator_ij / denominator_ij
