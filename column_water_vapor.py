@@ -461,6 +461,34 @@ class Column_Water_Vapor():
                f'\ \n  {self.c0} + {self.c1} * (rji) + {self.c2} * (rji)^2)')
         return cwv_expression
 
+    def _big_cwv_expression_mean_ij(self):
+        """
+        Build and return a valid mapcalc expression for deriving a Column
+        Water Vapor map from Landsat8's brightness temperature channels
+        B10, B11 based on the MSWCVM method (see citation).
+        """
+        modifiers_ti = self._derive_modifiers(self.ti)
+        ti_mean = self._mean_tirs_expression(modifiers_ti)
+        string_for_mean_ti = 'ti_mean'
+
+        modifiers_tj = self._derive_modifiers(self.tj)
+        tj_mean = self._mean_tirs_expression(modifiers_tj)
+        string_for_mean_tj = 'tj_mean'
+
+        numerator = self._numerator_for_ratio_big(
+                        mean_ti=string_for_mean_ti,
+                        mean_tj=string_for_mean_tj,
+                    )
+        denominator = self._denominator_for_ratio_ij_big(mean_tj=string_for_mean_tj)
+
+        cwv_expression = ('eval('
+               f'\ \n  ti_mean = {ti_mean},'
+               f'\ \n  tj_mean = {tj_mean},'
+               f'\ \n  numerator = {numerator},'
+               f'\ \n  denominator = {denominator},'
+               '\ \n  rji = numerator / denominator,'
+               f'\ \n  {self.c0} + {self.c1} * (rji) + {self.c2} * (rji)^2)')
+        return cwv_expression
 
     def _big_cwv_expression_median(self):
         """
@@ -491,7 +519,34 @@ class Column_Water_Vapor():
                f'\ \n  {self.c0} + {self.c1} * (rji) + {self.c2} * (rji)^2)')
         return cwv_expression
 
+    def _big_cwv_expression_median_ij(self):
+        """
+        Build and return a valid mapcalc expression for deriving a Column
+        Water Vapor map from Landsat8's brightness temperature channels
+        B10, B11 based on the MSWCVM method (see citation).
+        """
+        modifiers_ti = self._derive_modifiers(self.ti)
+        ti_median = self._median_tirs_expression(modifiers_ti)
+        string_for_median_ti = 'ti_median'
 
+        modifiers_tj = self._derive_modifiers(self.tj)
+        tj_median = self._median_tirs_expression(modifiers_tj)
+        string_for_median_tj = 'tj_median'
+
+        numerator = self._numerator_for_ratio_big(
+                        median_ti=string_for_median_ti,
+                        median_tj=string_for_median_tj,
+                    )
+        denominator = self._denominator_for_ratio_big(median_tj=string_for_median_tj)
+
+        cwv_expression = ('eval('
+               f'\ \n  ti_median = {ti_median},'
+               f'\ \n  tj_median = {tj_median},'
+               f'\ \n  numerator = {numerator},'
+               f'\ \n  denominator = {denominator},'
+               '\ \n  rji = numerator / denominator,'
+               f'\ \n  {self.c0} + {self.c1} * (rji) + {self.c2} * (rji)^2)')
+        return cwv_expression
 def estimate_cwv_big_expression(
         outname,
         cwv_output,
