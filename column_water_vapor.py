@@ -154,9 +154,6 @@ class Column_Water_Vapor():
         # mapcalc expression for ratio ji
         self.ratio_ji_expression = self._ratio_ji_expression()
 
-        # mapcalc expression for column water vapor
-        self.column_water_vapor_expression = \
-            self._column_water_vapor_expression()
 
     def __str__(self):
         """
