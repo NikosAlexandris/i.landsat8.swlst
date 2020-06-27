@@ -454,12 +454,13 @@ def main():
 
     # flags
     info = flags['i']
-    scene_extent = flags['e']
-    timestamping = flags['t']
     null = flags['n']
+    scene_extent = flags['e']
     median = flags['m']
+    accuracy = flags['a']
     rounding = flags['r']
     celsius = flags['c']
+    timestamping = flags['t']
 
     #
     # Pre-production actions
@@ -513,7 +514,6 @@ def main():
                     null,
                     info=info,
             )
-
         # likewise for b11 -> t11
         if b11:
             t11 = tirs_to_at_satellite_temperature(
@@ -593,7 +593,6 @@ def main():
     # 4. Estimate Column Water Vapor
     #
 
-
     estimate_cwv(
             temporary_map=tmp_cwv,
             cwv_map=cwv_output,
@@ -658,15 +657,12 @@ def main():
     history_lst += '\n\nSplit-Window model: '
     history_lst += split_window_lst._equation  # :wsw_lst_mapcalc
     description_lst = DESCRIPTION_LST
-
     if celsius:
         title_lst = 'Land Surface Temperature (C)'
         units_lst = 'Celsius'
-
     else:
         title_lst = 'Land Surface Temperature (K)'
         units_lst = 'Kelvin'
-
     landsat8_metadata = Landsat8_MTL(mtl_file)
     source1_lst = landsat8_metadata.scene_id
     source2_lst = landsat8_metadata.origin
