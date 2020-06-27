@@ -8,6 +8,7 @@ Huazhong Ren, Chen Du, Qiming Qin, Rongyuan Liu, Jinjie Meng, Jing Li
 @author nik | Created on 2015-04-18 03:48:20 | Updated on June 2020
 """
 
+from citations import CITATION_COLUMN_WATER_VAPOR
 from constants import DUMMY_Ti_MEAN
 from constants import DUMMY_Tj_MEAN
 from constants import DUMMY_Rji
@@ -109,10 +110,7 @@ class Column_Water_Vapor():
         """
 
         # citation
-        self.citation = ('Huazhong Ren, Chen Du, Qiming Qin, Rongyuan Liu, '
-                         'Jinjie Meng, and Jing Li. '
-                         '"Atmospheric Water Vapor Retrieval from Landsat 8 '
-                         'and Its Validation." 3045-3048. IEEE, 2014.')
+        self.citation = CITATION_COLUMN_WATER_VAPOR
 
         # model constants
         self.c2 = -9.674
@@ -447,7 +445,7 @@ def estimate_cwv_big_expression(
         title_cwv = 'Column Water Vapor'
         description_cwv = 'Column Water Vapor'
         units_cwv = 'g/cm^2'
-        source1_cwv = 'FixMe'
+        source1_cwv = cwv.citation
         source2_cwv = 'FixMe'
         run("r.support",
             map=outname,

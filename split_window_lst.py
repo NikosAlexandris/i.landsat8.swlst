@@ -5,6 +5,7 @@ A class for the Split Window Algorithm for Land Surface Temperature estimation
 @author: nik | Created on Wed Mar 18 11:28:45 2015 | Updated on June 2020
 """
 
+from citations import CITATION_SPLIT_WINDOW
 from constants import BARREN_LAND_CLASS_STRING
 from constants import DUMMY_MAPCALC_STRING_T10
 from constants import DUMMY_MAPCALC_STRING_T11
@@ -91,12 +92,7 @@ class SplitWindowLST():
         - subrange for column water vapor
         """
         # citation
-        self.citation = ('Du, Chen; Ren, Huazhong; Qin, Qiming; Meng, '
-                         'Jinjie; Zhao, Shaohua. 2015. '
-                         '"A Practical Split-Window Algorithm '
-                         'for Estimating Land Surface Temperature from '
-                         'Landsat 8 Data." '
-                         'Remote Sens. 7, no. 1: 647-665.')
+        self.citation = CITATION_SPLIT_WINDOW
 
         # basic equation (for __str__)
         self._equation = ('[b0 + '
