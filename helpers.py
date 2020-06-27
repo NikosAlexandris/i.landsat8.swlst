@@ -37,7 +37,6 @@ def save_map(mapname):
     """
     Helper function to save some in-between maps, assisting in debugging
     """
-    # run('r.info', map=mapname, flags='r')
     run('g.copy', raster=(mapname, 'DebuggingMap'))
 
 

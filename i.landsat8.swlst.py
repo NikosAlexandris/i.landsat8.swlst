@@ -475,7 +475,6 @@ def main():
     #
 
     if cloud_map:
-        # user-fed cloud map?
         msg = '\n|i Using {cmap} as a MASK'.format(cmap=cloud_map)
         g.message(msg)
         r.mask(raster=cloud_map, flags='i', overwrite=True)
@@ -578,7 +577,7 @@ def main():
                 tmp_delta_lse = options['delta_emissivity_out']
 
     #
-    # 4. Modified Split-Window Variance-Covariance Matrix > Column Water Vapor
+    # 4. Estimate Column Water Vapor
     #
 
     if info:
@@ -668,8 +667,6 @@ def main():
     landsat8_metadata = Landsat8_MTL(mtl_file)
     source1_lst = landsat8_metadata.scene_id
     source2_lst = landsat8_metadata.origin
-
-    # history entry
     run("r.support",
         map=lst_output,
         title=title_lst,
@@ -680,12 +677,10 @@ def main():
         history=history_lst,
     )
 
-    # restore region
     if scene_extent:
         grass.del_temp_region()  # restoring previous region settings
         g.message("|! Original Region restored")
 
-    # print citation
     if info:
         g.message('\nSource: ' + citation_lst)
 
