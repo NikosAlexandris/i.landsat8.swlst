@@ -250,7 +250,11 @@ class Column_Water_Vapor():
 
     def _numerator_for_ratio(self, ti_m, tj_m):
         """
-        Numerator for Ratio ji or ij.
+        Build the numerator for Ratio ji or ij which is:
+            Sum( (Tik - Ti_mean) * (Tjk - Tj_mean) )
+
+        Note that 'Ratio_ji' =~ 'Ratio_ij'.
+        Use this function for building GRASS GIS mapcalc expression.
 
         Parameters
         ----------
@@ -287,49 +291,6 @@ class Column_Water_Vapor():
                                         Tjm=tj_m)
                             for modifier_ti, modifier_tj
                             in self.modifiers])
-        return numerator
-
-    def _numerator_for_ratio_big(self, **kwargs):
-        """
-        Build the numerator for Ratio ji (or ij) which is:
-        Sum( (Tik - Ti_mean) * (Tjk - Tj_mean) ).
-        Note that 'Ratio_ji' =~ 'Ratio_ij'.
-
-        Use this function for the big mapcalc expression.
-
-        Parameters
-        ----------
-        mean_ti
-            A string 'mean_ti' to represent the mean of 'Ti's
-
-        mean_tj
-            A string 'mean_tj' to represent the mean of 'Tj's
-
-        Returns
-        -------
-        terms
-            A string representing a GRASS GIS mapcalc compatible expression of
-            the numerator for ratio ji
-
-        Example
-        -------
-         _numerator_for_ratio_big(mean_ti='Some_String', mean_tj='Another_String')
-        """
-        if 'mean_ti' and 'mean_tj' in kwargs:
-            mean_ti = kwargs.get('mean_ti', 'ti_mean')
-            mean_tj = kwargs.get('mean_tj', 'tj_mean')
-            numerator = self._numerator_for_ratio(
-                    ti_m = mean_ti,
-                    tj_m = mean_tj,
-            )
-
-        if 'median_ti' and 'median_tj' in kwargs:
-            median_ti = kwargs.get('median_ti', 'ti_median')
-            median_tj = kwargs.get('median_tj', 'tj_median')
-            numerator = self._numerator_for_ratio(
-                    ti_m = median_ti,
-                    tj_m = median_tj,
-            )
         return numerator
 
     def _denominator_for_ratio_ji(self, ti_m):
@@ -450,7 +411,7 @@ class Column_Water_Vapor():
         tj_mean = self._mean_tirs_expression(modifiers_tj)
         string_for_mean_tj = 'tj_mean'
 
-        numerator = self._numerator_for_ratio_big(
+        numerator = self._numerator_for_ratio(
                         mean_ti=string_for_mean_ti,
                         mean_tj=string_for_mean_tj,
                     )
@@ -479,7 +440,7 @@ class Column_Water_Vapor():
         tj_mean = self._mean_tirs_expression(modifiers_tj)
         string_for_mean_tj = 'tj_mean'
 
-        numerator = self._numerator_for_ratio_big(
+        numerator = self._numerator_for_ratio(
                         mean_ti=string_for_mean_ti,
                         mean_tj=string_for_mean_tj,
                     )
@@ -508,7 +469,7 @@ class Column_Water_Vapor():
         tj_median = self._median_tirs_expression(modifiers_tj)
         string_for_median_tj = 'tj_median'
 
-        numerator = self._numerator_for_ratio_big(
+        numerator = self._numerator_for_ratio(
                         median_ti=string_for_median_ti,
                         median_tj=string_for_median_tj,
                     )
@@ -537,7 +498,7 @@ class Column_Water_Vapor():
         tj_median = self._median_tirs_expression(modifiers_tj)
         string_for_median_tj = 'tj_median'
 
-        numerator = self._numerator_for_ratio_big(
+        numerator = self._numerator_for_ratio(
                         median_ti=string_for_median_ti,
                         median_tj=string_for_median_tj,
                     )
@@ -556,7 +517,7 @@ class Column_Water_Vapor():
         """
         """
         if 'mean' in kwargs:
-            numerator_ji = self._numerator_for_ratio_big(
+            numerator_ji = self._numerator_for_ratio(
                             mean_ti=string_for_mean_ti,
                             mean_tj=string_for_mean_tj,
                         )
@@ -565,7 +526,7 @@ class Column_Water_Vapor():
             denominator_ij = self._denominator_for_ratio_big(mean_tj=string_for_mean_tj)
 
         if 'median' in kwargs:
-            numerator_ji = self._numerator_for_ratio_big(
+            numerator_ji = self._numerator_for_ratio(
                             median_ti=string_for_median_ti,
                             median_tj=string_for_median_tj,
                         )
