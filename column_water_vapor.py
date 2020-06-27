@@ -547,6 +547,49 @@ class Column_Water_Vapor():
                '\ \n  rji = numerator / denominator,'
                f'\ \n  {self.c0} + {self.c1} * (rji) + {self.c2} * (rji)^2)')
         return cwv_expression
+
+    def _compute_retrieval_accuracy(self, **kwargs):
+        """
+        """
+        if 'mean' in kwargs:
+            numerator_ji = self._numerator_for_ratio_big(
+                            mean_ti=string_for_mean_ti,
+                            mean_tj=string_for_mean_tj,
+                        )
+            numerator_ij = numerator_ji
+            denominator_ji = self._denominator_for_ratio_big(mean_ti=string_for_mean_ti)
+            denominator_ij = self._denominator_for_ratio_big(mean_tj=string_for_mean_tj)
+
+        if 'median' in kwargs:
+            numerator_ji = self._numerator_for_ratio_big(
+                            median_ti=string_for_median_ti,
+                            median_tj=string_for_median_tj,
+                        )
+            numerator_ij = numerator_ji
+            denominator_ji = self._denominator_for_ratio_big(median_ti=string_for_median_ti)
+            denominator_ij = self._denominator_for_ratio_big(median_tj=string_for_median_tj)
+
+        ratio_ji = numerator_ji / denominator_ji
+        ratio_ij = numerator_ij / denominator_ij
+        x2 = ratio_ji * ratio_ij
+        self.retrieval_accuracy = x2
+
+        return ratio_ji * ratio_ij
+
+    def _big_retrieval_accuracy_expression_mean():
+        """
+        """
+        ratio_ji = self._big_cwv_expression_mean()
+        ratio_ij = self._big_cwv_expression_mean_ij
+        return ratio_ji * ratio_ij
+
+    def _big_retrieval_accuracy_expression_median():
+        """
+        """
+        ratio_ji = self._big_cwv_expression_median()
+        ratio_ij = self._big_cwv_expression_median_ij
+        return ratio_ji * ratio_ij
+
 def estimate_cwv_big_expression(
         outname,
         cwv_output,
@@ -564,6 +607,13 @@ def estimate_cwv_big_expression(
     msg = "\n|i Estimating atmospheric column water vapor "
     if quiet:
         msg += '| Expression:\n'
+    # if accuracy:
+    #     if median:
+    #         accuracy_expression = cwv._big_accuracy_expression_median()
+    #     else:
+    #         accuracy_expression = cwv._big_accuracy_expression_mean()
+    # else:
+    #     accuracy_expression = str()
     g.message(msg)
 
     if quiet:
@@ -576,6 +626,8 @@ def estimate_cwv_big_expression(
     cwv_equation = EQUATION.format(result=outname, expression=cwv_expression)
     grass.mapcalc(cwv_equation, overwrite=True)
 
+    # accuracy_equation = EQUATION.format(result=outname, expression=accuracy_expression)
+    # grass.mapcalc(accuracy_equation, overwrite=True)
     if quiet:
         run('r.info', map=outname, flags='r')
 
