@@ -244,25 +244,46 @@ class Column_Water_Vapor():
         tx_median_expression = f'median({modifiers})'
         return tx_median_expression
 
-    def _numerator_for_ratio(self, mean_ti, mean_tj):
+    def _numerator_for_ratio(self, ti_m, tj_m):
         """
-        Numerator for Ratio ji. Use this function for the step-by-step approach
-        to estimate the column water vapor from within the main code (main
-        function) of the module i.landsat8.swlst
+        Numerator for Ratio ji or ij.
+
+        Parameters
+        ----------
+        modifiers
+            Not explicitly needed as an input since it is sourced from the
+            objects attribute self.modifiers
+
+        ti_m
+            Either of mean(Ti) or median(Ti)
+
+        tj_m
+            Either of mean(Tj) or median(Tj)
+
+        Returns
+        -------
+        numerator
+            The numerator expression for Ratio ji or ij
+
+        Examples
+        --------
+        >>> numerator = self._numerator_for_ratio(
+                ti_m = mean_ti,
+                tj_m = mean_tj,
+            )
+
+        >>> numerator = self._numerator_for_ratio(
+                ti_m = median_ti,
+                tj_m = median_tj,
+            )
         """
-        if not mean_ti:
-            mean_ti = 'Ti_mean'
-
-        if not mean_tj:
-            mean_tj = 'Tj_mean'
-
-        rji_numerator = '(' + '({Ti} - {Tim}) * ({Tj} - {Tjm})' + ')'
-
-        return ' + '.join([rji_numerator.format(Ti=mod_ti,
-                                                Tim=mean_ti,
-                                                Tj=mod_tj,
-                                                Tjm=mean_tj)
-                          for mod_ti, mod_tj in self.modifiers])
+        numerator = ' + '.join([NUMERATOR.format(Ti=modifier_ti,
+                                        Tim=ti_m,
+                                        Tj=modifier_tj,
+                                        Tjm=tj_m)
+                            for modifier_ti, modifier_tj
+                            in self.modifiers])
+        return numerator
 
     def _numerator_for_ratio_big(self, **kwargs):
         """
@@ -331,9 +352,17 @@ class Column_Water_Vapor():
         Returns a mapcalc expression for the Ratio ji, part of the column water
         vapor retrieval model.
         """
-        rji_numerator = self._numerator_for_ratio(mean_ti=DUMMY_Ti_MEAN,
-                                                  mean_tj=DUMMY_Tj_MEAN)
+        if 'mean' in statistic:
+            rji_numerator = self._numerator_for_ratio(
+                    ti_m=DUMMY_Ti_MEAN,
+                    tj_m=DUMMY_Tj_MEAN,
+            )
         rji_denominator = self._denominator_for_ratio(mean_ti=DUMMY_Ti_MEAN)
+        if 'median' in statistic:
+            rji_numerator = self._numerator_for_ratio(
+                    ti_m=DUMMY_Ti_MEDIAN,
+                    tj_m=DUMMY_Tj_MEDIAN,
+            )
         rji = f'( {rji_numerator} ) / ( {rji_denominator} )'
         return rji
 
