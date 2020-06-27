@@ -158,43 +158,34 @@ class Column_Water_Vapor():
         msg += '\n      - Expression for r.mapcalc to determine column water vapor: '
         return msg + str(self.column_water_vapor_expression)
 
-    def compute_column_water_vapor(self, tik, tjk):
-        """
-        Compute the column water vapor based on lists of input Ti and Tj
-        values.
+    # def compute_column_water_vapor(self, tik, tjk):
+    #     """
+    #     Compute the column water vapor based on lists of input Ti and Tj
+    #     values.
 
-        This is a single value production function. It does not read or return
-        a map.
-        """
-        # feed with N pixels
-        ti_mean = sum(tik) / len(tik)
-        tj_mean = sum(tjk) / len(tjk)
+    #     This is a single value production function. It does not read or return
+    #     a map.
+    #     """
+    #     # feed with N pixels
+    #     ti_mean = sum(tik) / len(tik)
+    #     tj_mean = sum(tjk) / len(tjk)
 
-        # numerator: sum of all (Tik - Ti_mean) * (Tjk - Tj_mean)
-        numerator_ji_terms = []
-        for ti, tj in zip(tik, tjk):
-            numerator_ji_terms.append((ti - ti_mean) * (tj - tj_mean))
-        numerator_ji = sum(numerator_ji_terms) * 1.0
+    #     # numerator: sum of all (Tik - Ti_mean) * (Tjk - Tj_mean)
+    #     numerator_ji_terms = []
+    #     for ti, tj in zip(tik, tjk):
+    #         numerator_ji_terms.append((ti - ti_mean) * (tj - tj_mean))
+    #     numerator_ji = sum(numerator_ji_terms) * 1.0
 
-        # denominator:  sum of all (Tik - Tj_mean)^2
-        denominator_ji_terms = []
-        for ti in tik:
-            term = (ti - ti_mean)**2
-            denominator_ji_terms.append(term)
-        denominator_ji = sum(denominator_ji_terms) * 1.0
+    #     # denominator:  sum of all (Tik - Ti_mean)^2
+    #     denominator_ji_terms = []
+    #     for ti in tik:
+    #         term = (ti - ti_mean)**2
+    #         denominator_ji_terms.append(term)
+    #     denominator_ji = sum(denominator_ji_terms) * 1.0
 
-        # ratio ji
-        ratio_ji = numerator_ji / denominator_ji
-
-        # column water vapor
-        cwv = self.c0 + self.c1 * (ratio_ji) + self.c2 * ((ratio_ji) ** 2)
-
-        # print '{c0} + {c1}*({rji}) + {c2}*({rji})^2 = '.format(c0=self.c0,
-        #                                                        c1=self.c1,
-        #                                                        rji=ratio_ji,
-        #                                                        c2=self.c2,
-        #                                                        cwv=cwv),
-        return cwv
+    #     ratio_ji = numerator_ji / denominator_ji
+    #     cwv = self.c0 + self.c1 * (ratio_ji) + self.c2 * ((ratio_ji) ** 2)
+    #     return cwv
 
     def _derive_adjacent_pixels(self):
         """
