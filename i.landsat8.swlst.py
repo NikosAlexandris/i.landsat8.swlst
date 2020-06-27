@@ -99,6 +99,11 @@
 #%end
 
 #%flag
+#% key: n
+#% description: Set zero digital numbers in b10, b11 to NULL | ToDo: Perform in copy of input input maps!
+#%end
+
+#%flag
 #%  key: e
 #%  description: Match computational region to extent of thermal bands
 #%end
@@ -109,13 +114,13 @@
 #%end
 
 #%flag
-#%  key: r
-#%  description: Round LST output and keep two digits
+#%  key: a
+#%  description: Report on column water vapor retrieval accuracy based on the MSWCVM method
 #%end
 
 #%flag
-#% key: t
-#% description: Time-stamp the output LST (and optional CWV) map
+#%  key: r
+#%  description: Round LST output and keep two digits
 #%end
 
 #%flag
@@ -124,8 +129,8 @@
 #%end
 
 #%flag
-#% key: n
-#% description: Set zero digital numbers in b10, b11 to NULL | ToDo: Perform in copy of input input maps!
+#% key: t
+#% description: Time-stamp the output LST (and optional CWV) map
 #%end
 
 #%option G_OPT_F_INPUT
