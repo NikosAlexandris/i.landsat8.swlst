@@ -316,42 +316,6 @@ class Column_Water_Vapor():
                             in self.modifiers_tj])
         return denominator_ij
 
-    def _denominator_for_ratio_big(self, **kwargs):
-        """
-        Denominator for Ratio ji. Use this function for the big mapcalc
-        expression.
-
-        Example:
-                _denominator_for_ratio_big(mean_ti='Some_String')
-        """
-        if 'mean_ti' in kwargs:
-            mean_ti = kwargs.get('mean_ti', 'ti_mean')
-            denominator_ji = self._denominator_for_ratio_ji(ti_m=mean_ti)
-
-        if 'median_ti' in kwargs:
-            median_ti = kwargs.get('median_ti', 'ti_median')
-            denominator_ji = self._denominator_for_ratio_ji(ti_m=median_ti)
-
-        return denominator_ji
-
-    def _denominator_for_ratio_ij_big(self, **kwargs):
-        """
-        Denominator for Ratio ij. Use this function for the big mapcalc
-        expression.
-
-        Example:
-                _denominator_for_ratio_ij_big(mean_tj='Some_String')
-        """
-        if 'mean_tj' in kwargs:
-            mean_tj = kwargs.get('mean_tj', 'tj_mean')
-            denominator_ij = self._denominator_for_ratio_ij(tj_m=mean_tj)
-
-        if 'median_tj' in kwargs:
-            median_tj = kwargs.get('median_ti', 'ti_median')
-            denominator_ij = self._denominator_for_ratio_ij(tj_m=median_tj)
-
-        return denominator_ij
-
     def _ratio_ji_expression(self, statistic):
         """
         Returns a mapcalc expression for the Ratio ji, part of the column water
@@ -415,7 +379,7 @@ class Column_Water_Vapor():
                         mean_ti=string_for_mean_ti,
                         mean_tj=string_for_mean_tj,
                     )
-        denominator = self._denominator_for_ratio_big(mean_ti=string_for_mean_ti)
+        denominator = self._denominator_for_ratio_ji(ti_m=DUMMY_Ti_MEAN)
 
         cwv_expression = ('eval('
                f'\ \n  ti_mean = {ti_mean},'
@@ -444,7 +408,7 @@ class Column_Water_Vapor():
                         mean_ti=string_for_mean_ti,
                         mean_tj=string_for_mean_tj,
                     )
-        denominator = self._denominator_for_ratio_ij_big(mean_tj=string_for_mean_tj)
+        denominator = self._denominator_for_ratio_ij(tj_m=DUMMY_Tj_MEAN)
 
         cwv_expression = ('eval('
                f'\ \n  ti_mean = {ti_mean},'
@@ -473,7 +437,7 @@ class Column_Water_Vapor():
                         median_ti=string_for_median_ti,
                         median_tj=string_for_median_tj,
                     )
-        denominator = self._denominator_for_ratio_big(median_ti=string_for_median_ti)
+        denominator = self._denominator_for_ratio_ji(ti_m=DUMMY_Ti_MEDIAN)
 
         cwv_expression = ('eval('
                f'\ \n  ti_median = {ti_median},'
@@ -502,7 +466,7 @@ class Column_Water_Vapor():
                         median_ti=string_for_median_ti,
                         median_tj=string_for_median_tj,
                     )
-        denominator = self._denominator_for_ratio_big(median_tj=string_for_median_tj)
+        denominator = self._denominator_for_ratio_ij(tj_m=DUMMY_Tj_MEDIAN)
 
         cwv_expression = ('eval('
                f'\ \n  ti_median = {ti_median},'
@@ -522,8 +486,8 @@ class Column_Water_Vapor():
                             mean_tj=string_for_mean_tj,
                         )
             numerator_ij = numerator_ji
-            denominator_ji = self._denominator_for_ratio_big(mean_ti=string_for_mean_ti)
-            denominator_ij = self._denominator_for_ratio_big(mean_tj=string_for_mean_tj)
+            denominator_ji = self._denominator_for_ratio_ji(ti_m=string_for_mean_ti)
+            denominator_ij = self._denominator_for_ratio_ij(tj_m=string_for_mean_tj)
 
         if 'median' in kwargs:
             numerator_ji = self._numerator_for_ratio(
@@ -531,8 +495,8 @@ class Column_Water_Vapor():
                             median_tj=string_for_median_tj,
                         )
             numerator_ij = numerator_ji
-            denominator_ji = self._denominator_for_ratio_big(median_ti=string_for_median_ti)
-            denominator_ij = self._denominator_for_ratio_big(median_tj=string_for_median_tj)
+            denominator_ji = self._denominator_for_ratio_ji(ti_m=string_for_median_ti)
+            denominator_ij = self._denominator_for_ratio_ij(tj_m=string_for_median_tj)
 
         ratio_ji = numerator_ji / denominator_ji
         ratio_ij = numerator_ij / denominator_ij
