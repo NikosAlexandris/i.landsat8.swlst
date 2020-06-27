@@ -310,20 +310,29 @@ class Column_Water_Vapor():
         Example
         -------
          _numerator_for_ratio_big(mean_ti='Some_String', mean_tj='Another_String')
-    def _denominator_for_ratio(self, mean_ti):
         """
-        Denominator for Ratio ji. Use this function for the step-by-step
+    def _denominator_for_ratio_ji(self, ti_m):
+        """
+        Denominator for Ratio ji which is:
+        Sum ( (Tik - Ti_mean)^2 )
+        """
+        denominator_ji = ' + '.join([DENOMINATOR_Ti.format(Ti=modifier_ti,
+                                        Tim=ti_m)
+                            for modifier_ti
+                            in self.modifiers_ti])
+        return denominator_ji
+
+    def _denominator_for_ratio_ij(self, tj_m):
+        """
+        Denominator for Ratio ij. Note that Use this function for the step-by-step
         approach to estimate the column water vapor from within the main code
         (main function) of the module i.landsat8.swlst
         """
-        if not mean_ti:
-            mean_ti = 'Ti_mean'
-
-        rji_denominator = '({Ti} - {Tim})^2'
-
-        return ' + '.join([rji_denominator.format(Ti=mod,
-                                                  Tim=mean_ti)
-                          for mod in self.modifiers_ti])
+        denominator_ij = ' + '.join([DENOMINATOR_Tj.format(Tj=modifier_tj,
+                                        Tjm=tj_m)
+                            for modifier_tj
+                            in self.modifiers_tj])
+        return denominator_ij
 
     def _denominator_for_ratio_big(self, **kwargs):
         """
@@ -333,15 +342,34 @@ class Column_Water_Vapor():
         Example:
                 _denominator_for_ratio_big(mean_ti='Some_String')
         """
-        mean_ti = kwargs.get('mean_ti', 'ti_mean')
-        terms = '({Ti} - {Tim})^2'
-        terms = ' + '.join([terms.format(Ti=mod,
-                                         Tim=mean_ti)
-                           for mod in self.modifiers_ti])
+        if 'mean_ti' in kwargs:
+            mean_ti = kwargs.get('mean_ti', 'ti_mean')
+            denominator_ji = self._denominator_for_ratio_ji(ti_m=mean_ti)
 
-        return terms
+        if 'median_ti' in kwargs:
+            median_ti = kwargs.get('median_ti', 'ti_median')
+            denominator_ji = self._denominator_for_ratio_ji(ti_m=median_ti)
 
-    def _ratio_ji_expression(self):
+        return denominator_ji
+
+    def _denominator_for_ratio_ij_big(self, **kwargs):
+        """
+        Denominator for Ratio ij. Use this function for the big mapcalc
+        expression.
+
+        Example:
+                _denominator_for_ratio_ij_big(mean_tj='Some_String')
+        """
+        if 'mean_tj' in kwargs:
+            mean_tj = kwargs.get('mean_tj', 'tj_mean')
+            denominator_ij = self._denominator_for_ratio_ij(tj_m=mean_tj)
+
+        if 'median_tj' in kwargs:
+            median_tj = kwargs.get('median_ti', 'ti_median')
+            denominator_ij = self._denominator_for_ratio_ij(tj_m=median_tj)
+
+        return denominator_ij
+
         """
         Returns a mapcalc expression for the Ratio ji, part of the column water
         vapor retrieval model.
@@ -351,12 +379,13 @@ class Column_Water_Vapor():
                     ti_m=DUMMY_Ti_MEAN,
                     tj_m=DUMMY_Tj_MEAN,
             )
-        rji_denominator = self._denominator_for_ratio(mean_ti=DUMMY_Ti_MEAN)
+            rji_denominator = self._denominator_for_ratio_ji(ti_m=DUMMY_Ti_MEAN)
         if 'median' in statistic:
             rji_numerator = self._numerator_for_ratio(
                     ti_m=DUMMY_Ti_MEDIAN,
                     tj_m=DUMMY_Tj_MEDIAN,
             )
+            rji_denominator = self._denominator_for_ratio_ji(ti_m=DUMMY_Ti_MEDIAN)
         rji = f'( {rji_numerator} ) / ( {rji_denominator} )'
         return rji
 
