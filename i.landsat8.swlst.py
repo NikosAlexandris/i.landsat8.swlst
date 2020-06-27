@@ -341,7 +341,7 @@ import functools
 from citations import CITATION_COLUMN_WATER_VAPOR
 from citations import CITATION_SPLIT_WINDOW
 from column_water_vapor import estimate_cwv
-from split_window_lst import *
+from split_window_lst import SplitWindowLST
 from landsat8_mtl import Landsat8_MTL
 from helpers import cleanup
 from helpers import tmp_map_name
@@ -605,17 +605,17 @@ def main():
         grass.verbose(msg)
 
     estimate_lst(
-            lst_output,
-            t10,
-            t11,
-            landcover_map,
-            landcover_class,
-            tmp_avg_lse,
-            tmp_delta_lse,
-            tmp_cwv,
-            split_window_lst.sw_lst_mapcalc,
-            rounding,
-            celsius,
+            outname=lst_output,
+            t10=t10,
+            t11=t11,
+            landcover_map=landcover_map,
+            landcover_class=landcover_class,
+            avg_lse_map=tmp_avg_lse,
+            delta_lse_map=tmp_delta_lse,
+            cwv_map=tmp_cwv,
+            lst_expression=split_window_lst.sw_lst_mapcalc,
+            rounding=rounding,
+            celsius=celsius,
             info=info,
     )
 
