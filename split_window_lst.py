@@ -142,11 +142,11 @@ class SplitWindowLST():
 
             # use mapcalc expressions instead,
             # containing DUMMY strings for map names
-            self.average_lse_mapcalc = self._build_average_emissivity_mapcalc()
-            self.delta_lse_mapcalc = self._build_delta_emissivity_mapcalc()
+            self.average_lse_mapcalc = self._build_average_emissivity_expression()
+            self.delta_lse_mapcalc = self._build_delta_emissivity_expression()
 
         # all-in-one split-window lst expression for mapcalc
-        self.sw_lst_mapcalc = self._build_swlst_mapcalc()
+        self.sw_lst_mapcalc = self._build_swlst_expression()
 
     def __str__(self):
         """
@@ -336,7 +336,7 @@ class SplitWindowLST():
         msg = "Associated RMSE: "
         return msg + str(self.rmse)
 
-    def _build_average_emissivity_mapcalc(self):
+    def _build_average_emissivity_expression(self):
         """
         Build average emissivity expression for GRASS GIS' mapcalc
         """
@@ -383,7 +383,7 @@ class SplitWindowLST():
                       ' null() )))))))))))')
         return expression
 
-    def _build_delta_emissivity_mapcalc(self):
+    def _build_delta_emissivity_expression(self):
         """
         Build delta emissivity expression for GRASS GIS' mapcalc
         """
@@ -449,7 +449,7 @@ class SplitWindowLST():
                                    t11=self.emissivity_t11)
         return model
 
-    def _build_subrange_mapcalc(self, subrange):
+    def _build_subrange_expression(self, subrange):
         """
         Build formula for GRASS GIS' mapcalc for the given cwv subrange.
 
@@ -488,7 +488,7 @@ class SplitWindowLST():
                   )
         return mapcalc
 
-    def _build_swlst_mapcalc(self):
+    def _build_swlst_expression(self):
         """
         Build and return a valid expression for GRASS GIS' r.mapcalc to
         determine LST.
@@ -500,12 +500,12 @@ class SplitWindowLST():
         low_4, high_4 = COLUMN_WATER_VAPOR['Range_4'].subrange
         low_5, high_5 = COLUMN_WATER_VAPOR['Range_5'].subrange
         low_6, high_6 = COLUMN_WATER_VAPOR['Range_6'].subrange  # unused
-        expression_range_1 = self._build_subrange_mapcalc('Range_1')
-        expression_range_2 = self._build_subrange_mapcalc('Range_2')
-        expression_range_3 = self._build_subrange_mapcalc('Range_3')
-        expression_range_4 = self._build_subrange_mapcalc('Range_4')
-        expression_range_5 = self._build_subrange_mapcalc('Range_5')
-        expression_range_6 = self._build_subrange_mapcalc('Range_6')  # complete range
+        expression_range_1 = self._build_subrange_expression('Range_1')
+        expression_range_2 = self._build_subrange_expression('Range_2')
+        expression_range_3 = self._build_subrange_expression('Range_3')
+        expression_range_4 = self._build_subrange_expression('Range_4')
+        expression_range_5 = self._build_subrange_expression('Range_5')
+        expression_range_6 = self._build_subrange_expression('Range_6')  # complete range
         expression = (f'eval( sw_lst_1 = {expression_range_1},'
                       f'\ \n sw_lst_2 = {expression_range_2},'
                       f'\ \n sw_lst_12 = (sw_lst_1 + sw_lst_2) / 2,'
