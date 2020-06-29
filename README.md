@@ -123,6 +123,7 @@ Implementation notes
 
 - Created on Wed Mar 18 10:00:53 2015
 - First all-through execution: Tue May 12 21:50:42 EEST 2015
+- Updated for Python 3 and added new functionality: Jun 2020
 
 
 ## To Do
@@ -134,6 +135,7 @@ Implementation notes
 
 - Evaluate BIG mapcalc expressions -- are they correct?  I guess so ;-)
 
+    - Still missing automatic tests!
     - ~~Expression for Column Water Vapor~~
     - ~~CWV output values range -- is it rational?~~ It was not. There is a
       typo in paper [0]. The correct order of the coefficients is in papers [1,
@@ -150,7 +152,7 @@ Implementation notes
   **Done**
 - ~~Get the FROM-GLC map,~~ **Found**
 - ~~implement mechanism to read land cover classes from it
-  and use'm to retrieve emissivities~~ **Done**
+  and use it to retrieve emissivities~~ **Done**
 - ~~How to use the FVC?~~ Don't. Just **use the Look-up table** (see [\*] for
   details).
 - ~~Save average emissivity and delta emissivity maps for caching (re-use in
@@ -171,10 +173,10 @@ Implementation notes
 
 - ~~Test for too small region?~~ Works for a region of 267 rows x 267 cols
   (71289 cells)
-- Deduplicate code in `split_window_lst` class, in functions
+- ~~Deduplicate code in `split_window_lst` class, in functions
 `_build_average_emissivity_mapcalc()` and
-`_build_delta_emissivity_mapcalc()`
-- Implement a median window filter, as another option in addition to mean.
+`_build_delta_emissivity_mapcalc()`~~
+- ~~Implement a median window filter, as another option in addition to mean.~~
 - Profiling
 - Implement a complete cloud masking function using the BQA image. Support for
   user requested confidence or types of clouds (?). Eg: options=
