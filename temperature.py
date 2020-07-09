@@ -151,9 +151,13 @@ def estimate_lst(
 
     if rounding:
         split_window_expression = f'(round({split_window_expression}, 2, 0.5))'
+        msg = '\n|i Rounding temperature figures to 2 decimals'
+        g.message(msg)
 
     if celsius:
         split_window_expression = f'({split_window_expression}) - 273.15'
+        msg = '\n|i Converting temperature figures to Celsius degrees'
+        g.message(msg)
 
     split_window_equation = EQUATION.format(
             result=outname,
