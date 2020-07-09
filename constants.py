@@ -43,4 +43,4 @@ LST_FORMULA = ('{b0} + '
                '({b7}) * ({DUMMY_T10} - {DUMMY_T11})^2')
 NUMERATOR = '({Ti} - {Tim}) * ({Tj} - {Tjm})'
 DENOMINATOR_Ti = '({Ti} - {Tim})^2'
-DENOMINATOR_Tj = '({Ti} - {Tim})^2'
+DENOMINATOR_Tj = '({Tj} - {Tjm})^2'
