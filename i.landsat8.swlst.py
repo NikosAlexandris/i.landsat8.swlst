@@ -406,7 +406,6 @@ def main():
     # Temporary filenames
     tmp_avg_lse = tmp_map_name('avg_lse')
     tmp_delta_lse = tmp_map_name('delta_lse')
-    tmp_cwv = tmp_map_name('cwv')
     #tmp_lst = tmp_map_name('lst')
 
     # user input
@@ -448,10 +447,14 @@ def main():
     else:
         brightness_temperature_prefix = None
 
-    cwv_window_size = int(options['window'])
-    assertion_for_cwv_window_size_msg = MSG_ASSERTION_WINDOW_SIZE
-    assert cwv_window_size >= 7, assertion_for_cwv_window_size_msg
-    cwv_output = options['cwv']
+    if options['cwv']:
+        tmp_cwv = options['cwv']
+    else:
+        tmp_cwv = tmp_map_name('cwv')
+        cwv_window_size = int(options['window'])
+        assertion_for_cwv_window_size_msg = MSG_ASSERTION_WINDOW_SIZE
+        assert cwv_window_size >= 7, assertion_for_cwv_window_size_msg
+    cwv_output = options['cwv_out']
 
     # optional maps
     average_emissivity_map = options['emissivity']
@@ -596,15 +599,19 @@ def main():
     # 4. Estimate Column Water Vapor
     #
 
-    estimate_cwv(
-            temporary_map=tmp_cwv,
-            cwv_map=cwv_output,
-            t10=t10,
-            t11=t11,
-            window_size=cwv_window_size,
-            median=median,
-            info=info,
-    )
+    if not options['cwv']:
+        estimate_cwv(
+                temporary_map=tmp_cwv,
+                cwv_map=cwv_output,
+                t10=t10,
+                t11=t11,
+                window_size=cwv_window_size,
+                median=median,
+                info=info,
+        )
+    else:
+        msg = f'\n|! User defined map \'{tmp_cwv}\' for atmospheric column water vapor'
+        g.message(msg)
 
     if cwv_output:
         tmp_cwv = cwv_output
