@@ -526,9 +526,11 @@ def estimate_cwv(
 
             *** To Do: evaluate -- does it work correctly? *** !
     """
+    msg = "\n|i Estimating atmospheric column water vapor"
     cwv = Column_Water_Vapor(window_size, t10, t11)
 
     if median:
+        msg += f'\n|! Computing median value in a {window_size}^2 pixel neighborhood'
         cwv_expression = cwv._cwv_expression_median()
     else:
         cwv_expression = cwv._cwv_expression_mean()
@@ -541,7 +543,6 @@ def estimate_cwv(
     # else:
     #     accuracy_expression = str()
 
-    msg = "\n|i Estimating atmospheric column water vapor"
     if info:
         msg += '\n   Expression:\n'
         msg = replace_dummies(
