@@ -564,8 +564,8 @@ def estimate_cwv(
         run('r.info', map=temporary_map, flags='r')
 
     if cwv_map:
-        history_cwv = f'\nColumn Water Vapor model: {cwv._equation}'
-        history_cwv += f'\nSpatial window of size: {cwv.window_size}'
+        history_cwv = f'\nColumn Water Vapor = {cwv._equation}'
+        history_cwv += f'\nSpatial window size: {cwv.window_size}^2'
         title_cwv = 'Column Water Vapor'
         description_cwv = 'Column Water Vapor based on MSWVCM'
         units_cwv = 'g/cm^2'
