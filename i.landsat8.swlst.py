@@ -314,14 +314,27 @@
 #% key_desc: integer
 #% description: Odd number n sizing an n^2 spatial window for column water vapor retrieval | Increase to reduce spatial discontinuation in the final LST
 #% answer: 7
-#% required: yes
+#% required: no
+#%end
+
+#%option G_OPT_R_INPUT
+#% key: cwv
+#% key_desc: name
+#% description: Column Water Vapor map derived from Landsat8 TIRS channels 10 and 11 | Expert use, overrides computing column water vapor. Apply only on the same Landsat 8 TIRS products used to generate this map.
+#% required : no
 #%end
 
 #%option G_OPT_R_OUTPUT
-#% key: cwv
+#% key: cwv_out
 #% key_desc: name
-#% description: Name for output Column Water Vapor map | Optional
+#% description: Name for output Column Water Vapor map | Optional, currently cannot be used at the same time with the 'cwv' input.
 #% required: no
+#%end
+
+#%rules
+#% required: window, cwv
+#% exclusive: window, cwv
+#% exclusive: cwv, cwv_out
 #%end
 
 # required librairies
